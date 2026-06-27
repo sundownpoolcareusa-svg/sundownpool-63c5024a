@@ -23,8 +23,8 @@ function PublicInvoicePage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["public-invoice", token],
     queryFn: async () => {
-      // @ts-expect-error RPC not in generated types yet
-      const { data, error } = await supabase.rpc("get_invoice_public", { _token: token });
+      const { data, error } = await supabase.rpc("get_invoice_public" as never, { _token: token } as never);
+
       if (error) throw error;
       if (!data) throw new Error("Invoice not found");
       return data as PublicInvoice;
