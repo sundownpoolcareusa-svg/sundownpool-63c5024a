@@ -1,0 +1,109 @@
+import { useEffect, useRef, useState } from "react";
+import { loadGoogleMaps } from "@/lib/googleMapsLoader";
+
+type Suggestion = { id: string; text: string; placeId: string };
+
+export function AddressAutocomplete({
+  value,
+  onChange,
+  onSelectPlace,
+  label = "Endereço",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSelectPlace?: (p: { address: string; city: string }) => void;
+  label?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<Suggestion[]>([]);
+  const sessionRef = useRef<any>(null);
+  const placesRef = useRef<any>(null);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    loadGoogleMaps()
+      .then(async (g) => {
+        const places: any = await g.maps.importLibrary("places");
+        placesRef.current = places;
+        sessionRef.current = new places.AutocompleteSessionToken();
+      })
+      .catch(() => {});
+  }, []);
+
+  function handleInput(v: string) {
+    onChange(v);
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    if (!v.trim() || !placesRef.current) {
+      setItems([]);
+      setOpen(false);
+      return;
+    }
+    timerRef.current = window.setTimeout(async () => {
+      try {
+        const { suggestions } = await placesRef.current.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: v,
+          sessionToken: sessionRef.current,
+        });
+        const mapped: Suggestion[] = (suggestions || [])
+          .map((s: any) => s.placePrediction)
+          .filter(Boolean)
+          .map((p: any) => ({
+            id: p.placeId,
+            placeId: p.placeId,
+            text: p.text?.toString?.() ?? "",
+          }));
+        setItems(mapped);
+        setOpen(mapped.length > 0);
+      } catch {
+        setItems([]);
+        setOpen(false);
+      }
+    }, 200);
+  }
+
+  async function pick(s: Suggestion) {
+    setOpen(false);
+    try {
+      const place = new placesRef.current.Place({ id: s.placeId });
+      await place.fetchFields({ fields: ["formattedAddress", "addressComponents"] });
+      const address = place.formattedAddress || s.text;
+      const comps = place.addressComponents || [];
+      const city = comps.find((c: any) => c.types?.includes("locality"))?.longText
+        || comps.find((c: any) => c.types?.includes("administrative_area_level_2"))?.longText
+        || "";
+      const state = comps.find((c: any) => c.types?.includes("administrative_area_level_1"))?.shortText || "";
+      onChange(address);
+      onSelectPlace?.({ address, city: [city, state].filter(Boolean).join(", ") });
+      sessionRef.current = new placesRef.current.AutocompleteSessionToken();
+    } catch {
+      onChange(s.text);
+    }
+  }
+
+  return (
+    <div className="relative">
+      <label className="text-sm font-semibold text-slate-700">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => handleInput(e.target.value)}
+        onFocus={() => items.length && setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="Comece a digitar o endereço..."
+        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+      />
+      {open && (
+        <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
+          {items.map((s) => (
+            <li
+              key={s.id}
+              onMouseDown={(e) => { e.preventDefault(); pick(s); }}
+              className="cursor-pointer px-3 py-2 text-sm hover:bg-slate-50"
+            >
+              {s.text}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

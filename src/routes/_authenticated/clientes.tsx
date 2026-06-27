@@ -8,6 +8,7 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { listClients, fmtDate, initials, type Client } from "@/lib/db";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -173,8 +174,21 @@ function ClientesPage() {
   );
 }
 
+const WEEKDAYS = [
+  { v: "Seg", label: "Segunda" },
+  { v: "Ter", label: "Terça" },
+  { v: "Qua", label: "Quarta" },
+  { v: "Qui", label: "Quinta" },
+  { v: "Sex", label: "Sexta" },
+  { v: "Sáb", label: "Sábado" },
+  { v: "Dom", label: "Domingo" },
+];
+
 function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", city: "", client_type: "Residencial" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", city: "", client_type: "Residencial", service_days: [] as string[] });
+
+  const toggleDay = (d: string) =>
+    setForm((f) => ({ ...f, service_days: f.service_days.includes(d) ? f.service_days.filter((x) => x !== d) : [...f.service_days, d] }));
 
   const mut = useMutation({
     mutationFn: async (values: typeof form) => {
@@ -185,7 +199,7 @@ function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: 
     },
     onSuccess: () => {
       toast.success("Cliente criado!");
-      setForm({ name: "", email: "", phone: "", address: "", city: "", client_type: "Residencial" });
+      setForm({ name: "", email: "", phone: "", address: "", city: "", client_type: "Residencial", service_days: [] });
       onCreated();
       onClose();
     },
@@ -203,7 +217,11 @@ function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: 
           <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
           <Field label="Telefone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
         </div>
-        <Field label="Endereço" value={form.address} onChange={(v) => setForm({ ...form, address: v })} />
+        <AddressAutocomplete
+          value={form.address}
+          onChange={(v) => setForm((f) => ({ ...f, address: v }))}
+          onSelectPlace={(p) => setForm((f) => ({ ...f, address: p.address, city: p.city || f.city }))}
+        />
         <div className="grid grid-cols-2 gap-4">
           <Field label="Cidade/Estado" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
           <div>
@@ -211,6 +229,25 @@ function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: 
             <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
               <option>Residencial</option><option>Comercial</option>
             </select>
+          </div>
+        </div>
+        <div>
+          <label className="text-sm font-semibold text-slate-700">Dias de Serviço Recorrente</label>
+          <p className="text-xs text-slate-500">Selecione um ou mais dias da semana</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {WEEKDAYS.map((d) => {
+              const active = form.service_days.includes(d.v);
+              return (
+                <button
+                  type="button"
+                  key={d.v}
+                  onClick={() => toggleDay(d.v)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${active ? "border-[var(--brand-blue)] bg-[var(--brand-blue)] text-white" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-2">
