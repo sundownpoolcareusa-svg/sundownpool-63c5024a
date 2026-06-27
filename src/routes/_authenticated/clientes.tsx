@@ -185,7 +185,8 @@ const WEEKDAYS = [
 ];
 
 function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", city: "", client_type: "Residencial", service_days: [] as string[] });
+  const empty = { name: "", email: "", phone: "", address: "", city: "", state: "", zip: "", client_type: "Residencial", service_days: [] as string[] };
+  const [form, setForm] = useState(empty);
 
   const toggleDay = (d: string) =>
     setForm((f) => ({ ...f, service_days: f.service_days.includes(d) ? f.service_days.filter((x) => x !== d) : [...f.service_days, d] }));
@@ -199,7 +200,7 @@ function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: 
     },
     onSuccess: () => {
       toast.success("Cliente criado!");
-      setForm({ name: "", email: "", phone: "", address: "", city: "", client_type: "Residencial", service_days: [] });
+      setForm(empty);
       onCreated();
       onClose();
     },
@@ -220,16 +221,18 @@ function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: 
         <AddressAutocomplete
           value={form.address}
           onChange={(v) => setForm((f) => ({ ...f, address: v }))}
-          onSelectPlace={(p) => setForm((f) => ({ ...f, address: p.address, city: p.city || f.city }))}
+          onSelectPlace={(p) => setForm((f) => ({ ...f, address: p.address, city: p.city || f.city, state: p.state || f.state, zip: p.zip || f.zip }))}
         />
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Cidade/Estado" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
-          <div>
-            <label className="text-sm font-semibold text-slate-700">Tipo</label>
-            <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
-              <option>Residencial</option><option>Comercial</option>
-            </select>
-          </div>
+        <div className="grid grid-cols-3 gap-4">
+          <Field label="Cidade" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+          <Field label="Estado" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
+          <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
+        </div>
+        <div>
+          <label className="text-sm font-semibold text-slate-700">Tipo</label>
+          <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+            <option>Residencial</option><option>Comercial</option>
+          </select>
         </div>
         <div>
           <label className="text-sm font-semibold text-slate-700">Dias de Serviço Recorrente</label>

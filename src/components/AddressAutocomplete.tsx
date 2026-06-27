@@ -11,7 +11,7 @@ export function AddressAutocomplete({
 }: {
   value: string;
   onChange: (v: string) => void;
-  onSelectPlace?: (p: { address: string; city: string }) => void;
+  onSelectPlace?: (p: { address: string; city: string; state: string; zip: string }) => void;
   label?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -66,14 +66,20 @@ export function AddressAutocomplete({
     try {
       const place = new placesRef.current.Place({ id: s.placeId });
       await place.fetchFields({ fields: ["formattedAddress", "addressComponents"] });
-      const address = place.formattedAddress || s.text;
       const comps = place.addressComponents || [];
-      const city = comps.find((c: any) => c.types?.includes("locality"))?.longText
-        || comps.find((c: any) => c.types?.includes("administrative_area_level_2"))?.longText
-        || "";
-      const state = comps.find((c: any) => c.types?.includes("administrative_area_level_1"))?.shortText || "";
+      const get = (type: string, short = false) => {
+        const c = comps.find((c: any) => c.types?.includes(type));
+        return (short ? c?.shortText : c?.longText) || "";
+      };
+      const streetNumber = get("street_number");
+      const route = get("route");
+      const street = [streetNumber, route].filter(Boolean).join(" ");
+      const city = get("locality") || get("postal_town") || get("administrative_area_level_2");
+      const state = get("administrative_area_level_1", true);
+      const zip = get("postal_code");
+      const address = street || (place.formattedAddress || s.text).split(",")[0];
       onChange(address);
-      onSelectPlace?.({ address, city: [city, state].filter(Boolean).join(", ") });
+      onSelectPlace?.({ address, city, state, zip });
       sessionRef.current = new placesRef.current.AutocompleteSessionToken();
     } catch {
       onChange(s.text);
