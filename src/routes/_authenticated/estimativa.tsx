@@ -1,34 +1,26 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
+import { Modal } from "@/components/Modal";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Mail, Download, MoreHorizontal, User, MapPin,
-  Wrench, Grid3x3, Trash2, FlaskConical, Droplet, CheckCircle2, Pencil,
-  ListChecks, CalendarDays, Clock, ShieldCheck, Phone,
+  Wrench, ListChecks, CalendarDays, Clock, ShieldCheck, Phone, CheckCircle2, Pencil, Trash2,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
+import { listEstimates, listClients, nextNumber, fmt, fmtDate, type Estimate } from "@/lib/db";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/estimativa")({
   component: EstimativaPage,
 });
 
 const tabs = ["Todas", "Pendentes", "Enviadas", "Aprovadas", "Expiradas"];
-
-const estimates = [
-  { id: "EST-2025-031", client: "John Smith",     svc: "Limpeza e Manutenção da Piscina", date: "26 de Jun, 2025", amount: "$725.00", status: "PENDENTE", active: true },
-  { id: "EST-2025-030", client: "Maria Oliveira", svc: "Reparo de Bomba",                  date: "24 de Jun, 2025", amount: "$560.00", status: "APROVADA" },
-  { id: "EST-2025-029", client: "Robert Johnson", svc: "Troca de Filtro",                   date: "23 de Jun, 2025", amount: "$450.00", status: "ENVIADA" },
-  { id: "EST-2025-028", client: "Lisa Anderson",  svc: "Limpeza Completa + Químicos",       date: "20 de Jun, 2025", amount: "$380.00", status: "PENDENTE" },
-  { id: "EST-2025-027", client: "Carlos Mendes",  svc: "Inspeção + Reparo",                 date: "18 de Jun, 2025", amount: "$310.00", status: "EXPIRADA" },
-];
-
-const services = [
-  { icon: Wrench,        name: "Limpeza da Piscina",   desc: "Aspiração, escovação das paredes e linha d'água", qty: 1, unit: "$100.00", total: "$100.00" },
-  { icon: Wrench,        name: "Reparo de Equipamento", desc: "Reparo da bomba da piscina",                      qty: 1, unit: "$250.00", total: "$250.00" },
-  { icon: Grid3x3,       name: "Limpeza de Azulejo",   desc: "Limpeza da linha de azulejos e bordas",            qty: 1, unit: "$120.00", total: "$120.00" },
-  { icon: Trash2,        name: "Troca do Filtro",      desc: "Substituição do cartucho do filtro",               qty: 1, unit: "$200.00", total: "$200.00" },
-  { icon: FlaskConical,  name: "Balanceamento Químico", desc: "Ajuste e balanceamento dos produtos químicos",    qty: 1, unit: "$80.00",  total: "$80.00" },
-];
+const tabStatus: Record<string, string | null> = {
+  Todas: null, Pendentes: "PENDENTE", Enviadas: "ENVIADA", Aprovadas: "APROVADA", Expiradas: "EXPIRADA",
+};
 
 function statusBadge(s: string) {
   const map: Record<string, string> = {
@@ -41,6 +33,30 @@ function statusBadge(s: string) {
 }
 
 function EstimativaPage() {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState("Todas");
+  const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates });
+
+  const filtered = estimates.filter((e) => {
+    const want = tabStatus[tab];
+    if (want && e.status !== want) return false;
+    if (search && !e.number.toLowerCase().includes(search.toLowerCase()) && !e.client?.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+  const selected = estimates.find((e) => e.id === selectedId) ?? filtered[0] ?? null;
+
+  const approve = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("estimates").update({ status: "APROVADA" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Estimativa aprovada!"); qc.invalidateQueries({ queryKey: ["estimates"] }); },
+  });
+
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader />
@@ -49,191 +65,320 @@ function EstimativaPage() {
         <aside className="col-span-3 space-y-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-extrabold text-slate-900">Estimativas</h1>
-            <button className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow">
+            <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow">
               <Plus className="h-4 w-4" /> Nova Estimativa
             </button>
           </div>
           <div className="flex gap-4 border-b text-sm">
-            {tabs.map((t, i) => (
-              <button key={t} className={`pb-2 ${i === 0 ? "border-b-2 border-[var(--brand-blue)] text-[var(--brand-blue)] font-semibold" : "text-slate-500"}`}>{t}</button>
+            {tabs.map((t) => (
+              <button key={t} onClick={() => setTab(t)} className={`pb-2 ${tab === t ? "border-b-2 border-[var(--brand-blue)] text-[var(--brand-blue)] font-semibold" : "text-slate-500"}`}>{t}</button>
             ))}
           </div>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input placeholder="Buscar estimativas..." className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar estimativas..." className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm" />
             </div>
             <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white text-[var(--brand-blue)]"><Filter className="h-4 w-4" /></button>
           </div>
-          <div className="space-y-3">
-            {estimates.map((e) => (
-              <div key={e.id} className={`rounded-lg border p-4 ${e.active ? "border-[var(--brand-blue)]/40 bg-sky-50/60" : "border-slate-200 bg-white"}`}>
-                <div className="flex items-start justify-between">
-                  <div className="font-bold text-[var(--brand-blue)]">{e.id}</div>
-                  {statusBadge(e.status)}
-                </div>
-                <div className="mt-1 text-sm text-slate-700">{e.client}</div>
-                <div className="text-xs text-slate-500">{e.svc}</div>
-                <div className="mt-2 flex items-end justify-between">
-                  <div className="text-xs text-slate-500">{e.date}</div>
-                  <div className="font-bold text-slate-900">{e.amount}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700">
-            <FileText className="h-4 w-4" /> Ver todas as estimativas
-          </button>
+          {filtered.length === 0 ? (
+            <div className="rounded-lg border-2 border-dashed border-slate-200 py-10 text-center">
+              <FileText className="mx-auto h-8 w-8 text-slate-300" />
+              <p className="mt-2 text-sm text-slate-500">Nenhuma estimativa</p>
+              <p className="text-xs text-slate-400">Clique em "Nova Estimativa".</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filtered.map((e) => (
+                <button key={e.id} onClick={() => setSelectedId(e.id)} className={`block w-full rounded-lg border p-4 text-left ${selected?.id === e.id ? "border-[var(--brand-blue)]/40 bg-sky-50/60" : "border-slate-200 bg-white"}`}>
+                  <div className="flex items-start justify-between">
+                    <div className="font-bold text-[var(--brand-blue)]">{e.number}</div>
+                    {statusBadge(e.status)}
+                  </div>
+                  <div className="mt-1 text-sm text-slate-700">{e.client?.name}</div>
+                  <div className="text-xs text-slate-500">{e.title || "—"}</div>
+                  <div className="mt-2 flex items-end justify-between">
+                    <div className="text-xs text-slate-500">{fmtDate(e.estimate_date)}</div>
+                    <div className="font-bold text-slate-900">{fmt(e.total)}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </aside>
 
         {/* CENTER */}
         <section className="col-span-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-extrabold text-slate-900">Estimativa #EST-2025-031</h2>
-              <span className="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">PENDENTE</span>
+          {selected ? (
+            <EstimateDetail estimate={selected} />
+          ) : (
+            <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-16 text-center">
+              <FileText className="mx-auto h-12 w-12 text-slate-300" />
+              <p className="mt-4 text-lg font-semibold text-slate-700">Nenhuma estimativa</p>
+              <p className="mt-1 text-sm text-slate-500">Crie sua primeira estimativa.</p>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium">
-                <Mail className="h-4 w-4 text-[var(--brand-blue)]" /> Enviar
-              </button>
-              <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium">
-                <Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF
-              </button>
-              <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-            <DocCardHeader title="ESTIMATIVA" number="EST-2025-031" />
-            <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
-              <div className="space-y-1 text-slate-700">
-                <div>123 Blue Water Way</div>
-                <div>Orlando, FL 32801</div>
-                <div>(407) 555-1234</div>
-                <div>hello@aquaclearpools.com</div>
-              </div>
-              <div className="space-y-1 text-right text-slate-700">
-                <div><span className="font-semibold text-slate-900">Data da Estimativa:</span> 26 de Jun, 2025</div>
-                <div><span className="font-semibold text-slate-900">Válida até:</span> 10 de Jul, 2025</div>
-              </div>
-            </div>
-
-            <hr className="my-6 border-slate-100" />
-
-            <div className="grid grid-cols-2 gap-6 text-sm">
-              <div>
-                <div className="flex items-center gap-2 font-bold text-slate-900"><User className="h-4 w-4" /> Cliente</div>
-                <div className="mt-2 space-y-0.5 text-slate-700">
-                  <div>John Smith</div>
-                  <div>(407) 555-1234</div>
-                  <div>john.smith@email.com</div>
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 font-bold text-slate-900"><MapPin className="h-4 w-4" /> Endereço do Serviço</div>
-                <div className="mt-2 space-y-0.5 text-slate-700">
-                  <div>123 Lakeview Dr</div>
-                  <div>Orlando, FL 32801</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <div className="mb-2 font-bold text-slate-900">Serviços Solicitados</div>
-              <div className="overflow-hidden rounded-lg border border-slate-200">
-                <table className="w-full text-sm">
-                  <thead className="bg-[var(--brand-blue)] text-white">
-                    <tr>
-                      <th className="px-4 py-2.5 text-left text-xs font-bold tracking-wide">SERVIÇO</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-bold tracking-wide">DESCRIÇÃO</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-bold tracking-wide">QTD</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-bold tracking-wide">VALOR UNIT.</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-bold tracking-wide">TOTAL</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {services.map((s) => (
-                      <tr key={s.name} className="border-t border-slate-100 align-top">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2 font-semibold text-slate-900">
-                            <s.icon className="h-4 w-4 text-[var(--brand-blue)]" /> {s.name}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-slate-700">{s.desc}</td>
-                        <td className="px-4 py-3 text-slate-700">{s.qty}</td>
-                        <td className="px-4 py-3 text-right text-slate-700">{s.unit}</td>
-                        <td className="px-4 py-3 text-right text-slate-700">{s.total}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-6">
-              <div>
-                <div className="font-bold text-slate-900">Observações</div>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
-                  <li>Os valores podem sofrer alteração após inspeção técnica.</li>
-                  <li>Recomendado manter a piscina limpa regularmente para melhor durabilidade dos equipamentos.</li>
-                </ul>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>$750.00</span></div>
-                <div className="flex justify-between text-slate-700"><span>Desconto</span><span className="text-green-600">-$25.00</span></div>
-                <div className="mt-2 flex items-center justify-between border-t pt-2">
-                  <span className="text-base font-bold text-slate-900">Total</span>
-                  <span className="text-2xl font-extrabold text-[var(--brand-blue)]">$725.00</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </section>
 
         {/* RIGHT */}
         <aside className="col-span-3 space-y-4">
-          <h3 className="text-lg font-extrabold text-slate-900">Resumo da Estimativa</h3>
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <img src={poolImg} alt="Piscina" className="h-44 w-full object-cover" width={1024} height={640} loading="lazy" />
-            <div className="space-y-3 p-4 text-sm">
-              {[
-                { icon: ListChecks, label: "Serviços", value: "5 itens" },
-                { icon: CalendarDays, label: "Válida até", value: "10 de Jul, 2025" },
-                { icon: Clock, label: "Tempo estimado", value: "3 a 4 horas" },
-                { icon: ShieldCheck, label: "Garantia do serviço", value: "30 dias" },
-              ].map((r) => (
-                <div key={r.label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <r.icon className="h-4 w-4 text-[var(--brand-blue)]" /> {r.label}
-                  </div>
-                  <span className="font-semibold text-slate-900">{r.value}</span>
+          {selected && (
+            <>
+              <h3 className="text-lg font-extrabold text-slate-900">Resumo da Estimativa</h3>
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <img src={poolImg} alt="Piscina" className="h-44 w-full object-cover" width={1024} height={640} loading="lazy" />
+                <div className="space-y-3 p-4 text-sm">
+                  <Row icon={ListChecks} label="Serviços" value={`${(selected.estimate_items ?? []).length} itens`} />
+                  <Row icon={CalendarDays} label="Válida até" value={fmtDate(selected.valid_until)} />
+                  <Row icon={Clock} label="Tempo estimado" value="A combinar" />
+                  <Row icon={ShieldCheck} label="Garantia" value="30 dias" />
+                </div>
+              </div>
+              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
+                <div className="font-bold text-[var(--brand-blue)]">Próximos Passos</div>
+                <p className="mt-1 text-sm text-slate-700">Aprove a estimativa para gerar a fatura.</p>
+                <button disabled={selected.status === "APROVADA" || approve.isPending} onClick={() => approve.mutate(selected.id)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-green-500 py-2.5 text-sm font-semibold text-white hover:bg-green-600 disabled:opacity-50">
+                  <CheckCircle2 className="h-4 w-4" /> {selected.status === "APROVADA" ? "Aprovada" : "Aprovar Estimativa"}
+                </button>
+                {selected.status === "APROVADA" && (
+                  <Link to="/invoice" className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-semibold text-[var(--brand-blue)]">
+                    Gerar Fatura →
+                  </Link>
+                )}
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="font-bold text-slate-900">Dúvidas?</div>
+                <p className="text-sm text-slate-600">Estamos aqui para ajudar!</p>
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-slate-700"><Phone className="h-4 w-4 text-[var(--brand-blue)]" /> (407) 555-1234</div>
+                  <div className="flex items-center gap-2 text-slate-700"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> hello@aquaclearpools.com</div>
+                </div>
+              </div>
+            </>
+          )}
+        </aside>
+      </main>
+
+      <NewEstimateModal open={open} onClose={() => setOpen(false)} onCreated={() => qc.invalidateQueries({ queryKey: ["estimates"] })} />
+    </div>
+  );
+}
+
+function Row({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 text-slate-700"><Icon className="h-4 w-4 text-[var(--brand-blue)]" /> {label}</div>
+      <span className="font-semibold text-slate-900">{value}</span>
+    </div>
+  );
+}
+
+function EstimateDetail({ estimate }: { estimate: Estimate }) {
+  const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.position - b.position);
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-extrabold text-slate-900">Estimativa #{estimate.number}</h2>
+          {statusBadge(estimate.status)}
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> Enviar</button>
+          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF</button>
+          <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
+        </div>
+      </div>
+      <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+        <DocCardHeader title="ESTIMATIVA" number={estimate.number} />
+        <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
+          <div className="space-y-1 text-slate-700">
+            <div>123 Blue Water Way</div>
+            <div>Orlando, FL 32801</div>
+            <div>(407) 555-1234</div>
+            <div>hello@aquaclearpools.com</div>
+          </div>
+          <div className="space-y-1 text-right text-slate-700">
+            <div><span className="font-semibold text-slate-900">Data:</span> {fmtDate(estimate.estimate_date)}</div>
+            <div><span className="font-semibold text-slate-900">Válida até:</span> {fmtDate(estimate.valid_until)}</div>
+          </div>
+        </div>
+        <hr className="my-6 border-slate-100" />
+        <div className="grid grid-cols-2 gap-6 text-sm">
+          <div>
+            <div className="flex items-center gap-2 font-bold text-slate-900"><User className="h-4 w-4" /> Cliente</div>
+            <div className="mt-2 space-y-0.5 text-slate-700">
+              <div>{estimate.client?.name}</div>
+              {estimate.client?.phone && <div>{estimate.client.phone}</div>}
+              {estimate.client?.email && <div>{estimate.client.email}</div>}
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2 font-bold text-slate-900"><MapPin className="h-4 w-4" /> Endereço do Serviço</div>
+            <div className="mt-2 space-y-0.5 text-slate-700">
+              <div>{estimate.client?.address || "—"}</div>
+              <div>{estimate.client?.city || ""}</div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6">
+          <div className="mb-2 font-bold text-slate-900">Serviços Solicitados</div>
+          <div className="overflow-hidden rounded-lg border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-[var(--brand-blue)] text-white">
+                <tr>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold">SERVIÇO</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold">DESCRIÇÃO</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold">QTD</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-bold">VALOR UNIT.</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-bold">TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((s, i) => (
+                  <tr key={i} className="border-t border-slate-100 align-top">
+                    <td className="px-4 py-3 font-semibold text-slate-900"><div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--brand-blue)]" /> {s.name}</div></td>
+                    <td className="px-4 py-3 text-slate-700">{s.description}</td>
+                    <td className="px-4 py-3 text-slate-700">{s.qty}</td>
+                    <td className="px-4 py-3 text-right text-slate-700">{fmt(Number(s.unit_price))}</td>
+                    <td className="px-4 py-3 text-right text-slate-700">{fmt(Number(s.total))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="mt-6 grid grid-cols-2 gap-6">
+          <div>
+            <div className="font-bold text-slate-900">Observações</div>
+            <p className="mt-2 text-sm text-slate-700 whitespace-pre-line">{estimate.notes || "—"}</p>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(estimate.subtotal)}</span></div>
+            <div className="flex justify-between text-slate-700"><span>Desconto</span><span className="text-green-600">-{fmt(estimate.discount)}</span></div>
+            <div className="mt-2 flex items-center justify-between border-t pt-2">
+              <span className="text-base font-bold text-slate-900">Total</span>
+              <span className="text-2xl font-extrabold text-[var(--brand-blue)]">{fmt(estimate.total)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+type ItemRow = { name: string; description: string; qty: number; unit_price: number };
+
+function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: listClients, enabled: open });
+  const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates, enabled: open });
+
+  const [clientId, setClientId] = useState("");
+  const [title, setTitle] = useState("Limpeza e Manutenção da Piscina");
+  const [validUntil, setValidUntil] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [notes, setNotes] = useState("Os valores podem sofrer alteração após inspeção técnica.");
+  const [items, setItems] = useState<ItemRow[]>([
+    { name: "Limpeza da Piscina", description: "Aspiração e escovação", qty: 1, unit_price: 100 },
+  ]);
+
+  const subtotal = useMemo(() => items.reduce((s, i) => s + i.qty * i.unit_price, 0), [items]);
+  const total = Math.max(0, subtotal - discount);
+
+  const mut = useMutation({
+    mutationFn: async () => {
+      if (!clientId) throw new Error("Selecione um cliente");
+      if (items.length === 0) throw new Error("Adicione ao menos um item");
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Não autenticado");
+      const number = nextNumber("EST", estimates.map((e) => e.number));
+      const { data: est, error } = await supabase.from("estimates").insert({
+        user_id: u.user.id, client_id: clientId, number, title,
+        valid_until: validUntil || null, status: "PENDENTE",
+        subtotal, discount, total, notes,
+      }).select().single();
+      if (error) throw error;
+      const rows = items.map((it, idx) => ({
+        estimate_id: est.id, name: it.name, description: it.description,
+        qty: it.qty, unit_price: it.unit_price, total: it.qty * it.unit_price, position: idx,
+      }));
+      const { error: e2 } = await supabase.from("estimate_items").insert(rows);
+      if (e2) throw e2;
+    },
+    onSuccess: () => {
+      toast.success("Estimativa criada!");
+      setClientId(""); setItems([{ name: "Limpeza da Piscina", description: "Aspiração e escovação", qty: 1, unit_price: 100 }]);
+      setDiscount(0);
+      onCreated(); onClose();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Modal open={open} onClose={onClose} title="Nova Estimativa" maxWidth="max-w-3xl">
+      {clients.length === 0 ? (
+        <div className="py-8 text-center">
+          <p className="text-slate-600">Você precisa criar um cliente primeiro.</p>
+          <Link to="/clientes" onClick={onClose} className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Ir para Clientes →</Link>
+        </div>
+      ) : (
+        <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-semibold text-slate-700">Cliente *</label>
+              <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+                <option value="">Selecione...</option>
+                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-slate-700">Válida até</label>
+              <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Título</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-semibold text-slate-700">Serviços</label>
+              <button type="button" onClick={() => setItems([...items, { name: "", description: "", qty: 1, unit_price: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Adicionar item</button>
+            </div>
+            <div className="space-y-2">
+              {items.map((it, idx) => (
+                <div key={idx} className="grid grid-cols-12 gap-2">
+                  <input className="col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Serviço" value={it.name} onChange={(e) => { const n = [...items]; n[idx].name = e.target.value; setItems(n); }} />
+                  <input className="col-span-5 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Descrição" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                  <input className="col-span-1 rounded-md border border-slate-200 px-2 py-2 text-sm" type="number" step="0.01" placeholder="Qtd" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
+                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Valor" value={it.unit_price} onChange={(e) => { const n = [...items]; n[idx].unit_price = Number(e.target.value); setItems(n); }} />
+                  <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-md border border-slate-200 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
-            <div className="font-bold text-[var(--brand-blue)]">Próximos Passos</div>
-            <p className="mt-1 text-sm text-slate-700">Após sua aprovação, nossa equipe entrará em contato para agendar o melhor dia e horário para o serviço.</p>
-            <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-green-500 py-2.5 text-sm font-semibold text-white hover:bg-green-600">
-              <CheckCircle2 className="h-4 w-4" /> Aprovar Estimativa
-            </button>
-            <button className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700">
-              <Pencil className="h-4 w-4" /> Solicitar Alterações
-            </button>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Observações</label>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <div className="font-bold text-slate-900">Dúvidas?</div>
-            <p className="text-sm text-slate-600">Estamos aqui para ajudar!</p>
-            <div className="mt-3 space-y-2 text-sm">
-              <div className="flex items-center gap-2 text-slate-700"><Phone className="h-4 w-4 text-[var(--brand-blue)]" /> (407) 555-1234</div>
-              <div className="flex items-center gap-2 text-slate-700"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> hello@aquaclearpools.com</div>
+          <div className="flex justify-end">
+            <div className="w-72 space-y-1.5 text-sm">
+              <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
+              <div className="flex items-center justify-between text-slate-700"><span>Desconto</span><input type="number" step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-24 rounded-md border border-slate-200 px-2 py-1 text-right text-sm" /></div>
+              <div className="flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="text-[var(--brand-blue)]">{fmt(total)}</span></div>
             </div>
           </div>
-        </aside>
-      </main>
-    </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancelar</button>
+            <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+              {mut.isPending ? "Salvando..." : "Criar Estimativa"}
+            </button>
+          </div>
+        </form>
+      )}
+    </Modal>
   );
 }
