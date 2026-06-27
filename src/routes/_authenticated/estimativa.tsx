@@ -55,7 +55,7 @@ function EstimativaPage() {
       const { error } = await supabase.from("estimates").update({ status: "APROVADA" }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Estimativa aprovada!"); qc.invalidateQueries({ queryKey: ["estimates"] }); },
+    onSuccess: () => { toast.success("Estimate approved!"); qc.invalidateQueries({ queryKey: ["estimates"] }); },
   });
 
   return (
@@ -65,9 +65,9 @@ function EstimativaPage() {
         {/* LEFT */}
         <aside className="col-span-3 space-y-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-extrabold text-slate-900">Estimativas</h1>
+            <h1 className="text-2xl font-extrabold text-slate-900">Estimates</h1>
             <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow">
-              <Plus className="h-4 w-4" /> Nova Estimativa
+              <Plus className="h-4 w-4" /> New Estimate
             </button>
           </div>
           <div className="flex gap-4 border-b text-sm">
@@ -85,8 +85,8 @@ function EstimativaPage() {
           {filtered.length === 0 ? (
             <div className="rounded-lg border-2 border-dashed border-slate-200 py-10 text-center">
               <FileText className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-2 text-sm text-slate-500">Nenhuma estimativa</p>
-              <p className="text-xs text-slate-400">Clique em "Nova Estimativa".</p>
+              <p className="mt-2 text-sm text-slate-500">No estimates</p>
+              <p className="text-xs text-slate-400">Clique em "New Estimate".</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -115,8 +115,8 @@ function EstimativaPage() {
           ) : (
             <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-16 text-center">
               <FileText className="mx-auto h-12 w-12 text-slate-300" />
-              <p className="mt-4 text-lg font-semibold text-slate-700">Nenhuma estimativa</p>
-              <p className="mt-1 text-sm text-slate-500">Crie sua primeira estimativa.</p>
+              <p className="mt-4 text-lg font-semibold text-slate-700">No estimates</p>
+              <p className="mt-1 text-sm text-slate-500">Create your first estimate.</p>
             </div>
           )}
         </section>
@@ -125,34 +125,34 @@ function EstimativaPage() {
         <aside className="col-span-3 space-y-4">
           {selected && (
             <>
-              <h3 className="text-lg font-extrabold text-slate-900">Resumo da Estimativa</h3>
+              <h3 className="text-lg font-extrabold text-slate-900">Estimate Summary</h3>
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                 <img src={poolImg} alt="Piscina" className="h-44 w-full object-cover" width={1024} height={640} loading="lazy" />
                 <div className="space-y-3 p-4 text-sm">
-                  <Row icon={ListChecks} label="Serviços" value={`${(selected.estimate_items ?? []).length} itens`} />
-                  <Row icon={CalendarDays} label="Válida até" value={fmtDate(selected.valid_until)} />
-                  <Row icon={Clock} label="Tempo estimado" value="A combinar" />
-                  <Row icon={ShieldCheck} label="Garantia" value="30 dias" />
+                  <Row icon={ListChecks} label="Services" value={`${(selected.estimate_items ?? []).length} items`} />
+                  <Row icon={CalendarDays} label="Valid until" value={fmtDate(selected.valid_until)} />
+                  <Row icon={Clock} label="Estimated time" value="To be agreed" />
+                  <Row icon={ShieldCheck} label="Warranty" value="30 days" />
                 </div>
               </div>
               <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
-                <div className="font-bold text-[var(--brand-blue)]">Próximos Passos</div>
-                <p className="mt-1 text-sm text-slate-700">Aprove a estimativa para gerar a fatura.</p>
+                <div className="font-bold text-[var(--brand-blue)]">Next Steps</div>
+                <p className="mt-1 text-sm text-slate-700">Approve the estimate to generate the invoice.</p>
                 <button disabled={selected.status === "APROVADA" || approve.isPending} onClick={() => approve.mutate(selected.id)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-green-500 py-2.5 text-sm font-semibold text-white hover:bg-green-600 disabled:opacity-50">
-                  <CheckCircle2 className="h-4 w-4" /> {selected.status === "APROVADA" ? "Aprovada" : "Aprovar Estimativa"}
+                  <CheckCircle2 className="h-4 w-4" /> {selected.status === "APROVADA" ? "Approved" : "Approve Estimate"}
                 </button>
                 {selected.status === "APROVADA" && (
                   <Link to="/invoice" className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-semibold text-[var(--brand-blue)]">
-                    Gerar Fatura →
+                    Generate Invoice →
                   </Link>
                 )}
               </div>
               <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <div className="font-bold text-slate-900">Dúvidas?</div>
-                <p className="text-sm text-slate-600">Estamos aqui para ajudar!</p>
+                <div className="font-bold text-slate-900">Questions?</div>
+                <p className="text-sm text-slate-600">We are here to help!</p>
                 <div className="mt-3 space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-slate-700"><Phone className="h-4 w-4 text-[var(--brand-blue)]" /> (407) 555-1234</div>
-                  <div className="flex items-center gap-2 text-slate-700"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> hello@aquaclearpools.com</div>
+                  <div className="flex items-center gap-2 text-slate-700"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> hello@sundownpoolservice.com</div>
                 </div>
               </div>
             </>
@@ -180,7 +180,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
     <>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-extrabold text-slate-900">Estimativa #{estimate.number}</h2>
+          <h2 className="text-xl font-extrabold text-slate-900">Estimate #{estimate.number}</h2>
           {statusBadge(estimate.status)}
         </div>
         <div className="flex items-center gap-2">
@@ -193,20 +193,20 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
         <DocCardHeader title="ESTIMATIVA" number={estimate.number} />
         <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
           <div className="space-y-1 text-slate-700">
-            <div>123 Blue Water Way</div>
-            <div>Orlando, FL 32801</div>
+            <div>4008 Destination Dr #2208</div>
+            <div>Osprey, FL 34229</div>
             <div>(407) 555-1234</div>
-            <div>hello@aquaclearpools.com</div>
+            <div>hello@sundownpoolservice.com</div>
           </div>
           <div className="space-y-1 text-right text-slate-700">
             <div><span className="font-semibold text-slate-900">Data:</span> {fmtDate(estimate.estimate_date)}</div>
-            <div><span className="font-semibold text-slate-900">Válida até:</span> {fmtDate(estimate.valid_until)}</div>
+            <div><span className="font-semibold text-slate-900">Valid until:</span> {fmtDate(estimate.valid_until)}</div>
           </div>
         </div>
         <hr className="my-6 border-slate-100" />
         <div className="grid grid-cols-2 gap-6 text-sm">
           <div>
-            <div className="flex items-center gap-2 font-bold text-slate-900"><User className="h-4 w-4" /> Cliente</div>
+            <div className="flex items-center gap-2 font-bold text-slate-900"><User className="h-4 w-4" /> Client</div>
             <div className="mt-2 space-y-0.5 text-slate-700">
               <div>{estimate.client?.name}</div>
               {estimate.client?.phone && <div>{estimate.client.phone}</div>}
@@ -214,7 +214,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
             </div>
           </div>
           <div>
-            <div className="flex items-center gap-2 font-bold text-slate-900"><MapPin className="h-4 w-4" /> Endereço do Serviço</div>
+            <div className="flex items-center gap-2 font-bold text-slate-900"><MapPin className="h-4 w-4" /> Service Address</div>
             <div className="mt-2 space-y-0.5 text-slate-700">
               <div>{estimate.client?.address || "—"}</div>
               <div>{estimate.client?.city || ""}</div>
@@ -222,15 +222,15 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
           </div>
         </div>
         <div className="mt-6">
-          <div className="mb-2 font-bold text-slate-900">Serviços Solicitados</div>
+          <div className="mb-2 font-bold text-slate-900">Requested Services</div>
           <div className="overflow-hidden rounded-lg border border-slate-200">
             <table className="w-full text-sm">
               <thead className="bg-[var(--brand-blue)] text-white">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">SERVIÇO</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">DESCRIÇÃO</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold">SERVICE</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold">DESCRIPTION</th>
                   <th className="px-4 py-2.5 text-left text-xs font-bold">QTD</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold">VALOR UNIT.</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-bold">UNIT PRICE</th>
                   <th className="px-4 py-2.5 text-right text-xs font-bold">TOTAL</th>
                 </tr>
               </thead>
@@ -250,12 +250,12 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
         </div>
         <div className="mt-6 grid grid-cols-2 gap-6">
           <div>
-            <div className="font-bold text-slate-900">Observações</div>
+            <div className="font-bold text-slate-900">Notes</div>
             <p className="mt-2 text-sm text-slate-700 whitespace-pre-line">{estimate.notes || "—"}</p>
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(estimate.subtotal)}</span></div>
-            <div className="flex justify-between text-slate-700"><span>Desconto</span><span className="text-green-600">-{fmt(estimate.discount)}</span></div>
+            <div className="flex justify-between text-slate-700"><span>Discount</span><span className="text-green-600">-{fmt(estimate.discount)}</span></div>
             <div className="mt-2 flex items-center justify-between border-t pt-2">
               <span className="text-base font-bold text-slate-900">Total</span>
               <span className="text-2xl font-extrabold text-[var(--brand-blue)]">{fmt(estimate.total)}</span>
@@ -277,7 +277,7 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
   const [title, setTitle] = useState("Limpeza e Manutenção da Piscina");
   const [validUntil, setValidUntil] = useState("");
   const [discount, setDiscount] = useState(0);
-  const [notes, setNotes] = useState("Os valores podem sofrer alteração após inspeção técnica.");
+  const [notes, setNotes] = useState("Prices may change after on-site inspection.");
   const [items, setItems] = useState<ItemRow[]>([
     { name: "Limpeza da Piscina", description: "Aspiração e escovação", qty: 1, unit_price: 100 },
   ]);
@@ -287,8 +287,8 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
 
   const mut = useMutation({
     mutationFn: async () => {
-      if (!clientId) throw new Error("Selecione um cliente");
-      if (items.length === 0) throw new Error("Adicione ao menos um item");
+      if (!clientId) throw new Error("Select a client");
+      if (items.length === 0) throw new Error("Add at least one item");
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Não autenticado");
       const number = nextNumber("EST", estimates.map((e) => e.number));
@@ -306,7 +306,7 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
       if (e2) throw e2;
     },
     onSuccess: () => {
-      toast.success("Estimativa criada!");
+      toast.success("Estimate created!");
       setClientId(""); setItems([{ name: "Limpeza da Piscina", description: "Aspiração e escovação", qty: 1, unit_price: 100 }]);
       setDiscount(0);
       onCreated(); onClose();
@@ -315,24 +315,24 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
   });
 
   return (
-    <Modal open={open} onClose={onClose} title="Nova Estimativa" maxWidth="max-w-3xl">
+    <Modal open={open} onClose={onClose} title="New Estimate" maxWidth="max-w-3xl">
       {clients.length === 0 ? (
         <div className="py-8 text-center">
           <p className="text-slate-600">Você precisa criar um cliente primeiro.</p>
-          <Link to="/clientes" onClick={onClose} className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Ir para Clientes →</Link>
+          <Link to="/clientes" onClick={onClose} className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Go to Clients →</Link>
         </div>
       ) : (
         <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-semibold text-slate-700">Cliente *</label>
+              <label className="text-sm font-semibold text-slate-700">Client *</label>
               <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
-                <option value="">Selecione...</option>
+                <option value="">Select...</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-sm font-semibold text-slate-700">Válida até</label>
+              <label className="text-sm font-semibold text-slate-700">Valid until</label>
               <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
             </div>
           </div>
@@ -343,16 +343,16 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-700">Serviços</label>
-              <button type="button" onClick={() => setItems([...items, { name: "", description: "", qty: 1, unit_price: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Adicionar item</button>
+              <label className="text-sm font-semibold text-slate-700">Services</label>
+              <button type="button" onClick={() => setItems([...items, { name: "", description: "", qty: 1, unit_price: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Add item</button>
             </div>
             <div className="space-y-2">
               {items.map((it, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2">
-                  <input className="col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Serviço" value={it.name} onChange={(e) => { const n = [...items]; n[idx].name = e.target.value; setItems(n); }} />
-                  <input className="col-span-5 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Descrição" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
-                  <input className="col-span-1 rounded-md border border-slate-200 px-2 py-2 text-sm" type="number" step="0.01" placeholder="Qtd" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
-                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Valor" value={it.unit_price} onChange={(e) => { const n = [...items]; n[idx].unit_price = Number(e.target.value); setItems(n); }} />
+                  <input className="col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Service" value={it.name} onChange={(e) => { const n = [...items]; n[idx].name = e.target.value; setItems(n); }} />
+                  <input className="col-span-5 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                  <input className="col-span-1 rounded-md border border-slate-200 px-2 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
+                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Price" value={it.unit_price} onChange={(e) => { const n = [...items]; n[idx].unit_price = Number(e.target.value); setItems(n); }} />
                   <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-md border border-slate-200 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
                 </div>
               ))}
@@ -360,22 +360,22 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-slate-700">Observações</label>
+            <label className="text-sm font-semibold text-slate-700">Notes</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
           </div>
 
           <div className="flex justify-end">
             <div className="w-72 space-y-1.5 text-sm">
               <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
-              <div className="flex items-center justify-between text-slate-700"><span>Desconto</span><input type="number" step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-24 rounded-md border border-slate-200 px-2 py-1 text-right text-sm" /></div>
+              <div className="flex items-center justify-between text-slate-700"><span>Discount</span><input type="number" step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-24 rounded-md border border-slate-200 px-2 py-1 text-right text-sm" /></div>
               <div className="flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="text-[var(--brand-blue)]">{fmt(total)}</span></div>
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancelar</button>
+            <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
             <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-              {mut.isPending ? "Salvando..." : "Criar Estimativa"}
+              {mut.isPending ? "Saving..." : "Create Estimate"}
             </button>
           </div>
         </form>
