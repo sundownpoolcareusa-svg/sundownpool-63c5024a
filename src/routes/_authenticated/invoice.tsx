@@ -5,7 +5,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { Modal } from "@/components/Modal";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import {
-  Plus, Search, Filter, FileText, Download, MoreHorizontal,
+  Plus, Search, Filter, FileText, Download, MoreHorizontal, Link2, Check, X,
   Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/invoice")({
   component: InvoicePage,
 });
 
-const tabs = ["All", "Paid", "Sent", "Overdue", "Draft"];
+const tabs = ["All", "Paid", "Unpaid"];
 
 const footerCats = [
   { icon: Droplet, title: "Pool Cleaning", text: "Regular cleaning and maintenance" },
@@ -28,13 +28,12 @@ const footerCats = [
 ];
 
 function statusBadge(s: string) {
-  const map: Record<string, string> = {
-    PAID: "bg-green-100 text-green-700",
-    SENT: "bg-sky-100 text-sky-700",
-    OVERDUE: "bg-orange-100 text-orange-700",
-    DRAFT: "bg-slate-100 text-slate-600",
-  };
-  return <span className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wide ${map[s] ?? "bg-gray-100 text-gray-700"}`}>{s}</span>;
+  const isPaid = s === "PAID";
+  return (
+    <span className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wide ${isPaid ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+      {isPaid ? "PAID" : "UNPAID"}
+    </span>
+  );
 }
 
 function InvoicePage() {
@@ -48,7 +47,8 @@ function InvoicePage() {
   const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates });
 
   const filtered = invoices.filter((inv) => {
-    if (tab !== "All" && inv.status.toLowerCase() !== tab.toLowerCase()) return false;
+    if (tab === "Paid" && inv.status !== "PAID") return false;
+    if (tab === "Unpaid" && inv.status === "PAID") return false;
     if (search && !inv.number.toLowerCase().includes(search.toLowerCase()) && !inv.client?.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -59,9 +59,9 @@ function InvoicePage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader />
-      <main className="grid grid-cols-12 gap-5 p-5">
+      <main className="grid grid-cols-12 gap-5 p-5 print:block print:p-0">
         {/* LEFT */}
-        <aside className="col-span-3 space-y-4">
+        <aside className="col-span-3 space-y-4 print:hidden">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-extrabold text-slate-900">Invoices</h1>
             <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow hover:opacity-90">
@@ -108,9 +108,9 @@ function InvoicePage() {
         </aside>
 
         {/* CENTER */}
-        <section className="col-span-6 space-y-4">
+        <section className="col-span-6 space-y-4 print:col-span-12">
           {selected ? (
-            <InvoiceDetail invoice={selected} />
+            <InvoiceDetail invoice={selected} onChanged={() => qc.invalidateQueries({ queryKey: ["invoices"] })} />
           ) : (
             <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-16 text-center">
               <FileText className="mx-auto h-12 w-12 text-slate-300" />
@@ -121,7 +121,7 @@ function InvoicePage() {
         </section>
 
         {/* RIGHT */}
-        <aside className="col-span-3 space-y-4">
+        <aside className="col-span-3 space-y-4 print:hidden">
           {pendingEstimate ? (
             <>
               <h3 className="text-lg font-extrabold text-slate-900">Estimate #{pendingEstimate.number}</h3>
@@ -154,7 +154,7 @@ function InvoicePage() {
         </aside>
       </main>
 
-      <section className="mx-5 mb-6 rounded-xl border border-slate-200 bg-white px-6 py-6">
+      <section className="mx-5 mb-6 rounded-xl border border-slate-200 bg-white px-6 py-6 print:hidden">
         <div className="grid grid-cols-5 gap-6">
           {footerCats.map((c) => (
             <div key={c.title} className="flex items-start gap-3">
@@ -173,23 +173,52 @@ function InvoicePage() {
   );
 }
 
-function InvoiceDetail({ invoice }: { invoice: Invoice }) {
+function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: () => void }) {
   const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.position - b.position);
+  const isPaid = invoice.status === "PAID";
+
+  const toggle = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("invoices").update({ status: isPaid ? "UNPAID" : "PAID" }).eq("id", invoice.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success(isPaid ? "Marked as unpaid" : "Marked as paid"); onChanged(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/i/${invoice.public_token}`;
+
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between print:hidden">
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-extrabold text-slate-900">Invoice</h2>
           {statusBadge(invoice.status)}
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium">
+          <button
+            onClick={() => toggle.mutate()}
+            disabled={toggle.isPending}
+            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-white ${isPaid ? "bg-amber-500 hover:bg-amber-600" : "bg-green-500 hover:bg-green-600"}`}
+          >
+            {isPaid ? <><X className="h-4 w-4" /> Mark Unpaid</> : <><Check className="h-4 w-4" /> Mark Paid</>}
+          </button>
+          <button
+            onClick={() => { navigator.clipboard.writeText(publicUrl); toast.success("Link copied! Share with client."); }}
+            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+          >
+            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> Copy Client Link
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+          >
             <Download className="h-4 w-4 text-[var(--brand-blue)]" /> Download PDF
           </button>
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
-      <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm print:border-0 print:shadow-none">
         <DocCardHeader title="INVOICE" number={invoice.number} />
         <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
           <div className="space-y-1 text-slate-700">
@@ -201,6 +230,7 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
           <div className="space-y-1 text-right text-slate-700">
             <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(invoice.invoice_date)}</div>
             <div><span className="font-semibold text-slate-900">Due Date:</span> {fmtDate(invoice.due_date)}</div>
+            <div><span className="font-semibold text-slate-900">Status:</span> <span className={isPaid ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>{isPaid ? "PAID" : "UNPAID"}</span></div>
           </div>
         </div>
         <hr className="my-6 border-slate-100" />
@@ -227,6 +257,7 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
           <table className="w-full text-sm">
             <thead className="bg-[var(--brand-blue)] text-white">
               <tr>
+                <th className="px-4 py-2.5 text-left text-xs font-bold tracking-wide">SERVICE</th>
                 <th className="px-4 py-2.5 text-left text-xs font-bold tracking-wide">DESCRIPTION</th>
                 <th className="px-4 py-2.5 text-left text-xs font-bold tracking-wide">QTY</th>
                 <th className="px-4 py-2.5 text-right text-xs font-bold tracking-wide">RATE</th>
@@ -235,7 +266,10 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
             </thead>
             <tbody>
               {items.map((it, i) => (
-                <tr key={i} className="border-t border-slate-100">
+                <tr key={i} className="border-t border-slate-100 align-top">
+                  <td className="px-4 py-2.5 font-semibold text-slate-900">
+                    <div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--brand-blue)]" /> {it.service || "—"}</div>
+                  </td>
                   <td className="px-4 py-2.5 text-slate-700">{it.description}</td>
                   <td className="px-4 py-2.5 text-slate-700">{it.qty}</td>
                   <td className="px-4 py-2.5 text-right text-slate-700">{fmt(it.rate)}</td>
@@ -248,8 +282,7 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
         <div className="mt-4 flex justify-end">
           <div className="w-72 space-y-2 text-sm">
             <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(invoice.subtotal)}</span></div>
-            <div className="flex justify-between text-slate-700"><span>Tax</span><span>{fmt(invoice.tax)}</span></div>
-            <div className="flex justify-between border-t pt-2 text-base"><span className="font-semibold">Total</span><span className={`font-extrabold ${invoice.status === "PAID" ? "text-green-600" : "text-slate-900"}`}>{fmt(invoice.total)}</span></div>
+            <div className="flex justify-between border-t pt-2 text-base"><span className="font-semibold">Total</span><span className={`font-extrabold ${isPaid ? "text-green-600" : "text-slate-900"}`}>{fmt(invoice.total)}</span></div>
           </div>
         </div>
       </div>
@@ -257,7 +290,7 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
   );
 }
 
-type LineRow = { description: string; qty: number; rate: number };
+type LineRow = { service: string; description: string; qty: number; rate: number };
 
 function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: listClients, enabled: open });
@@ -267,21 +300,19 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
   const [clientId, setClientId] = useState("");
   const [estimateId, setEstimateId] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [status, setStatus] = useState("SENT");
-  const [items, setItems] = useState<LineRow[]>([{ description: "Pool Cleaning – Standard", qty: 1, rate: 100 }]);
-  const [tax, setTax] = useState(0);
+  const [status, setStatus] = useState("UNPAID");
+  const [items, setItems] = useState<LineRow[]>([{ service: "Pool Cleaning", description: "Standard cleaning", qty: 1, rate: 100 }]);
 
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.qty * i.rate, 0), [items]);
-  const total = subtotal + tax;
+  const total = subtotal;
 
-  // Apply estimate if selected
   function applyEstimate(id: string) {
     setEstimateId(id);
     if (!id) return;
     const e = estimates.find((x) => x.id === id);
     if (e) {
       setClientId(e.client_id);
-      setItems((e.estimate_items ?? []).map((it) => ({ description: it.name, qty: Number(it.qty), rate: Number(it.unit_price) })));
+      setItems((e.estimate_items ?? []).map((it) => ({ service: it.name, description: it.description, qty: Number(it.qty), rate: Number(it.unit_price) })));
     }
   }
 
@@ -294,11 +325,11 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
       const number = nextNumber("INV", invoices.map((i) => i.number));
       const { data: inv, error } = await supabase.from("invoices").insert({
         user_id: u.user.id, client_id: clientId, estimate_id: estimateId || null,
-        number, due_date: dueDate || null, status, subtotal, tax, total,
+        number, due_date: dueDate || null, status, subtotal, tax: 0, total,
       }).select().single();
       if (error) throw error;
       const rows = items.map((it, idx) => ({
-        invoice_id: inv.id, description: it.description, qty: it.qty, rate: it.rate,
+        invoice_id: inv.id, service: it.service, description: it.description, qty: it.qty, rate: it.rate,
         amount: it.qty * it.rate, position: idx,
       }));
       const { error: e2 } = await supabase.from("invoice_items").insert(rows);
@@ -306,8 +337,8 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
     },
     onSuccess: () => {
       toast.success("Invoice created!");
-      setClientId(""); setEstimateId(""); setDueDate(""); setStatus("SENT"); setTax(0);
-      setItems([{ description: "Pool Cleaning – Standard", qty: 1, rate: 100 }]);
+      setClientId(""); setEstimateId(""); setDueDate(""); setStatus("UNPAID");
+      setItems([{ service: "Pool Cleaning", description: "Standard cleaning", qty: 1, rate: 100 }]);
       onCreated(); onClose();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -346,7 +377,8 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
             <div>
               <label className="text-sm font-semibold text-slate-700">Status</label>
               <select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
-                <option>DRAFT</option><option>SENT</option><option>PAID</option><option>OVERDUE</option>
+                <option value="UNPAID">UNPAID</option>
+                <option value="PAID">PAID</option>
               </select>
             </div>
           </div>
@@ -354,12 +386,13 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
           <div>
             <div className="mb-2 flex items-center justify-between">
               <label className="text-sm font-semibold text-slate-700">Items</label>
-              <button type="button" onClick={() => setItems([...items, { description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Add item</button>
+              <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Add item</button>
             </div>
             <div className="space-y-2">
               {items.map((it, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2">
-                  <input className="col-span-7 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                  <input className="col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
+                  <input className="col-span-4 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
                   <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
                   <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
                   <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-md border border-slate-200 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
@@ -371,7 +404,6 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
           <div className="flex justify-end">
             <div className="w-72 space-y-1.5 text-sm">
               <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
-              <div className="flex items-center justify-between text-slate-700"><span>Tax</span><input type="number" step="0.01" value={tax} onChange={(e) => setTax(Number(e.target.value))} className="w-24 rounded-md border border-slate-200 px-2 py-1 text-right text-sm" /></div>
               <div className="flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="text-[var(--brand-blue)]">{fmt(total)}</span></div>
             </div>
           </div>
