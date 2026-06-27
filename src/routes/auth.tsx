@@ -10,10 +10,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,17 +24,8 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email, password,
-          options: { emailRedirectTo: window.location.origin, data: { full_name: name } },
-        });
-        if (error) throw error;
-        toast.success("Conta criada! Você já está logado.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
       navigate({ to: "/invoice" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao autenticar");
@@ -50,19 +39,9 @@ function AuthPage() {
       <div className="grid min-h-screen place-items-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
           <div className="flex justify-center"><AppLogo variant="dark" /></div>
-          <h1 className="mt-6 text-center text-2xl font-extrabold text-slate-900">
-            {mode === "signin" ? "Entrar" : "Criar conta"}
-          </h1>
-          <p className="mt-1 text-center text-sm text-slate-500">
-            {mode === "signin" ? "Acesse sua conta para gerenciar clientes" : "Crie sua conta para começar"}
-          </p>
+          <h1 className="mt-6 text-center text-2xl font-extrabold text-slate-900">Entrar</h1>
+          <p className="mt-1 text-center text-sm text-slate-500">Acesse sua conta para gerenciar clientes</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
-            {mode === "signup" && (
-              <div>
-                <label className="text-sm font-semibold text-slate-700">Nome</label>
-                <input value={name} onChange={(e) => setName(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
-              </div>
-            )}
             <div>
               <label className="text-sm font-semibold text-slate-700">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
@@ -72,12 +51,9 @@ function AuthPage() {
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
             </div>
             <button disabled={loading} className="w-full rounded-md bg-[var(--brand-blue)] py-2.5 text-sm font-semibold text-white disabled:opacity-50">
-              {loading ? "Aguarde..." : mode === "signin" ? "Entrar" : "Criar conta"}
+              {loading ? "Aguarde..." : "Entrar"}
             </button>
           </form>
-          <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="mt-4 w-full text-center text-sm text-[var(--brand-blue)] hover:underline">
-            {mode === "signin" ? "Não tem conta? Criar conta" : "Já tem conta? Entrar"}
-          </button>
         </div>
       </div>
     </div>
