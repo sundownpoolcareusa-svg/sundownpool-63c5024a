@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
 
-export const Route = createFileRoute("/invoice")({
+export const Route = createFileRoute("/_authenticated/invoice")({
   component: InvoicePage,
 });
 

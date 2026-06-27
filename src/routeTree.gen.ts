@@ -9,89 +9,73 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as InvoiceRouteImport } from './routes/invoice'
-import { Route as EstimativaRouteImport } from './routes/estimativa'
-import { Route as ClientesRouteImport } from './routes/clientes'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedInvoiceRouteImport } from './routes/_authenticated/invoice'
+import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authenticated/estimativa'
+import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 
-const InvoiceRoute = InvoiceRouteImport.update({
-  id: '/invoice',
-  path: '/invoice',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EstimativaRoute = EstimativaRouteImport.update({
-  id: '/estimativa',
-  path: '/estimativa',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClientesRoute = ClientesRouteImport.update({
-  id: '/clientes',
-  path: '/clientes',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedInvoiceRoute = AuthenticatedInvoiceRouteImport.update({
+  id: '/_authenticated/invoice',
+  path: '/invoice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedEstimativaRoute = AuthenticatedEstimativaRouteImport.update({
+  id: '/_authenticated/estimativa',
+  path: '/estimativa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
+  id: '/_authenticated/clientes',
+  path: '/clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/clientes': typeof ClientesRoute
-  '/estimativa': typeof EstimativaRoute
-  '/invoice': typeof InvoiceRoute
+  '/clientes': typeof AuthenticatedClientesRoute
+  '/estimativa': typeof AuthenticatedEstimativaRoute
+  '/invoice': typeof AuthenticatedInvoiceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/clientes': typeof ClientesRoute
-  '/estimativa': typeof EstimativaRoute
-  '/invoice': typeof InvoiceRoute
+  '/clientes': typeof AuthenticatedClientesRoute
+  '/estimativa': typeof AuthenticatedEstimativaRoute
+  '/invoice': typeof AuthenticatedInvoiceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/clientes': typeof ClientesRoute
-  '/estimativa': typeof EstimativaRoute
-  '/invoice': typeof InvoiceRoute
+  '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/estimativa': typeof AuthenticatedEstimativaRoute
+  '/_authenticated/invoice': typeof AuthenticatedInvoiceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths: '/' | '/clientes' | '/estimativa' | '/invoice'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/clientes' | '/estimativa' | '/invoice'
-  id: '__root__' | '/' | '/clientes' | '/estimativa' | '/invoice'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated/clientes'
+    | '/_authenticated/estimativa'
+    | '/_authenticated/invoice'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ClientesRoute: typeof ClientesRoute
-  EstimativaRoute: typeof EstimativaRoute
-  InvoiceRoute: typeof InvoiceRoute
+  AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedEstimativaRoute: typeof AuthenticatedEstimativaRoute
+  AuthenticatedInvoiceRoute: typeof AuthenticatedInvoiceRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/invoice': {
-      id: '/invoice'
-      path: '/invoice'
-      fullPath: '/invoice'
-      preLoaderRoute: typeof InvoiceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/estimativa': {
-      id: '/estimativa'
-      path: '/estimativa'
-      fullPath: '/estimativa'
-      preLoaderRoute: typeof EstimativaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/clientes': {
-      id: '/clientes'
-      path: '/clientes'
-      fullPath: '/clientes'
-      preLoaderRoute: typeof ClientesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -99,14 +83,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/invoice': {
+      id: '/_authenticated/invoice'
+      path: '/invoice'
+      fullPath: '/invoice'
+      preLoaderRoute: typeof AuthenticatedInvoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/estimativa': {
+      id: '/_authenticated/estimativa'
+      path: '/estimativa'
+      fullPath: '/estimativa'
+      preLoaderRoute: typeof AuthenticatedEstimativaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/clientes': {
+      id: '/_authenticated/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof AuthenticatedClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ClientesRoute: ClientesRoute,
-  EstimativaRoute: EstimativaRoute,
-  InvoiceRoute: InvoiceRoute,
+  AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedEstimativaRoute: AuthenticatedEstimativaRoute,
+  AuthenticatedInvoiceRoute: AuthenticatedInvoiceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
 
-export const Route = createFileRoute("/estimativa")({
+export const Route = createFileRoute("/_authenticated/estimativa")({
   component: EstimativaPage,
 });
 

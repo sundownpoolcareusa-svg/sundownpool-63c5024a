@@ -5,7 +5,7 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 
-export const Route = createFileRoute("/clientes")({
+export const Route = createFileRoute("/_authenticated/clientes")({
   component: ClientesPage,
 });
 
