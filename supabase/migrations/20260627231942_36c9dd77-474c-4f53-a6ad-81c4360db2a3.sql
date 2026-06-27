@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS state text; ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS zip text;

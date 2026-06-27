@@ -26,9 +26,11 @@ export type Database = {
           notes: string | null
           phone: string | null
           service_days: string[]
+          state: string | null
           status: string
           updated_at: string
           user_id: string
+          zip: string | null
         }
         Insert: {
           address?: string | null
@@ -41,9 +43,11 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           service_days?: string[]
+          state?: string | null
           status?: string
           updated_at?: string
           user_id: string
+          zip?: string | null
         }
         Update: {
           address?: string | null
@@ -56,9 +60,11 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           service_days?: string[]
+          state?: string | null
           status?: string
           updated_at?: string
           user_id?: string
+          zip?: string | null
         }
         Relationships: []
       }
