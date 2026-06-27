@@ -181,6 +181,7 @@ export type Database = {
           position: number
           qty: number
           rate: number
+          service: string
         }
         Insert: {
           amount?: number
@@ -191,6 +192,7 @@ export type Database = {
           position?: number
           qty?: number
           rate?: number
+          service?: string
         }
         Update: {
           amount?: number
@@ -201,6 +203,7 @@ export type Database = {
           position?: number
           qty?: number
           rate?: number
+          service?: string
         }
         Relationships: [
           {
@@ -222,6 +225,7 @@ export type Database = {
           invoice_date: string
           notes: string | null
           number: string
+          public_token: string
           status: string
           subtotal: number
           tax: number
@@ -238,6 +242,7 @@ export type Database = {
           invoice_date?: string
           notes?: string | null
           number: string
+          public_token?: string
           status?: string
           subtotal?: number
           tax?: number
@@ -254,6 +259,7 @@ export type Database = {
           invoice_date?: string
           notes?: string | null
           number?: string
+          public_token?: string
           status?: string
           subtotal?: number
           tax?: number
@@ -283,7 +289,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_invoice_public: { Args: { _token: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
