@@ -56,7 +56,7 @@ function PublicInvoicePage() {
             <Download className="h-4 w-4" /> Download PDF
           </button>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white pt-2 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
+        <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
           <DocCardHeader title="INVOICE" number={invoice.number} />
           <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
             <div className="space-y-1 text-slate-700">
