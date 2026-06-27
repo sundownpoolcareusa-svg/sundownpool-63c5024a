@@ -17,9 +17,9 @@ export const Route = createFileRoute("/_authenticated/estimativa")({
   component: EstimativaPage,
 });
 
-const tabs = ["Todas", "Pendentes", "Enviadas", "Aprovadas", "Expiradas"];
+const tabs = ["All", "Pending", "Sent", "Approved", "Expired"];
 const tabStatus: Record<string, string | null> = {
-  Todas: null, Pendentes: "PENDENTE", Enviadas: "ENVIADA", Aprovadas: "APROVADA", Expiradas: "EXPIRADA",
+  All: null, Pending: "PENDENTE", Sent: "ENVIADA", Approved: "APROVADA", Expired: "EXPIRADA",
 };
 
 function statusBadge(s: string) {
@@ -29,7 +29,8 @@ function statusBadge(s: string) {
     ENVIADA: "bg-sky-100 text-sky-700",
     EXPIRADA: "bg-slate-200 text-slate-600",
   };
-  return <span className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wide ${map[s] ?? "bg-gray-100"}`}>{s}</span>;
+  const labels: Record<string, string> = { PENDENTE: "PENDING", APROVADA: "APPROVED", ENVIADA: "SENT", EXPIRADA: "EXPIRED" };
+  return <span className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wide ${map[s] ?? "bg-gray-100"}`}>{labels[s] ?? s}</span>;
 }
 
 function EstimativaPage() {
