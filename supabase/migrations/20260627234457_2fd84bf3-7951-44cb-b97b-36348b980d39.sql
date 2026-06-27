@@ -1,0 +1,1 @@
+UPDATE public.invoice_items SET service = 'Pool Cleaning', description = '06/27/2026' WHERE id = '85bd1e06-7072-4e5f-8591-e145da096471';
