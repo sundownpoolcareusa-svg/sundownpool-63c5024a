@@ -5,7 +5,7 @@ export function DocCardHeader({ title, number }: { title: string; number: string
     <div className="flex items-start justify-between">
       <div className="flex items-center gap-3">
         <div className="grid place-items-center rounded-lg bg-white p-2">
-          <img src={logoAsset.url} alt="Sundown Pool Service" className="h-16 w-auto" />
+          <img src={logoAsset.url} alt="Sundown Pool Service" className="h-28 w-auto" />
         </div>
 
       </div>
