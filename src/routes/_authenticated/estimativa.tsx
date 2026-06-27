@@ -190,8 +190,8 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
         </div>
       </div>
       <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-        <DocCardHeader title="ESTIMATIVA" number={estimate.number} />
-        <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
+        <DocCardHeader title="ESTIMATE" number={estimate.number} />
+        <div className="mt-3 grid grid-cols-2 gap-6 text-sm">
           <div className="space-y-1 text-slate-700">
             <div>4008 Destination Dr #2208</div>
             <div>Osprey, FL 34229</div>
@@ -199,10 +199,11 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
             <div>hello@sundownpoolservice.com</div>
           </div>
           <div className="space-y-1 text-right text-slate-700">
-            <div><span className="font-semibold text-slate-900">Data:</span> {fmtDate(estimate.estimate_date)}</div>
+            <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(estimate.estimate_date)}</div>
             <div><span className="font-semibold text-slate-900">Valid until:</span> {fmtDate(estimate.valid_until)}</div>
           </div>
         </div>
+
         <hr className="my-6 border-slate-100" />
         <div className="grid grid-cols-2 gap-6 text-sm">
           <div>
