@@ -253,31 +253,34 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             </div>
           </div>
         </div>
-        <div className="mt-6 overflow-hidden rounded-lg border border-slate-200">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--brand-blue)] text-white">
-              <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-bold tracking-wide">SERVICE</th>
-                <th className="px-4 py-2.5 text-left text-xs font-bold tracking-wide">DESCRIPTION</th>
-                <th className="px-4 py-2.5 text-left text-xs font-bold tracking-wide">QTY</th>
-                <th className="px-4 py-2.5 text-right text-xs font-bold tracking-wide">RATE</th>
-                <th className="px-4 py-2.5 text-right text-xs font-bold tracking-wide">AMOUNT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((it, i) => (
-                <tr key={i} className="border-t border-slate-100 align-top">
-                  <td className="px-4 py-2.5 font-semibold text-slate-900">
-                    <div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--brand-blue)]" /> {it.service || "—"}</div>
-                  </td>
-                  <td className="px-4 py-2.5 text-slate-700">{it.description}</td>
-                  <td className="px-4 py-2.5 text-slate-700">{it.qty}</td>
-                  <td className="px-4 py-2.5 text-right text-slate-700">{fmt(it.rate)}</td>
-                  <td className="px-4 py-2.5 text-right text-slate-700">{fmt(it.amount)}</td>
+        <div className="mt-6">
+          <div className="mb-2 font-bold text-slate-900">Requested Services</div>
+          <div className="overflow-hidden rounded-lg border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-[var(--brand-blue)] text-white">
+                <tr>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold">SERVICE</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold">DESCRIPTION</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold">QTD</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-bold">UNIT PRICE</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-bold">TOTAL</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {items.map((it, i) => (
+                  <tr key={i} className="border-t border-slate-100 align-top">
+                    <td className="px-4 py-3 font-semibold text-slate-900">
+                      <div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--brand-blue)]" /> {it.service || "—"}</div>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">{it.description}</td>
+                    <td className="px-4 py-3 text-slate-700">{it.qty}</td>
+                    <td className="px-4 py-3 text-right text-slate-700">{fmt(it.rate)}</td>
+                    <td className="px-4 py-3 text-right text-slate-700">{fmt(it.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
         <div className="mt-4 flex justify-end">
           <div className="w-72 space-y-2 text-sm">
