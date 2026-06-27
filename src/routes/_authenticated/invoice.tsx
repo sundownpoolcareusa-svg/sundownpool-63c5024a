@@ -83,8 +83,8 @@ function InvoicePage() {
           {filtered.length === 0 ? (
             <div className="rounded-lg border-2 border-dashed border-slate-200 py-10 text-center">
               <FileText className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-2 text-sm text-slate-500">Nenhuma fatura ainda</p>
-              <p className="text-xs text-slate-400">Crie uma estimativa primeiro, ou clique em New Invoice.</p>
+              <p className="mt-2 text-sm text-slate-500">No invoices yet</p>
+              <p className="text-xs text-slate-400">Create an estimate first, or click New Invoice.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -114,8 +114,8 @@ function InvoicePage() {
           ) : (
             <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-16 text-center">
               <FileText className="mx-auto h-12 w-12 text-slate-300" />
-              <p className="mt-4 text-lg font-semibold text-slate-700">Nenhuma fatura selecionada</p>
-              <p className="mt-1 text-sm text-slate-500">Clique em "New Invoice" para criar a sua primeira fatura.</p>
+              <p className="mt-4 text-lg font-semibold text-slate-700">No invoice selected</p>
+              <p className="mt-1 text-sm text-slate-500">Click "New Invoice" to create your first invoice.</p>
             </div>
           )}
         </section>
@@ -129,26 +129,26 @@ function InvoicePage() {
                 <img src={poolImg} alt="Pool" className="h-44 w-full object-cover" width={1024} height={640} loading="lazy" />
                 <div className="p-4">
                   <div className="font-bold text-slate-900">{pendingEstimate.title || "Estimate"}</div>
-                  <p className="mt-1 text-sm text-slate-600">Cliente: {pendingEstimate.client?.name}</p>
+                  <p className="mt-1 text-sm text-slate-600">Client: {pendingEstimate.client?.name}</p>
                   <hr className="my-4 border-slate-100" />
                   <div className="space-y-1.5 text-sm">
                     <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(pendingEstimate.subtotal)}</span></div>
-                    <div className="flex justify-between text-slate-700"><span>Desconto</span><span className="text-green-600">-{fmt(pendingEstimate.discount)}</span></div>
+                    <div className="flex justify-between text-slate-700"><span>Discount</span><span className="text-green-600">-{fmt(pendingEstimate.discount)}</span></div>
                     <div className="mt-2 flex items-center justify-between border-t pt-2">
                       <span className="font-bold text-slate-900">Total</span>
                       <span className="text-xl font-extrabold text-[var(--brand-blue)]">{fmt(pendingEstimate.total)}</span>
                     </div>
                   </div>
                   <Link to="/estimativa" className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[var(--brand-blue)] py-2.5 text-sm font-semibold text-white">
-                    Ver Estimativa
+                    View Estimate
                   </Link>
                 </div>
               </div>
             </>
           ) : (
             <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-6 text-center">
-              <p className="text-sm font-semibold text-slate-700">Nenhuma estimativa pendente</p>
-              <Link to="/estimativa" className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Criar estimativa →</Link>
+              <p className="text-sm font-semibold text-slate-700">No pending estimate</p>
+              <Link to="/estimativa" className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Create estimate →</Link>
             </div>
           )}
         </aside>
@@ -193,10 +193,10 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
         <DocCardHeader title="INVOICE" number={invoice.number} />
         <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
           <div className="space-y-1 text-slate-700">
-            <div>123 Blue Water Way</div>
-            <div>Orlando, FL 32801</div>
+            <div>4008 Destination Dr #2208</div>
+            <div>Osprey, FL 34229</div>
             <div>(407) 555-1234</div>
-            <div>hello@aquaclearpools.com</div>
+            <div>hello@sundownpoolservice.com</div>
           </div>
           <div className="space-y-1 text-right text-slate-700">
             <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(invoice.invoice_date)}</div>
@@ -287,10 +287,10 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
 
   const mut = useMutation({
     mutationFn: async () => {
-      if (!clientId) throw new Error("Selecione um cliente");
-      if (items.length === 0) throw new Error("Adicione ao menos um item");
+      if (!clientId) throw new Error("Select a client");
+      if (items.length === 0) throw new Error("Add at least one item");
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Não autenticado");
+      if (!u.user) throw new Error("Not authenticated");
       const number = nextNumber("INV", invoices.map((i) => i.number));
       const { data: inv, error } = await supabase.from("invoices").insert({
         user_id: u.user.id, client_id: clientId, estimate_id: estimateId || null,
@@ -305,7 +305,7 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
       if (e2) throw e2;
     },
     onSuccess: () => {
-      toast.success("Fatura criada!");
+      toast.success("Invoice created!");
       setClientId(""); setEstimateId(""); setDueDate(""); setStatus("SENT"); setTax(0);
       setItems([{ description: "Pool Cleaning – Standard", qty: 1, rate: 100 }]);
       onCreated(); onClose();
@@ -317,30 +317,30 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
     <Modal open={open} onClose={onClose} title="New Invoice" maxWidth="max-w-3xl">
       {clients.length === 0 ? (
         <div className="py-8 text-center">
-          <p className="text-slate-600">Você precisa criar um cliente primeiro.</p>
-          <Link to="/clientes" onClick={onClose} className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Ir para Clientes →</Link>
+          <p className="text-slate-600">You need to create a client first.</p>
+          <Link to="/clientes" onClick={onClose} className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Go to Clients →</Link>
         </div>
       ) : (
         <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4">
           {estimates.length > 0 && (
             <div>
-              <label className="text-sm font-semibold text-slate-700">Criar a partir de Estimativa (opcional)</label>
+              <label className="text-sm font-semibold text-slate-700">Create from Estimate (optional)</label>
               <select value={estimateId} onChange={(e) => applyEstimate(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
-                <option value="">— Nenhuma —</option>
+                <option value="">— None —</option>
                 {estimates.map((e) => <option key={e.id} value={e.id}>{e.number} — {e.client?.name} ({fmt(e.total)})</option>)}
               </select>
             </div>
           )}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-semibold text-slate-700">Cliente *</label>
+              <label className="text-sm font-semibold text-slate-700">Client *</label>
               <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
-                <option value="">Selecione...</option>
+                <option value="">Select...</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-sm font-semibold text-slate-700">Vencimento</label>
+              <label className="text-sm font-semibold text-slate-700">Due Date</label>
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
             </div>
             <div>
@@ -353,15 +353,15 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-700">Itens</label>
-              <button type="button" onClick={() => setItems([...items, { description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Adicionar item</button>
+              <label className="text-sm font-semibold text-slate-700">Items</label>
+              <button type="button" onClick={() => setItems([...items, { description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Add item</button>
             </div>
             <div className="space-y-2">
               {items.map((it, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2">
-                  <input className="col-span-7 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Descrição" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
-                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qtd" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
-                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Valor" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
+                  <input className="col-span-7 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
+                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
                   <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-md border border-slate-200 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
                 </div>
               ))}
@@ -377,9 +377,9 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancelar</button>
+            <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
             <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-              {mut.isPending ? "Salvando..." : "Criar Fatura"}
+              {mut.isPending ? "Saving..." : "Create Invoice"}
             </button>
           </div>
         </form>
