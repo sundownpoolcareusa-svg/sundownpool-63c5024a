@@ -56,9 +56,9 @@ function PublicInvoicePage() {
             <Download className="h-4 w-4" /> Download PDF
           </button>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm print:border-0 print:shadow-none">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm print:border-0 print:shadow-none">
           <DocCardHeader title="INVOICE" number={invoice.number} />
-          <div className="mt-6 grid grid-cols-2 gap-6 text-sm">
+          <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
             <div className="space-y-1 text-slate-700">
               <div>4008 Destination Dr #2208</div>
               <div>Osprey, FL 34229</div>
@@ -71,7 +71,7 @@ function PublicInvoicePage() {
               <div><span className="font-semibold text-slate-900">Status:</span> <span className={isPaid ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>{isPaid ? "PAID" : "UNPAID"}</span></div>
             </div>
           </div>
-          <hr className="my-6 border-slate-100" />
+          <hr className="my-4 border-slate-100" />
           <div className="text-sm">
             <div className="font-bold text-slate-900">Bill To:</div>
             <div className="mt-1 space-y-0.5 text-slate-700">

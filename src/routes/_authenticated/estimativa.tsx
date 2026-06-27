@@ -189,9 +189,9 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
-      <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <DocCardHeader title="ESTIMATE" number={estimate.number} />
-        <div className="mt-3 grid grid-cols-2 gap-6 text-sm">
+        <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
           <div className="space-y-1 text-slate-700">
             <div>4008 Destination Dr #2208</div>
             <div>Osprey, FL 34229</div>
@@ -204,7 +204,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
           </div>
         </div>
 
-        <hr className="my-6 border-slate-100" />
+        <hr className="my-4 border-slate-100" />
         <div className="grid grid-cols-2 gap-6 text-sm">
           <div>
             <div className="flex items-center gap-2 font-bold text-slate-900"><User className="h-4 w-4" /> Client</div>
