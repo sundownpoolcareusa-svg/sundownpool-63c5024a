@@ -5,9 +5,9 @@ import { AppLogo } from "./AppLogo";
 import { supabase } from "@/integrations/supabase/client";
 
 const tabs = [
-  { to: "/invoice", label: "INVOICE", icon: FileText },
-  { to: "/clientes", label: "CLIENTES", icon: Users },
-  { to: "/estimativa", label: "ESTIMATIVA", icon: ClipboardList },
+  { to: "/invoice", label: "INVOICES", icon: FileText },
+  { to: "/clientes", label: "CLIENTS", icon: Users },
+  { to: "/estimativa", label: "ESTIMATES", icon: ClipboardList },
 ] as const;
 
 export function AppHeader() {
@@ -32,7 +32,7 @@ export function AppHeader() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const display = email ? email.split("@")[0] : "Usuário";
+  const display = email ? email.split("@")[0] : "User";
   const init = (email[0] || "U").toUpperCase();
 
   return (
@@ -74,7 +74,7 @@ export function AppHeader() {
             {open && (
               <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg">
                 <button onClick={logout} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
-                  <LogOut className="h-4 w-4" /> Sair
+                  <LogOut className="h-4 w-4" /> Sign out
                 </button>
               </div>
             )}
