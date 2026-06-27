@@ -28,7 +28,7 @@ function AuthPage() {
       if (error) throw error;
       navigate({ to: "/invoice" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao autenticar");
+      toast.error(err instanceof Error ? err.message : "Authentication error");
     } finally {
       setLoading(false);
     }
@@ -39,19 +39,19 @@ function AuthPage() {
       <div className="grid min-h-screen place-items-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
           <div className="flex justify-center rounded-lg bg-slate-900 p-4"><AppLogo /></div>
-          <h1 className="mt-6 text-center text-2xl font-extrabold text-slate-900">Entrar</h1>
-          <p className="mt-1 text-center text-sm text-slate-500">Acesse sua conta para gerenciar clientes</p>
+          <h1 className="mt-6 text-center text-2xl font-extrabold text-slate-900">Sign in</h1>
+          <p className="mt-1 text-center text-sm text-slate-500">Sign in to manage your clients</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div>
               <label className="text-sm font-semibold text-slate-700">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="text-sm font-semibold text-slate-700">Senha</label>
+              <label className="text-sm font-semibold text-slate-700">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
             </div>
             <button disabled={loading} className="w-full rounded-md bg-[var(--brand-blue)] py-2.5 text-sm font-semibold text-white disabled:opacity-50">
-              {loading ? "Aguarde..." : "Entrar"}
+              {loading ? "Please wait..." : "Sign in"}
             </button>
           </form>
         </div>
