@@ -41,6 +41,7 @@ export type Estimate = {
 
 export type InvoiceItem = {
   id?: string;
+  service: string;
   description: string;
   qty: number;
   rate: number;
@@ -60,10 +61,12 @@ export type Invoice = {
   tax: number;
   total: number;
   notes: string | null;
+  public_token: string;
   created_at: string;
   client?: Client;
   invoice_items?: InvoiceItem[];
 };
+
 
 export async function listClients() {
   const { data, error } = await supabase.from("clients").select("*").order("created_at", { ascending: false });
