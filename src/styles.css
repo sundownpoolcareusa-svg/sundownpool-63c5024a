@@ -2,6 +2,16 @@
 @source "../src";
 @import "tw-animate-css";
 
+@theme inline {
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+}
+
+:root {
+  --brand-navy: oklch(0.22 0.06 260);
+  --brand-blue: oklch(0.52 0.18 255);
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*
