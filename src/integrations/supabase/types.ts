@@ -289,7 +289,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_invoice_public: { Args: { _token: string }; Returns: Json }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
