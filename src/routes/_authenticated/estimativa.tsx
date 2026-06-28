@@ -61,9 +61,9 @@ function EstimativaPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader />
-      <main className="grid grid-cols-12 gap-5 p-5">
+      <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12">
         {/* LEFT */}
-        <aside className="col-span-3 space-y-4">
+        <aside className="space-y-4 lg:col-span-3">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-extrabold text-slate-900">Estimates</h1>
             <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow">
