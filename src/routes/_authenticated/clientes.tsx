@@ -85,10 +85,10 @@ function ClientesPage() {
           </div>
         </aside>
 
-        <section className="col-span-9 rounded-xl border border-slate-200 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold text-slate-900">Client List</h2>
-            <div className="flex items-center gap-2">
+        <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 lg:col-span-9">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">Client List</h2>
+            <div className="flex flex-wrap items-center gap-2">
               <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">All statuses <ChevronDown className="h-4 w-4" /></button>
               <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"><Filter className="h-4 w-4 text-[var(--brand-blue)]" /> Filter</button>
               <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"><Upload className="h-4 w-4 text-[var(--brand-blue)]" /> Export</button>
