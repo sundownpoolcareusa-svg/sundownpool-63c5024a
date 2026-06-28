@@ -108,7 +108,7 @@ function InvoicePage() {
         </aside>
 
         {/* CENTER */}
-        <section className="col-span-6 space-y-4 print:col-span-12">
+        <section className="space-y-4 lg:col-span-6 print:col-span-12">
           {selected ? (
             <InvoiceDetail invoice={selected} onChanged={() => qc.invalidateQueries({ queryKey: ["invoices"] })} />
           ) : (
