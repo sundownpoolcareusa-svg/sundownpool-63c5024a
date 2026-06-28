@@ -155,7 +155,7 @@ function ClientesPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
               <div className="mt-5 flex items-center justify-between text-sm">
                 <div className="text-slate-500">Showing {filtered.length} of {total} clients</div>
                 <div className="flex items-center gap-1">
