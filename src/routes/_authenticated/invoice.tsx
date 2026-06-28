@@ -59,16 +59,16 @@ function InvoicePage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader />
-      <main className="grid grid-cols-12 gap-5 p-5 print:block print:p-0">
+      <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12 print:block print:p-0">
         {/* LEFT */}
-        <aside className="col-span-3 space-y-4 print:hidden">
+        <aside className="space-y-4 lg:col-span-3 print:hidden">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-extrabold text-slate-900">Invoices</h1>
             <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow hover:opacity-90">
               <Plus className="h-4 w-4" /> New Invoice
             </button>
           </div>
-          <div className="flex gap-4 border-b text-sm">
+          <div className="flex gap-4 overflow-x-auto border-b text-sm">
             {tabs.map((t) => (
               <button key={t} onClick={() => setTab(t)} className={`pb-2 ${tab === t ? "border-b-2 border-[var(--brand-blue)] text-[var(--brand-blue)] font-semibold" : "text-slate-500"}`}>{t}</button>
             ))}
@@ -108,7 +108,7 @@ function InvoicePage() {
         </aside>
 
         {/* CENTER */}
-        <section className="col-span-6 space-y-4 print:col-span-12">
+        <section className="space-y-4 lg:col-span-6 print:col-span-12">
           {selected ? (
             <InvoiceDetail invoice={selected} onChanged={() => qc.invalidateQueries({ queryKey: ["invoices"] })} />
           ) : (
@@ -121,7 +121,7 @@ function InvoicePage() {
         </section>
 
         {/* RIGHT */}
-        <aside className="col-span-3 space-y-4 print:hidden">
+        <aside className="space-y-4 lg:col-span-3 print:hidden">
           {pendingEstimate ? (
             <>
               <h3 className="text-lg font-extrabold text-slate-900">Estimate #{pendingEstimate.number}</h3>
@@ -154,8 +154,8 @@ function InvoicePage() {
         </aside>
       </main>
 
-      <section className="mx-5 mb-6 rounded-xl border border-slate-200 bg-white px-6 py-6 print:hidden">
-        <div className="grid grid-cols-5 gap-6">
+      <section className="mx-3 mb-6 rounded-xl border border-slate-200 bg-white px-4 py-5 sm:mx-5 sm:px-6 sm:py-6 print:hidden">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {footerCats.map((c) => (
             <div key={c.title} className="flex items-start gap-3">
               <c.icon className="mt-0.5 h-6 w-6 shrink-0 text-[var(--brand-blue)]" />
@@ -190,12 +190,12 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
 
   return (
     <>
-      <div className="flex items-center justify-between print:hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-extrabold text-slate-900">Invoice</h2>
+          <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">Invoice</h2>
           {statusBadge(invoice.status)}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => toggle.mutate()}
             disabled={toggle.isPending}
@@ -207,27 +207,27 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             onClick={() => { navigator.clipboard.writeText(publicUrl); toast.success("Link copied! Share with client."); }}
             className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
           >
-            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> Copy Client Link
+            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> <span className="hidden sm:inline">Copy Client </span>Link
           </button>
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
           >
-            <Download className="h-4 w-4 text-[var(--brand-blue)]" /> Download PDF
+            <Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF
           </button>
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
       <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
         <DocCardHeader title="INVOICE" number={invoice.number} />
-        <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
+        <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-slate-700">
             <div>4008 Destination Dr #2208</div>
             <div>Osprey, FL 34229</div>
             <div>(407) 555-1234</div>
             <div>hello@sundownpoolservice.com</div>
           </div>
-          <div className="space-y-1 text-right text-slate-700">
+          <div className="space-y-1 text-slate-700 sm:text-right">
             <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(invoice.invoice_date)}</div>
             <div><span className="font-semibold text-slate-900">Due Date:</span> {fmtDate(invoice.due_date)}</div>
             <div><span className="font-semibold text-slate-900">Status:</span> <span className={isPaid ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>{isPaid ? "PAID" : "UNPAID"}</span></div>
@@ -235,7 +235,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
 
         <hr className="my-4 border-slate-100" />
-        <div className="grid grid-cols-2 gap-6 text-sm">
+        <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div>
             <div className="font-bold text-slate-900">Bill To:</div>
             <div className="mt-1 space-y-0.5 text-slate-700">
@@ -256,8 +256,8 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
         <div className="mt-6">
           <div className="mb-2 font-bold text-slate-900">Requested Services</div>
-          <div className="overflow-hidden rounded-lg border border-slate-200">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-[var(--brand-blue)] text-white">
                 <tr>
                   <th className="px-4 py-2.5 text-left text-xs font-bold">SERVICE</th>
@@ -284,7 +284,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <div className="w-72 space-y-2 text-sm">
+          <div className="w-full max-w-xs space-y-2 text-sm sm:w-72">
             <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(invoice.subtotal)}</span></div>
             <div className="flex justify-between border-t pt-2 text-base"><span className="font-semibold">Total</span><span className={`font-extrabold ${isPaid ? "text-green-600" : "text-slate-900"}`}>{fmt(invoice.total)}</span></div>
           </div>

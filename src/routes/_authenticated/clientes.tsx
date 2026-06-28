@@ -43,8 +43,8 @@ function ClientesPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader />
-      <main className="grid grid-cols-12 gap-5 p-5">
-        <aside className="col-span-3 space-y-4">
+      <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12">
+        <aside className="space-y-4 lg:col-span-3">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-extrabold text-slate-900">Clients</h1>
             <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow hover:opacity-90">
@@ -85,10 +85,10 @@ function ClientesPage() {
           </div>
         </aside>
 
-        <section className="col-span-9 rounded-xl border border-slate-200 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold text-slate-900">Client List</h2>
-            <div className="flex items-center gap-2">
+        <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 lg:col-span-9">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">Client List</h2>
+            <div className="flex flex-wrap items-center gap-2">
               <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">All statuses <ChevronDown className="h-4 w-4" /></button>
               <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"><Filter className="h-4 w-4 text-[var(--brand-blue)]" /> Filter</button>
               <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"><Upload className="h-4 w-4 text-[var(--brand-blue)]" /> Export</button>
@@ -108,7 +108,7 @@ function ClientesPage() {
             </div>
           ) : (
             <>
-              <table className="mt-5 w-full text-sm">
+              <div className="-mx-4 mt-5 overflow-x-auto sm:mx-0"><table className="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-slate-500">
                     <th className="py-3 font-medium">Client</th>
@@ -155,7 +155,7 @@ function ClientesPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
               <div className="mt-5 flex items-center justify-between text-sm">
                 <div className="text-slate-500">Showing {filtered.length} of {total} clients</div>
                 <div className="flex items-center gap-1">

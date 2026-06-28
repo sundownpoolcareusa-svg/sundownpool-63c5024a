@@ -61,16 +61,16 @@ function EstimativaPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader />
-      <main className="grid grid-cols-12 gap-5 p-5">
+      <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12">
         {/* LEFT */}
-        <aside className="col-span-3 space-y-4">
+        <aside className="space-y-4 lg:col-span-3">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-extrabold text-slate-900">Estimates</h1>
             <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow">
               <Plus className="h-4 w-4" /> New Estimate
             </button>
           </div>
-          <div className="flex gap-4 border-b text-sm">
+          <div className="flex gap-4 overflow-x-auto border-b text-sm">
             {tabs.map((t) => (
               <button key={t} onClick={() => setTab(t)} className={`pb-2 ${tab === t ? "border-b-2 border-[var(--brand-blue)] text-[var(--brand-blue)] font-semibold" : "text-slate-500"}`}>{t}</button>
             ))}
@@ -109,7 +109,7 @@ function EstimativaPage() {
         </aside>
 
         {/* CENTER */}
-        <section className="col-span-6 space-y-4">
+        <section className="space-y-4 lg:col-span-6">
           {selected ? (
             <EstimateDetail estimate={selected} />
           ) : (
@@ -122,7 +122,7 @@ function EstimativaPage() {
         </section>
 
         {/* RIGHT */}
-        <aside className="col-span-3 space-y-4">
+        <aside className="space-y-4 lg:col-span-3">
           {selected && (
             <>
               <h3 className="text-lg font-extrabold text-slate-900">Estimate Summary</h3>
@@ -178,34 +178,34 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
   const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.position - b.position);
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-extrabold text-slate-900">Estimate #{estimate.number}</h2>
+          <h2 className="text-lg font-extrabold text-slate-900 sm:text-xl">Estimate #{estimate.number}</h2>
           {statusBadge(estimate.status)}
         </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> Enviar</button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> Send</button>
           <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF</button>
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
       <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm">
         <DocCardHeader title="ESTIMATE" number={estimate.number} />
-        <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
+        <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-slate-700">
             <div>4008 Destination Dr #2208</div>
             <div>Osprey, FL 34229</div>
             <div>(407) 555-1234</div>
             <div>hello@sundownpoolservice.com</div>
           </div>
-          <div className="space-y-1 text-right text-slate-700">
+          <div className="space-y-1 text-slate-700 sm:text-right">
             <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(estimate.estimate_date)}</div>
             <div><span className="font-semibold text-slate-900">Valid until:</span> {fmtDate(estimate.valid_until)}</div>
           </div>
         </div>
 
         <hr className="my-4 border-slate-100" />
-        <div className="grid grid-cols-2 gap-6 text-sm">
+        <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div>
             <div className="flex items-center gap-2 font-bold text-slate-900"><User className="h-4 w-4" /> Client</div>
             <div className="mt-2 space-y-0.5 text-slate-700">
@@ -224,8 +224,8 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
         </div>
         <div className="mt-6">
           <div className="mb-2 font-bold text-slate-900">Requested Services</div>
-          <div className="overflow-hidden rounded-lg border border-slate-200">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-[var(--brand-blue)] text-white">
                 <tr>
                   <th className="px-4 py-2.5 text-left text-xs font-bold">SERVICE</th>
@@ -249,7 +249,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
             </table>
           </div>
         </div>
-        <div className="mt-6 grid grid-cols-2 gap-6">
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <div className="font-bold text-slate-900">Notes</div>
             <p className="mt-2 text-sm text-slate-700 whitespace-pre-line">{estimate.notes || "—"}</p>
