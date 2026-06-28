@@ -178,13 +178,13 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
   const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.position - b.position);
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-extrabold text-slate-900">Estimate #{estimate.number}</h2>
+          <h2 className="text-lg font-extrabold text-slate-900 sm:text-xl">Estimate #{estimate.number}</h2>
           {statusBadge(estimate.status)}
         </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> Enviar</button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> Send</button>
           <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF</button>
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
