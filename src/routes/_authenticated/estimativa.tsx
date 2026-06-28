@@ -109,7 +109,7 @@ function EstimativaPage() {
         </aside>
 
         {/* CENTER */}
-        <section className="col-span-6 space-y-4">
+        <section className="space-y-4 lg:col-span-6">
           {selected ? (
             <EstimateDetail estimate={selected} />
           ) : (
