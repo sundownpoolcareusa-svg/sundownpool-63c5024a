@@ -68,7 +68,7 @@ function InvoicePage() {
               <Plus className="h-4 w-4" /> New Invoice
             </button>
           </div>
-          <div className="flex gap-4 border-b text-sm">
+          <div className="flex gap-4 overflow-x-auto border-b text-sm">
             {tabs.map((t) => (
               <button key={t} onClick={() => setTab(t)} className={`pb-2 ${tab === t ? "border-b-2 border-[var(--brand-blue)] text-[var(--brand-blue)] font-semibold" : "text-slate-500"}`}>{t}</button>
             ))}
