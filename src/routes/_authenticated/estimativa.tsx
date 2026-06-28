@@ -122,7 +122,7 @@ function EstimativaPage() {
         </section>
 
         {/* RIGHT */}
-        <aside className="col-span-3 space-y-4">
+        <aside className="space-y-4 lg:col-span-3">
           {selected && (
             <>
               <h3 className="text-lg font-extrabold text-slate-900">Estimate Summary</h3>
