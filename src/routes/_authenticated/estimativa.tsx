@@ -205,7 +205,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
         </div>
 
         <hr className="my-4 border-slate-100" />
-        <div className="grid grid-cols-2 gap-6 text-sm">
+        <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div>
             <div className="flex items-center gap-2 font-bold text-slate-900"><User className="h-4 w-4" /> Client</div>
             <div className="mt-2 space-y-0.5 text-slate-700">
