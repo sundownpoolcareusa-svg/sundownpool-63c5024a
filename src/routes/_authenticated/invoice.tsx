@@ -154,8 +154,8 @@ function InvoicePage() {
         </aside>
       </main>
 
-      <section className="mx-5 mb-6 rounded-xl border border-slate-200 bg-white px-6 py-6 print:hidden">
-        <div className="grid grid-cols-5 gap-6">
+      <section className="mx-3 mb-6 rounded-xl border border-slate-200 bg-white px-4 py-5 sm:mx-5 sm:px-6 sm:py-6 print:hidden">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {footerCats.map((c) => (
             <div key={c.title} className="flex items-start gap-3">
               <c.icon className="mt-0.5 h-6 w-6 shrink-0 text-[var(--brand-blue)]" />
