@@ -121,7 +121,7 @@ function InvoicePage() {
         </section>
 
         {/* RIGHT */}
-        <aside className="col-span-3 space-y-4 print:hidden">
+        <aside className="space-y-4 lg:col-span-3 print:hidden">
           {pendingEstimate ? (
             <>
               <h3 className="text-lg font-extrabold text-slate-900">Estimate #{pendingEstimate.number}</h3>
