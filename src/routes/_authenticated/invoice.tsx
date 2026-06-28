@@ -190,12 +190,12 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
 
   return (
     <>
-      <div className="flex items-center justify-between print:hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-extrabold text-slate-900">Invoice</h2>
+          <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">Invoice</h2>
           {statusBadge(invoice.status)}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => toggle.mutate()}
             disabled={toggle.isPending}
@@ -207,13 +207,13 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             onClick={() => { navigator.clipboard.writeText(publicUrl); toast.success("Link copied! Share with client."); }}
             className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
           >
-            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> Copy Client Link
+            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> <span className="hidden sm:inline">Copy Client </span>Link
           </button>
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
           >
-            <Download className="h-4 w-4 text-[var(--brand-blue)]" /> Download PDF
+            <Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF
           </button>
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
