@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getPublicInvoice } from "@/lib/public-invoice.functions";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import { fmt, fmtDate } from "@/lib/db";
 import { Wrench, Download } from "lucide-react";
@@ -20,16 +21,16 @@ type PublicInvoice = {
 
 function PublicInvoicePage() {
   const { token } = Route.useParams();
+  const fetchInvoice = useServerFn(getPublicInvoice);
   const { data, isLoading, error } = useQuery({
     queryKey: ["public-invoice", token],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_invoice_public" as never, { _token: token } as never);
-
-      if (error) throw error;
-      if (!data) throw new Error("Invoice not found");
-      return data as PublicInvoice;
+      const result = await fetchInvoice({ data: { token } });
+      if (!result) throw new Error("Invoice not found");
+      return result as PublicInvoice;
     },
   });
+
 
   if (isLoading) return <div className="grid min-h-screen place-items-center text-slate-500">Loading...</div>;
   if (error || !data) return (
