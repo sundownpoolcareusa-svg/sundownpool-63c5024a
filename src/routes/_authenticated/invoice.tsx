@@ -235,7 +235,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
 
         <hr className="my-4 border-slate-100" />
-        <div className="grid grid-cols-2 gap-6 text-sm">
+        <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div>
             <div className="font-bold text-slate-900">Bill To:</div>
             <div className="mt-1 space-y-0.5 text-slate-700">
