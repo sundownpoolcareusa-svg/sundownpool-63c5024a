@@ -220,7 +220,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
       </div>
       <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
         <DocCardHeader title="INVOICE" number={invoice.number} />
-        <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
+        <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-slate-700">
             <div>4008 Destination Dr #2208</div>
             <div>Osprey, FL 34229</div>
