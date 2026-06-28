@@ -256,8 +256,8 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
         <div className="mt-6">
           <div className="mb-2 font-bold text-slate-900">Requested Services</div>
-          <div className="overflow-hidden rounded-lg border border-slate-200">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-[var(--brand-blue)] text-white">
                 <tr>
                   <th className="px-4 py-2.5 text-left text-xs font-bold">SERVICE</th>
