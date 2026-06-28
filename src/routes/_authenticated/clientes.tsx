@@ -108,7 +108,7 @@ function ClientesPage() {
             </div>
           ) : (
             <>
-              <table className="mt-5 w-full text-sm">
+              <div className="-mx-4 mt-5 overflow-x-auto sm:mx-0"><table className="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-slate-500">
                     <th className="py-3 font-medium">Client</th>
