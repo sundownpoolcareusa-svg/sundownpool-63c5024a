@@ -284,7 +284,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <div className="w-72 space-y-2 text-sm">
+          <div className="w-full max-w-xs space-y-2 text-sm sm:w-72">
             <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(invoice.subtotal)}</span></div>
             <div className="flex justify-between border-t pt-2 text-base"><span className="font-semibold">Total</span><span className={`font-extrabold ${isPaid ? "text-green-600" : "text-slate-900"}`}>{fmt(invoice.total)}</span></div>
           </div>
