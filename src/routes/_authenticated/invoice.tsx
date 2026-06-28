@@ -227,7 +227,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             <div>(407) 555-1234</div>
             <div>hello@sundownpoolservice.com</div>
           </div>
-          <div className="space-y-1 text-right text-slate-700">
+          <div className="space-y-1 text-slate-700 sm:text-right">
             <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(invoice.invoice_date)}</div>
             <div><span className="font-semibold text-slate-900">Due Date:</span> {fmtDate(invoice.due_date)}</div>
             <div><span className="font-semibold text-slate-900">Status:</span> <span className={isPaid ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>{isPaid ? "PAID" : "UNPAID"}</span></div>
