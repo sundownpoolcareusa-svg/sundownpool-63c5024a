@@ -191,7 +191,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
       </div>
       <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm">
         <DocCardHeader title="ESTIMATE" number={estimate.number} />
-        <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
+        <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-slate-700">
             <div>4008 Destination Dr #2208</div>
             <div>Osprey, FL 34229</div>
