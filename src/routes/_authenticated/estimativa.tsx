@@ -249,7 +249,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
             </table>
           </div>
         </div>
-        <div className="mt-6 grid grid-cols-2 gap-6">
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <div className="font-bold text-slate-900">Notes</div>
             <p className="mt-2 text-sm text-slate-700 whitespace-pre-line">{estimate.notes || "—"}</p>
