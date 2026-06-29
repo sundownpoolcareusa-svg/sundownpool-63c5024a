@@ -502,8 +502,8 @@ function MaintenancePlansPage() {
       <footer className="bg-[#0a2547] text-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-5 lg:px-8">
           <div>
-            <div className="w-fit rounded bg-white p-2">
-              <img src={logoAsset.url} alt="Sundown Pool Service" className="h-20 w-auto" />
+            <div className="w-fit">
+              <img src={logoAsset.url} alt="Sundown Pool Service" className="h-20 w-auto invert" />
             </div>
             <p className="mt-4 text-sm text-white/80">
               Professional pool cleaning, green pool cleanup, maintenance and repairs. We keep your pool perfect, so you can enjoy what matters most.
