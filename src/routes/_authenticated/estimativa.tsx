@@ -178,6 +178,7 @@ function Row({ icon: Icon, label, value }: { icon: React.ComponentType<{ classNa
 
 function EstimateDetail({ estimate }: { estimate: Estimate }) {
   const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.position - b.position);
+  const pdfRef = useRef<HTMLDivElement>(null);
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -187,17 +188,26 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> Send</button>
-          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF</button>
+          <button
+            onClick={() => {
+              if (!pdfRef.current) return;
+              const fname = `${estimate.client?.name || "Client"} ${estimate.number}`;
+              downloadElementAsPdf(pdfRef.current, fname);
+            }}
+            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+          >
+            <Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF
+          </button>
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
-      <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm">
+      <div ref={pdfRef} className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm">
         <DocCardHeader title="ESTIMATE" number={estimate.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-slate-700">
             <div>4008 Destination Dr</div>
             <div>Osprey, FL 34229</div>
-            <div>(407) 555-1234</div>
+            <div>(561) 376-2428</div>
             <div>hello@sundownpoolservice.com</div>
           </div>
           <div className="space-y-1 text-slate-700 sm:text-right">
@@ -212,7 +222,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
             <div className="flex items-center gap-2 font-bold text-slate-900"><User className="h-4 w-4" /> Client</div>
             <div className="mt-2 space-y-0.5 text-slate-700">
               <div>{estimate.client?.name}</div>
-              {estimate.client?.phone && <div>{estimate.client.phone}</div>}
+              {estimate.client?.phone && <div>{formatPhone(estimate.client.phone)}</div>}
               {estimate.client?.email && <div>{estimate.client.email}</div>}
             </div>
           </div>
