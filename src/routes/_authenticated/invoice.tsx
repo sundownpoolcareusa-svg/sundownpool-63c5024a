@@ -6,7 +6,7 @@ import { Modal } from "@/components/Modal";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, Link2, Check, X,
-  Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2,
+  Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
 import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, type Invoice } from "@/lib/db";
@@ -174,6 +174,7 @@ function InvoicePage() {
 }
 
 function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: () => void }) {
+  const [editOpen, setEditOpen] = useState(false);
   const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.position - b.position);
   const isPaid = invoice.status === "PAID";
 
@@ -197,6 +198,12 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={() => setEditOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+          >
+            <Pencil className="h-4 w-4 text-[var(--brand-blue)]" /> Edit
+          </button>
+          <button
             onClick={() => toggle.mutate()}
             disabled={toggle.isPending}
             className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-white ${isPaid ? "bg-amber-500 hover:bg-amber-600" : "bg-green-500 hover:bg-green-600"}`}
@@ -218,11 +225,12 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
+      <EditInvoiceModal invoice={invoice} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => { onChanged(); setEditOpen(false); }} />
       <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
         <DocCardHeader title="INVOICE" number={invoice.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-slate-700">
-            <div>4008 Destination Dr #2208</div>
+            <div>4008 Destination Dr</div>
             <div>Osprey, FL 34229</div>
             <div>(407) 555-1234</div>
             <div>hello@sundownpoolservice.com</div>
@@ -420,6 +428,100 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
           </div>
         </form>
       )}
+    </Modal>
+  );
+}
+
+function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoice; open: boolean; onClose: () => void; onSaved: () => void }) {
+  const [dueDate, setDueDate] = useState(invoice.due_date || "");
+  const [status, setStatus] = useState(invoice.status);
+  const [items, setItems] = useState<LineRow[]>(
+    (invoice.invoice_items ?? []).slice().sort((a, b) => a.position - b.position).map((it) => ({
+      service: it.service,
+      description: it.description,
+      qty: it.qty,
+      rate: it.rate,
+    }))
+  );
+
+  const subtotal = useMemo(() => items.reduce((s, i) => s + i.qty * i.rate, 0), [items]);
+  const total = subtotal;
+
+  const mut = useMutation({
+    mutationFn: async () => {
+      if (items.length === 0) throw new Error("Add at least one item");
+      const { error: invErr } = await supabase
+        .from("invoices")
+        .update({ due_date: dueDate || null, status, subtotal, tax: 0, total })
+        .eq("id", invoice.id);
+      if (invErr) throw invErr;
+      const { error: delErr } = await supabase.from("invoice_items").delete().eq("invoice_id", invoice.id);
+      if (delErr) throw delErr;
+      const rows = items.map((it, idx) => ({
+        invoice_id: invoice.id,
+        service: it.service,
+        description: it.description,
+        qty: it.qty,
+        rate: it.rate,
+        amount: it.qty * it.rate,
+        position: idx,
+      }));
+      const { error: insErr } = await supabase.from("invoice_items").insert(rows);
+      if (insErr) throw insErr;
+    },
+    onSuccess: () => { toast.success("Invoice updated!"); onSaved(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Edit ${invoice.number}`} maxWidth="max-w-3xl">
+      <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Due Date</label>
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Status</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+              <option value="UNPAID">UNPAID</option>
+              <option value="PAID">PAID</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-sm font-semibold text-slate-700">Items</label>
+            <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Add item</button>
+          </div>
+          <div className="space-y-2">
+            {items.map((it, idx) => (
+              <div key={idx} className="grid grid-cols-12 gap-2">
+                <input className="col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
+                <input className="col-span-4 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
+                <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
+                <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-md border border-slate-200 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <div className="w-72 space-y-1.5 text-sm">
+            <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
+            <div className="flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="text-[var(--brand-blue)]">{fmt(total)}</span></div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
+          <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            {mut.isPending ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 }

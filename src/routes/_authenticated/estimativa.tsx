@@ -193,7 +193,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
         <DocCardHeader title="ESTIMATE" number={estimate.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-slate-700">
-            <div>4008 Destination Dr #2208</div>
+            <div>4008 Destination Dr</div>
             <div>Osprey, FL 34229</div>
             <div>(407) 555-1234</div>
             <div>hello@sundownpoolservice.com</div>
