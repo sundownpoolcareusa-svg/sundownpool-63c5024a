@@ -38,7 +38,7 @@ function AuthPage() {
     <div className="min-h-screen bg-[var(--brand-navy)]">
       <div className="grid min-h-screen place-items-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
-          <div className="flex justify-center rounded-lg bg-white p-4 border border-slate-200"><AppLogo className="h-20" /></div>
+          <div className="flex justify-center rounded-lg bg-white p-4 border border-slate-200"><AppLogo className="h-24" /></div>
           <h1 className="mt-6 text-center text-2xl font-extrabold text-slate-900">Sign in</h1>
           <p className="mt-1 text-center text-sm text-slate-500">Sign in to manage your clients</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
