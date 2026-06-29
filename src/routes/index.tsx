@@ -124,9 +124,9 @@ function LandingPage() {
                   Weekly maintenance, green pool recovery, equipment repairs, filter cleaning, and water treatment. Fast, reliable service with free estimates.
                 </p>
 
-                <div className="mt-6 hidden flex-wrap gap-x-6 gap-y-4 sm:flex">
+                <div className="mt-6 flex flex-wrap gap-x-6 gap-y-4">
                   {TRUST.map((t) => (
-                    <div key={t.label} className="flex items-center gap-2">
+                    <div key={t.label} className={`flex items-center gap-2 ${t.label === "Licensed" ? "hidden sm:flex" : ""}`}>
                       <t.icon className="h-6 w-6 text-white" />
                       <div className="text-xs leading-tight">
                         <div className="font-semibold">{t.label}</div>
