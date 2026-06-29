@@ -113,7 +113,7 @@ function LandingPage() {
           <img src={heroPool} alt="Luxury pool" className="h-[560px] w-full object-cover sm:h-[640px] lg:h-[720px]" width={1600} height={900} />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0a2547]/85 via-[#0a2547]/55 to-transparent lg:from-[#0a2547]/80 lg:via-[#0a2547]/30" />
           <div className="absolute inset-0">
-            <div className="mx-auto flex h-full max-w-7xl flex-col justify-center px-4 py-10 lg:px-8">
+            <div className="mx-auto flex h-full max-w-7xl flex-col justify-start px-4 pb-10 pt-24 sm:justify-center sm:pt-10 lg:px-8">
               <div className="max-w-2xl text-white">
                 <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
                   Professional Pool Care<br />
