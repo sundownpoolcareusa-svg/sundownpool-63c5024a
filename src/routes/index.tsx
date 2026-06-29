@@ -70,7 +70,7 @@ function LandingPage() {
       <header className="sticky top-0 z-50 bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
           <a href="#home" className="flex items-center">
-            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-20 w-auto sm:h-28 lg:h-28" />
+            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-14 w-auto sm:h-20 lg:h-20" />
           </a>
           <nav className="hidden items-center gap-7 lg:flex">
             {NAV.map((n) => (
