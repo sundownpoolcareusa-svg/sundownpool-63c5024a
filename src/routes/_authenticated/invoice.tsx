@@ -7,7 +7,6 @@ import { DocCardHeader } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, Link2, Check, X,
   Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil,
-
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
 import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, type Invoice } from "@/lib/db";
