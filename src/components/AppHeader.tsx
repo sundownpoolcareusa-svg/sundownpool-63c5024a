@@ -49,7 +49,7 @@ export function AppHeader() {
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
-          <AppLogo className="h-10 sm:h-12 lg:h-16" />
+          <AppLogo className="h-12 sm:h-14 lg:h-18" />
         </div>
 
         <nav className="hidden items-end gap-2 lg:flex">
