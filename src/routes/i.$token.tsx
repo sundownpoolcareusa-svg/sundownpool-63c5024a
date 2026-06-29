@@ -94,7 +94,7 @@ function PublicInvoicePage() {
           </div>
           <div className="mt-6 overflow-hidden rounded-lg border border-slate-200">
             <table className="w-full text-sm">
-              <thead className="bg-[var(--brand-blue)] text-white">
+              <thead className="bg-[var(--doc-blue)] text-white">
                 <tr>
                   <th className="px-4 py-2.5 text-left text-xs font-bold">SERVICE</th>
                   <th className="px-4 py-2.5 text-left text-xs font-bold">DESCRIPTION</th>
@@ -106,7 +106,7 @@ function PublicInvoicePage() {
               <tbody>
                 {sortedItems.map((it, i) => (
                   <tr key={i} className="border-t border-slate-100 align-top">
-                    <td className="px-4 py-2.5 font-semibold text-slate-900"><div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--brand-blue)]" /> {it.service || "—"}</div></td>
+                    <td className="px-4 py-2.5 font-bold text-slate-900"><div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--doc-blue)]" /> {it.service || "—"}</div></td>
                     <td className="px-4 py-2.5 text-slate-700">{it.description}</td>
                     <td className="px-4 py-2.5 text-slate-700">{it.qty}</td>
                     <td className="px-4 py-2.5 text-right text-slate-700">{fmt(Number(it.rate))}</td>
