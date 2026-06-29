@@ -177,6 +177,7 @@ function InvoicePage() {
 
 function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: () => void }) {
   const [editOpen, setEditOpen] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
   const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.position - b.position);
   const isPaid = invoice.status === "PAID";
 
