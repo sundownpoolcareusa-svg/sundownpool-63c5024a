@@ -199,6 +199,12 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={() => setEditOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+          >
+            <Pencil className="h-4 w-4 text-[var(--brand-blue)]" /> Edit
+          </button>
+          <button
             onClick={() => toggle.mutate()}
             disabled={toggle.isPending}
             className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-white ${isPaid ? "bg-amber-500 hover:bg-amber-600" : "bg-green-500 hover:bg-green-600"}`}
@@ -220,6 +226,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
+      <EditInvoiceModal invoice={invoice} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => { onChanged(); setEditOpen(false); }} />
       <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
         <DocCardHeader title="INVOICE" number={invoice.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
