@@ -154,7 +154,6 @@ function EstimativaPage() {
                 <p className="text-sm text-slate-600">We are here to help!</p>
                 <div className="mt-3 space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-slate-700"><Phone className="h-4 w-4 text-[var(--brand-blue)]" /> (561) 376-2428</div>
-                  <div className="flex items-center gap-2 text-slate-700"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> hello@sundownpoolservice.com</div>
                 </div>
               </div>
             </>
@@ -208,7 +207,6 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
             <div>4008 Destination Dr</div>
             <div>Osprey, FL 34229</div>
             <div>(561) 376-2428</div>
-            <div>hello@sundownpoolservice.com</div>
           </div>
           <div className="space-y-1 text-slate-700 sm:text-right">
             <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(estimate.estimate_date)}</div>

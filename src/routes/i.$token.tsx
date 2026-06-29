@@ -70,11 +70,10 @@ function PublicInvoicePage() {
           <DocCardHeader title="INVOICE" number={invoice.number} />
           <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
             <div className="space-y-1 text-slate-700">
-              <div>4008 Destination Dr</div>
-              <div>Osprey, FL 34229</div>
-              <div>(561) 376-2428</div>
-              <div>hello@sundownpoolservice.com</div>
-            </div>
+            <div>4008 Destination Dr</div>
+            <div>Osprey, FL 34229</div>
+            <div>(561) 376-2428</div>
+          </div>
             <div className="space-y-1 text-right text-slate-700">
               <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(invoice.invoice_date)}</div>
               <div><span className="font-semibold text-slate-900">Due Date:</span> {fmtDate(invoice.due_date)}</div>
