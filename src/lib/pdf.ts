@@ -1,3 +1,6 @@
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas-pro";
+
 export function formatPhone(raw: string | null | undefined): string {
   if (!raw) return "";
   const digits = raw.replace(/\D/g, "").slice(-10);
@@ -6,16 +9,30 @@ export function formatPhone(raw: string | null | undefined): string {
 }
 
 export async function downloadElementAsPdf(el: HTMLElement, filename: string) {
-  const mod = await import("html2pdf.js");
-  const html2pdf = (mod as any).default || (mod as any);
-  await html2pdf()
-    .set({
-      margin: [10, 10, 10, 10],
-      filename: `${filename}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-      jsPDF: { unit: "mm", format: "letter", orientation: "portrait" },
-    })
-    .from(el)
-    .save();
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+  });
+  const imgData = canvas.toDataURL("image/jpeg", 0.95);
+
+  const pdf = new jsPDF({ unit: "mm", format: "letter", orientation: "portrait" });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const margin = 10;
+  const availW = pageW - margin * 2;
+  const imgH = (canvas.height * availW) / canvas.width;
+
+  let heightLeft = imgH;
+  let position = margin;
+  pdf.addImage(imgData, "JPEG", margin, position, availW, imgH);
+  heightLeft -= pageH - margin * 2;
+  while (heightLeft > 0) {
+    position = margin - (imgH - heightLeft);
+    pdf.addPage();
+    pdf.addImage(imgData, "JPEG", margin, position, availW, imgH);
+    heightLeft -= pageH - margin * 2;
+  }
+
+  pdf.save(`${filename}.pdf`);
 }
