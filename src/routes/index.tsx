@@ -27,7 +27,7 @@ const NAV = [
   { label: "HOME", href: "#home" },
   { label: "SERVICES", href: "#services" },
   { label: "MAINTENANCE PLANS", href: "/maintenance-plans" },
-  { label: "ABOUT US", href: "#about" },
+  { label: "ABOUT US", href: "/about" },
   { label: "SERVICE AREAS", href: "#areas" },
   { label: "CONTACT", href: "#contact" },
 ];
