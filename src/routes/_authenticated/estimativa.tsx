@@ -238,7 +238,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
           <div className="mb-2 font-bold text-slate-900">Requested Services</div>
           <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-[var(--brand-blue)] text-white">
+              <thead className="bg-[var(--doc-blue)] text-white">
                 <tr>
                   <th className="px-4 py-2.5 text-left text-xs font-bold">SERVICE</th>
                   <th className="px-4 py-2.5 text-left text-xs font-bold">DESCRIPTION</th>
@@ -250,7 +250,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
               <tbody>
                 {items.map((s, i) => (
                   <tr key={i} className="border-t border-slate-100 align-top">
-                    <td className="px-4 py-3 font-semibold text-slate-900"><div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--brand-blue)]" /> {s.name}</div></td>
+                    <td className="px-4 py-3 font-bold text-slate-900"><div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--doc-blue)]" /> {s.name}</div></td>
                     <td className="px-4 py-3 text-slate-700">{s.description}</td>
                     <td className="px-4 py-3 text-slate-700">{s.qty}</td>
                     <td className="px-4 py-3 text-right text-slate-700">{fmt(Number(s.unit_price))}</td>

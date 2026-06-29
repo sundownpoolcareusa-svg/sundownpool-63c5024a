@@ -10,6 +10,7 @@
 :root {
   --brand-navy: oklch(0.22 0.06 260);
   --brand-blue: oklch(0.52 0.18 255);
+  --doc-blue: oklch(0.55 0.24 255);
 }
 
 @custom-variant dark (&:is(.dark *));
