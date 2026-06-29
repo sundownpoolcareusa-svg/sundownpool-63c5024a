@@ -70,7 +70,7 @@ function LandingPage() {
       <header className="sticky top-0 z-50 bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
           <a href="#home" className="flex items-center">
-            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-20 w-auto sm:h-24 lg:h-28" />
+            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-32 w-auto sm:h-36 lg:h-44" />
           </a>
           <nav className="hidden items-center gap-7 lg:flex">
             {NAV.map((n) => (
@@ -320,7 +320,7 @@ function LandingPage() {
       <footer className="bg-[#0a2547] text-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-5 lg:px-8">
           <div>
-            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-16 w-auto brightness-0 invert" />
+            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-24 w-auto brightness-0 invert" />
             <p className="mt-4 text-sm text-white/80">
               Professional pool cleaning, maintenance and repairs. We keep your pool perfect, so you can enjoy what matters most.
             </p>
