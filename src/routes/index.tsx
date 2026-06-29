@@ -320,7 +320,7 @@ function LandingPage() {
       <footer className="bg-[#0a2547] text-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-5 lg:px-8">
           <div>
-            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-16 w-auto brightness-0 invert" />
+            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-24 w-auto brightness-0 invert" />
             <p className="mt-4 text-sm text-white/80">
               Professional pool cleaning, maintenance and repairs. We keep your pool perfect, so you can enjoy what matters most.
             </p>
