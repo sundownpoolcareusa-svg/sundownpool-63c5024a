@@ -61,7 +61,7 @@ function PublicInvoicePage() {
           <DocCardHeader title="INVOICE" number={invoice.number} />
           <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
             <div className="space-y-1 text-slate-700">
-              <div>4008 Destination Dr #2208</div>
+              <div>4008 Destination Dr</div>
               <div>Osprey, FL 34229</div>
               <div>(407) 555-1234</div>
               <div>hello@sundownpoolservice.com</div>

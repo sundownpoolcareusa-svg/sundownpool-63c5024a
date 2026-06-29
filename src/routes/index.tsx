@@ -346,7 +346,7 @@ function LandingPage() {
             <ul className="mt-3 space-y-2 text-sm text-white/80">
               <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-sky-400" /> {PHONE}</li>
               <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-sky-400" /> hello@sundownpoolservice.com</li>
-              <li className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-400" /> 4008 Destination Dr #2208, Osprey, FL 34229</li>
+              <li className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-400" /> 4008 Destination Dr, Osprey, FL 34229</li>
             </ul>
             <div className="mt-4 flex items-center gap-3">
               <a href="#" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Facebook className="h-4 w-4" /></a>
