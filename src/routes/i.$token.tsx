@@ -47,6 +47,7 @@ function PublicInvoicePage() {
   const { invoice, client, items } = data;
   const isPaid = invoice.status === "PAID";
   const sortedItems = [...(items ?? [])].sort((a, b) => a.position - b.position);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 print:bg-white print:p-0">
@@ -55,17 +56,23 @@ function PublicInvoicePage() {
           <div className={`rounded px-3 py-1 text-xs font-bold ${isPaid ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
             {isPaid ? "PAID" : "UNPAID"}
           </div>
-          <button onClick={() => window.print()} className="flex items-center gap-2 rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white">
+          <button
+            onClick={() => {
+              if (!pdfRef.current) return;
+              downloadElementAsPdf(pdfRef.current, `${client?.name || "Client"} ${invoice.number}`);
+            }}
+            className="flex items-center gap-2 rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white"
+          >
             <Download className="h-4 w-4" /> Download PDF
           </button>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
+        <div ref={pdfRef} className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
           <DocCardHeader title="INVOICE" number={invoice.number} />
           <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
             <div className="space-y-1 text-slate-700">
               <div>4008 Destination Dr</div>
               <div>Osprey, FL 34229</div>
-              <div>(407) 555-1234</div>
+              <div>(561) 376-2428</div>
               <div>hello@sundownpoolservice.com</div>
             </div>
             <div className="space-y-1 text-right text-slate-700">
@@ -81,7 +88,7 @@ function PublicInvoicePage() {
               <div>{client.name}</div>
               {client.address && <div>{client.address}</div>}
               {client.city && <div>{client.city}{client.state ? `, ${client.state}` : ""} {client.zip || ""}</div>}
-              {client.phone && <div>{client.phone}</div>}
+              {client.phone && <div>{formatPhone(client.phone)}</div>}
               {client.email && <div>{client.email}</div>}
             </div>
           </div>
