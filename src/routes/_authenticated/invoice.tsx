@@ -12,6 +12,8 @@ import poolImg from "@/assets/pool.jpg";
 import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, type Invoice } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useRef } from "react";
+import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
 
 export const Route = createFileRoute("/_authenticated/invoice")({
   component: InvoicePage,
@@ -175,6 +177,7 @@ function InvoicePage() {
 
 function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: () => void }) {
   const [editOpen, setEditOpen] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
   const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.position - b.position);
   const isPaid = invoice.status === "PAID";
 
@@ -217,7 +220,11 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> <span className="hidden sm:inline">Copy Client </span>Link
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => {
+              if (!pdfRef.current) return;
+              const fname = `${invoice.client?.name || "Client"} ${invoice.number}`;
+              downloadElementAsPdf(pdfRef.current, fname);
+            }}
             className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
           >
             <Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF
@@ -226,13 +233,13 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
       </div>
       <EditInvoiceModal invoice={invoice} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => { onChanged(); setEditOpen(false); }} />
-      <div className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
+      <div ref={pdfRef} className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
         <DocCardHeader title="INVOICE" number={invoice.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-slate-700">
             <div>4008 Destination Dr</div>
             <div>Osprey, FL 34229</div>
-            <div>(407) 555-1234</div>
+            <div>(561) 376-2428</div>
             <div>hello@sundownpoolservice.com</div>
           </div>
           <div className="space-y-1 text-slate-700 sm:text-right">
@@ -250,7 +257,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
               <div>{invoice.client?.name}</div>
               {invoice.client?.address && <div>{invoice.client.address}</div>}
               {invoice.client?.city && <div>{invoice.client.city}</div>}
-              {invoice.client?.phone && <div>{invoice.client.phone}</div>}
+              {invoice.client?.phone && <div>{formatPhone(invoice.client.phone)}</div>}
               {invoice.client?.email && <div>{invoice.client.email}</div>}
             </div>
           </div>
