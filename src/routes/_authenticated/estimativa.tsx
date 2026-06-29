@@ -208,7 +208,6 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
             <div>4008 Destination Dr</div>
             <div>Osprey, FL 34229</div>
             <div>(561) 376-2428</div>
-            <div>hello@sundownpoolservice.com</div>
           </div>
           <div className="space-y-1 text-slate-700 sm:text-right">
             <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(estimate.estimate_date)}</div>
