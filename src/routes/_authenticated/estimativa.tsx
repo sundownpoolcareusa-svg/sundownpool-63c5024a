@@ -12,6 +12,8 @@ import poolImg from "@/assets/pool.jpg";
 import { listEstimates, listClients, nextNumber, fmt, fmtDate, type Estimate } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useRef } from "react";
+import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
 
 export const Route = createFileRoute("/_authenticated/estimativa")({
   component: EstimativaPage,
