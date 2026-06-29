@@ -12,6 +12,8 @@ import poolImg from "@/assets/pool.jpg";
 import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, type Invoice } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useRef } from "react";
+import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
 
 export const Route = createFileRoute("/_authenticated/invoice")({
   component: InvoicePage,
