@@ -304,11 +304,11 @@ function MaintenancePlansPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#0a2547]/95 via-[#0a2547]/80 to-[#0a2547]/50" />
           <div className="absolute inset-0">
             <div className="mx-auto flex h-full max-w-7xl flex-col justify-center px-4 py-16 lg:flex-row lg:items-center lg:px-8">
-              <div className="max-w-2xl text-white lg:pr-12">
-                <h1 className="text-3xl font-extrabold uppercase tracking-tight sm:text-3xl lg:text-4xl">
+               <div className="max-w-3xl text-white lg:pr-12">
+                <h1 className="text-2xl font-extrabold uppercase tracking-tight sm:text-3xl lg:text-3xl">
                   POOL MAINTENANCE PLANS
                 </h1>
-                <p className="mt-2 text-xl font-extrabold text-[#33b5c5] sm:text-2xl lg:text-3xl">
+                <p className="mt-2 text-lg font-extrabold text-[#33b5c5] sm:text-xl lg:text-2xl">
                   Simple Plans. Crystal Clear Results.
                 </p>
                 <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/90 sm:text-base">
