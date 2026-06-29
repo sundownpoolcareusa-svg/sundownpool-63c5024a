@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MaintenancePlansRouteImport } from './routes/maintenance-plans'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as AuthenticatedInvoiceRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authenticated/estimativa'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 
+const MaintenancePlansRoute = MaintenancePlansRouteImport.update({
+  id: '/maintenance-plans',
+  path: '/maintenance-plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -55,6 +61,7 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/maintenance-plans': typeof MaintenancePlansRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/maintenance-plans': typeof MaintenancePlansRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
@@ -73,6 +81,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/maintenance-plans': typeof MaintenancePlansRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/estimativa': typeof AuthenticatedEstimativaRoute
   '/_authenticated/invoice': typeof AuthenticatedInvoiceRoute
@@ -83,17 +92,26 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/maintenance-plans'
     | '/clientes'
     | '/estimativa'
     | '/invoice'
     | '/i/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/clientes' | '/estimativa' | '/invoice' | '/i/$token'
+  to:
+    | '/'
+    | '/auth'
+    | '/maintenance-plans'
+    | '/clientes'
+    | '/estimativa'
+    | '/invoice'
+    | '/i/$token'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/maintenance-plans'
     | '/_authenticated/clientes'
     | '/_authenticated/estimativa'
     | '/_authenticated/invoice'
@@ -104,11 +122,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  MaintenancePlansRoute: typeof MaintenancePlansRoute
   ITokenRoute: typeof ITokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/maintenance-plans': {
+      id: '/maintenance-plans'
+      path: '/maintenance-plans'
+      fullPath: '/maintenance-plans'
+      preLoaderRoute: typeof MaintenancePlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -180,6 +206,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  MaintenancePlansRoute: MaintenancePlansRoute,
   ITokenRoute: ITokenRoute,
 }
 export const routeTree = rootRouteImport
