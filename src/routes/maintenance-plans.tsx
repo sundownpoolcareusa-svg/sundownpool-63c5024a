@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   Phone, Calendar, FlaskConical, Wrench, ShieldCheck, Check, Menu, X, MapPin,
   Mail, Facebook, Instagram, ChevronDown, Clock, ThumbsUp, MessageCircle,
-  Waves, ArrowRight, Gem,
+  Waves, ArrowRight, Gem, ClipboardList,
 } from "lucide-react";
 import logoAsset from "@/assets/sundown-logo.png.asset.json";
 import heroPool from "@/assets/hero-pool.jpg";
