@@ -330,7 +330,12 @@ function MaintenancePlansPage() {
               </div>
 
               <div className="mt-8 w-full max-w-sm rounded-lg bg-white p-6 shadow-2xl lg:mt-0">
-                <h3 className="text-lg font-extrabold text-[#0a2547]">WHY CHOOSE OUR PLANS?</h3>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#0a4d8a]">
+                    <ClipboardList className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-extrabold text-[#0a2547]">WHY CHOOSE OUR PLANS?</h3>
+                </div>
                 <ul className="mt-4 space-y-3">
                   {WHY_CHOOSE.map((item) => (
                     <li key={item} className="flex items-start gap-3 text-sm text-slate-700">
