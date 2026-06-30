@@ -326,7 +326,7 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
   });
 
   return (
-    <Modal open={open} onClose={onClose} title="New Estimate" maxWidth="max-w-3xl">
+    <Modal open={open} onClose={onClose} title="New Estimate" maxWidth="max-w-3xl" closeOnOverlayClick={false}>
       {clients.length === 0 ? (
         <div className="py-8 text-center">
           <p className="text-slate-600">Você precisa criar um cliente primeiro.</p>
