@@ -116,9 +116,7 @@ function LandingPage() {
             <div className="mx-auto flex h-full max-w-7xl flex-col justify-start px-4 pb-10 pt-24 sm:justify-center sm:pt-10 lg:px-8">
               <div className="max-w-2xl text-white">
                 <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
-                  Professional Pool Care<br />
-                  <span className="text-sky-400">& Green Pool Cleanup</span><br />
-                  in South Florida
+                  Professional Pool Care & Green Pool Cleanup in Southwest Florida
                 </h1>
                 <p className="mt-5 max-w-md text-sm leading-relaxed text-white/90 sm:text-base">
                   Weekly maintenance, green pool recovery, equipment repairs, filter cleaning, and water treatment. Fast, reliable service with free estimates.
