@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Phone, Menu, X, MapPin, Mail, Facebook, Instagram, ChevronDown,
+  Phone, Menu, X, MapPin, Facebook, Instagram, ChevronDown,
   ShieldCheck, Star, UserCheck, Clock, BadgeCheck, DollarSign,
   Calendar, UserCog, FlaskConical, Waves, ArrowRight,
   Droplet, Trash2, Wrench, Grid3x3, Sparkles,
