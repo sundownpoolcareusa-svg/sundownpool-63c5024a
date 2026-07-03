@@ -320,8 +320,11 @@ function ServicesPage() {
             <h4 className="text-sm font-extrabold tracking-wide">CONTACT US</h4>
             <ul className="mt-3 space-y-2 text-sm text-white/80">
               <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-sky-400" /> {PHONE}</li>
-              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-sky-400" /> hello@sundownpoolservice.com</li>
               <li className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-400" /> South Florida</li>
+              <li className="flex items-start gap-2">
+                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-400" />
+                <span>Mon – Fri: 7:00am – 6:00pm<br />Sat & Sun: By Appointment</span>
+              </li>
             </ul>
           </div>
           <div>
