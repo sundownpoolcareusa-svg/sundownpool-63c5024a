@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Phone, Menu, X, MapPin, Mail, Facebook, Instagram, ChevronDown,
+  Phone, Menu, X, MapPin, Facebook, Instagram, ChevronDown,
   ShieldCheck, Star, UserCheck, Clock, BadgeCheck, DollarSign,
   Calendar, UserCog, FlaskConical, Waves, ArrowRight,
   Droplet, Trash2, Wrench, Grid3x3, Sparkles,
@@ -292,8 +292,10 @@ function ServicesPage() {
               Professional pool cleaning, maintenance, and repairs. We keep your pool perfect, so you can enjoy what matters most.
             </p>
             <div className="mt-4 flex items-center gap-3">
-              <a href="#" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Facebook className="h-4 w-4" /></a>
-              <a href="#" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Instagram className="h-4 w-4" /></a>
+              <a href="#" aria-label="Facebook" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Facebook className="h-4 w-4" /></a>
+              <a href="#" aria-label="Instagram" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Instagram className="h-4 w-4" /></a>
+              <a href="#" aria-label="Google" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-sm font-extrabold hover:bg-white/20">G</a>
+              <a href="#" aria-label="Yelp" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-sm font-extrabold hover:bg-white/20">y</a>
             </div>
           </div>
           <div>
@@ -318,8 +320,11 @@ function ServicesPage() {
             <h4 className="text-sm font-extrabold tracking-wide">CONTACT US</h4>
             <ul className="mt-3 space-y-2 text-sm text-white/80">
               <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-sky-400" /> {PHONE}</li>
-              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-sky-400" /> hello@sundownpoolservice.com</li>
               <li className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-400" /> South Florida</li>
+              <li className="flex items-start gap-2">
+                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-400" />
+                <span>Mon – Fri: 7:00am – 6:00pm<br />Sat & Sun: By Appointment</span>
+              </li>
             </ul>
           </div>
           <div>
