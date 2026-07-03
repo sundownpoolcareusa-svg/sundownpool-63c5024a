@@ -292,8 +292,10 @@ function ServicesPage() {
               Professional pool cleaning, maintenance, and repairs. We keep your pool perfect, so you can enjoy what matters most.
             </p>
             <div className="mt-4 flex items-center gap-3">
-              <a href="#" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Facebook className="h-4 w-4" /></a>
-              <a href="#" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Instagram className="h-4 w-4" /></a>
+              <a href="#" aria-label="Facebook" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Facebook className="h-4 w-4" /></a>
+              <a href="#" aria-label="Instagram" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Instagram className="h-4 w-4" /></a>
+              <a href="#" aria-label="Google" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-sm font-extrabold hover:bg-white/20">G</a>
+              <a href="#" aria-label="Yelp" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-sm font-extrabold hover:bg-white/20">y</a>
             </div>
           </div>
           <div>
