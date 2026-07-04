@@ -37,7 +37,14 @@ export function SiteHeader({ active }: { active?: string }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <a
+            href={PHONE_HREF}
+            className="hidden items-center gap-2 font-display text-[17px] font-bold text-brand-navy md:inline-flex"
+          >
+            <Phone className="h-4 w-4 text-brand-blue" />
+            {PHONE}
+          </a>
           <a
             href="/#quote"
             className="hidden items-center gap-2 rounded-lg bg-brand-yellow px-4 py-2.5 font-display text-[13px] font-bold text-brand-navy-deep md:inline-flex"
