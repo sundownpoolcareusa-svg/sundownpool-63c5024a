@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Phone, Calendar, FlaskConical, Wrench, ShieldCheck, Check,
-  ArrowRight, ClipboardList,
+  ArrowRight, ClipboardList, Clock, ThumbsUp,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
