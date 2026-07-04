@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import {
-  Phone, Menu, X, Shield, Users, Award, Clock, Handshake, BadgeCheck,
-  Heart, Calendar, MapPin, CheckCircle2, Mail, Facebook, Instagram,
+  Phone, Calendar, Shield, Users, Award, Clock, Handshake,
+  BadgeCheck, Heart, MapPin, CheckCircle2,
 } from "lucide-react";
-import logoAsset from "@/assets/sundown-logo.png.asset.json";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import technicianImg from "@/assets/about-technician.jpg";
 import familyImg from "@/assets/about-family.jpg";
 
@@ -12,23 +12,14 @@ export const Route = createFileRoute("/about")({
   component: AboutPage,
   head: () => ({
     meta: [
-      { title: "About Us — Sundown Pool Service | Trusted Pool Care in South Florida" },
-      { name: "description", content: "Sundown Pool Service treats every pool like our own. Family-owned, licensed and insured, with years of experience serving homes and businesses across South Florida." },
+      { title: "About Us — Sundown Pool Care | Trusted Pool Care in South Florida" },
+      { name: "description", content: "Sundown Pool Care treats every pool like our own. Family-owned, licensed and insured, with years of experience serving homes and businesses across South Florida." },
     ],
   }),
 });
 
 const PHONE = "(561) 376-2428";
 const PHONE_HREF = "tel:+15613762428";
-
-const NAV = [
-  { label: "HOME", href: "/" },
-  { label: "SERVICES", href: "/#services" },
-  { label: "MAINTENANCE PLANS", href: "/maintenance-plans" },
-  { label: "ABOUT US", href: "/about" },
-  { label: "SERVICE AREAS", href: "/#areas" },
-  { label: "CONTACT", href: "/#contact" },
-];
 
 const HERO_BADGES = [
   { icon: Shield, title: "Licensed", sub: "& Insured" },
@@ -52,140 +43,73 @@ const VALUES = [
 ];
 
 const TESTIMONIALS = [
-  { quote: "Sundown Pool Service is the best! Our green pool looked brand new in just a few days. Professional, on time, and very affordable.", name: "Melissa R.", city: "Boca Raton, FL" },
+  { quote: "Sundown Pool Care is the best! Our green pool looked brand new in just a few days. Professional, on time, and very affordable.", name: "Melissa R.", city: "Boca Raton, FL" },
   { quote: "Reliable service every week. They take care of everything so we can just enjoy our pool. Highly recommend!", name: "David L.", city: "Delray Beach, FL" },
   { quote: "Great communication and excellent results. Our pool has never been cleaner!", name: "Sarah K.", city: "Wellington, FL" },
 ];
 
 function AboutPage() {
-  const [open, setOpen] = useState(false);
-
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      {/* Top utility bar */}
-      <div className="bg-[#0a2547] text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-xs lg:px-8">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5"><Shield className="h-3.5 w-3.5" /> Licensed & Insured</span>
-            <span className="hidden items-center gap-1.5 sm:flex">
-              <Award className="h-3.5 w-3.5 text-amber-400" /> 5-Star Rated on Google
-              <span className="text-amber-400">★★★★★</span>
-            </span>
-          </div>
-          <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Serving South Florida</span>
-        </div>
-      </div>
-
-      {/* NAV */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
-          <Link to="/" className="flex items-center">
-            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-12 w-auto sm:h-16" />
-          </Link>
-          <nav className="hidden items-center gap-7 lg:flex">
-            {NAV.map((n) => (
-              <a
-                key={n.label}
-                href={n.href}
-                className={`text-[13px] font-bold tracking-wide hover:text-[#0a4d8a] ${
-                  n.label === "ABOUT US" ? "border-b-2 border-[#0a4d8a] pb-1 text-[#0a4d8a]" : "text-slate-800"
-                }`}
-              >
-                {n.label}
-              </a>
-            ))}
-          </nav>
-          <div className="hidden items-center gap-4 lg:flex">
-            <a href={PHONE_HREF} className="flex items-center gap-2 text-sm font-bold text-slate-900">
-              <Phone className="h-4 w-4 text-[#0a4d8a]" /> {PHONE}
-            </a>
-            <a href="/#contact" className="rounded bg-amber-400 px-4 py-2.5 text-xs font-extrabold tracking-wide text-slate-900 hover:bg-amber-500">
-              GET A FREE QUOTE
-            </a>
-          </div>
-          <button onClick={() => setOpen((v) => !v)} aria-label="Menu" className="grid h-10 w-10 place-items-center rounded-md text-slate-800 lg:hidden">
-            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </div>
-        {open && (
-          <nav className="border-t border-slate-100 bg-white lg:hidden">
-            <div className="flex flex-col px-4 py-3">
-              {NAV.map((n) => (
-                <a key={n.label} href={n.href} onClick={() => setOpen(false)} className="border-b border-slate-100 py-3 text-sm font-bold tracking-wide text-slate-800">
-                  {n.label}
-                </a>
-              ))}
-            </div>
-          </nav>
-        )}
-      </header>
+    <div className="w-full overflow-x-hidden bg-white font-body text-brand-ink">
+      <SiteHeader active="ABOUT US" />
 
       {/* HERO */}
-      <section className="bg-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 lg:grid-cols-2 lg:px-8 lg:py-14">
+      <section className="bg-gradient-to-b from-[#f3f9fd] to-[#eaf4fb]">
+        <div className="mx-auto grid max-w-[1180px] items-center gap-10 px-7 py-12 lg:grid-cols-2">
           <div>
-            <p className="text-sm font-bold tracking-[0.2em] text-[#0a4d8a]">ABOUT US</p>
-            <h1 className="mt-3 text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
+            <div className="mb-3 font-display text-[13px] font-bold tracking-[2px] text-brand-blue">ABOUT US</div>
+            <h1 className="m-0 font-display text-[36px] font-extrabold leading-[1.1] text-brand-navy md:text-[42px]">
               Your Pool. Our Passion.
             </h1>
-            <p className="mt-2 text-xl font-bold text-sky-500 sm:text-2xl">Reliable Care You Can Count On.</p>
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-slate-600">
-              At Sundown Pool Service, we believe a clean, healthy pool brings people together and creates the best moments. That's why we're dedicated to providing professional, honest, and high-quality pool care for homes and businesses across South Florida.
+            <div className="mb-5 font-display text-[22px] font-bold text-brand-blue-bright md:text-[26px]">
+              Reliable Care You Can Count On.
+            </div>
+            <p className="m-0 mb-7 max-w-[480px] text-[15.5px] leading-[1.7] text-[#42506a]">
+              At Sundown Pool Care, we believe a clean, healthy pool brings people together and creates the best moments. That's why we're dedicated to providing professional, honest, and high-quality pool care for homes and businesses across South Florida.
             </p>
-
-            <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
-              {HERO_BADGES.map((b) => (
-                <div key={b.title} className="flex items-center gap-2">
-                  <b.icon className="h-7 w-7 shrink-0 text-[#0a4d8a]" strokeWidth={1.5} />
-                  <div className="text-xs leading-tight">
-                    <div className="font-bold text-slate-900">{b.title}</div>
-                    <div className="text-slate-700">{b.sub}</div>
-                  </div>
+            <div className="flex flex-wrap gap-0 border-t border-[#d6e6f2] pt-5">
+              {HERO_BADGES.map((b, i) => (
+                <div key={b.title} className={`flex items-center gap-2.5 pr-4 text-[12.5px] font-bold text-brand-navy ${i > 0 ? "border-l border-[#d6e6f2] pl-4" : ""}`}>
+                  <b.icon className="h-6 w-6" strokeWidth={1.7} />
+                  <span>{b.title}<br />{b.sub}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="overflow-hidden rounded-lg shadow-md">
-            <img src={technicianImg} alt="Sundown pool technician testing water" className="h-full w-full object-cover" width={1280} height={896} />
-          </div>
+          <img src={technicianImg} alt="Sundown pool technician testing water" className="h-[360px] w-full rounded-[14px] object-cover shadow-[0_20px_46px_rgba(11,42,91,.18)]" />
         </div>
       </section>
 
       {/* OUR STORY */}
-      <section className="bg-white pb-12 lg:pb-16">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 lg:grid-cols-2 lg:items-center lg:px-8">
-          <div className="overflow-hidden rounded-lg shadow-md">
-            <img src={familyImg} alt="Family enjoying their pool at sunset" className="h-full w-full object-cover" loading="lazy" width={1024} height={768} />
+      <section className="mx-auto grid max-w-[1180px] items-center gap-10 px-7 py-14 lg:grid-cols-[0.9fr_1.1fr]">
+        <img src={familyImg} alt="Family enjoying their pool" className="h-[320px] w-full rounded-[14px] object-cover shadow-[0_16px_40px_rgba(11,42,91,.16)]" />
+        <div>
+          <div className="mb-2 font-display text-[13px] font-bold tracking-[2px] text-brand-blue">OUR STORY</div>
+          <h2 className="m-0 mb-4 font-display text-[24px] font-extrabold text-brand-navy md:text-[28px]">
+            Built on Experience. Driven by Excellence.
+          </h2>
+          <div className="space-y-3.5 text-[14.5px] leading-[1.7] text-[#42506a]">
+            <p>With years of experience in the pool care industry, Sundown Pool Care was founded with a simple mission: to treat every pool as if it were our own.</p>
+            <p>We know that every pool is unique, which is why we customize our services to meet your specific needs. From routine maintenance to complete green pool recovery, we have the knowledge, tools, and dedication to get the job done right.</p>
+            <p>We're proud to be a trusted partner for hundreds of satisfied customers throughout South Florida.</p>
           </div>
-          <div>
-            <p className="text-sm font-bold tracking-[0.2em] text-[#0a4d8a]">OUR STORY</p>
-            <h2 className="mt-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">
-              Built on Experience. Driven by Excellence.
-            </h2>
-            <div className="mt-5 space-y-4 text-sm leading-relaxed text-slate-600">
-              <p>With years of experience in the pool care industry, Sundown Pool Service was founded with a simple mission: to treat every pool as if it were our own.</p>
-              <p>We know that every pool is unique, which is why we customize our services to meet your specific needs. From routine maintenance to complete green pool recovery, we have the knowledge, tools, and dedication to get the job done right.</p>
-              <p>We're proud to be a trusted partner for hundreds of satisfied customers throughout South Florida.</p>
-            </div>
-            <p className="mt-5 font-serif text-xl italic text-sky-500 underline decoration-sky-300 underline-offset-4">
-              We care for your pool like it's our own.
-            </p>
+          <div className="mt-4 inline-block border-b-2 border-brand-blue-bright pb-1 font-script text-[26px] text-brand-blue">
+            We care for your pool like it's our own.
           </div>
         </div>
       </section>
 
       {/* STATS */}
-      <section className="bg-[#0a2547] py-10 text-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 lg:grid-cols-4 lg:px-8">
-          {STATS.map((s) => (
-            <div key={s.label} className="flex items-center gap-4">
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white/10">
-                <s.icon className="h-7 w-7 text-sky-300" strokeWidth={1.5} />
-              </div>
-              <div className="leading-tight">
-                <div className="text-2xl font-extrabold sm:text-3xl">{s.big}</div>
-                <div className="text-sm font-semibold">{s.label}</div>
-                <div className="text-xs text-white/70">{s.sub}</div>
+      <section className="relative overflow-hidden bg-brand-navy text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#123f70] to-brand-navy" />
+        <div className="absolute inset-0 bg-[repeating-linear-gradient(115deg,rgba(255,255,255,.04)_0_2px,transparent_2px_24px)]" />
+        <div className="relative mx-auto grid max-w-[1180px] gap-6 px-7 py-10 sm:grid-cols-2 lg:grid-cols-4">
+          {STATS.map((s, i) => (
+            <div key={s.label} className={`flex items-center gap-4 ${i < STATS.length - 1 ? "lg:border-r lg:border-white/10 lg:pr-4" : ""}`}>
+              <s.icon className="h-10 w-10 text-[#7fb6e6]" strokeWidth={1.5} />
+              <div>
+                <div className="font-display text-[26px] font-extrabold md:text-[30px]">{s.big}</div>
+                <div className="text-[12.5px] text-[#c3d6ef]">{s.label}<br />{s.sub}</div>
               </div>
             </div>
           ))}
@@ -193,50 +117,47 @@ function AboutPage() {
       </section>
 
       {/* VALUES */}
-      <section className="bg-white py-12 lg:py-16">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-xl font-extrabold tracking-wide text-slate-800 sm:text-2xl">OUR VALUES</h2>
-            <div className="mx-auto mt-2 h-0.5 w-16 bg-sky-400" />
-          </div>
-          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {VALUES.map((v) => (
-              <div key={v.title} className="flex flex-col items-center text-center">
-                <div className="grid h-16 w-16 place-items-center rounded-full bg-sky-50">
-                  <v.icon className="h-8 w-8 text-[#0a4d8a]" strokeWidth={1.5} />
-                </div>
-                <h3 className="mt-4 text-base font-extrabold text-slate-900">{v.title}</h3>
-                <p className="mt-2 max-w-[14rem] text-sm leading-relaxed text-slate-600">{v.desc}</p>
+      <section className="mx-auto max-w-[1080px] px-7 py-12">
+        <h2 className="m-0 text-center font-display text-[24px] font-extrabold text-brand-navy">OUR VALUES</h2>
+        <div className="mx-auto mt-1.5 h-[3px] w-[60px] rounded bg-brand-blue-bright" />
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {VALUES.map((v) => (
+            <div key={v.title} className="text-center px-2">
+              <div className="mx-auto mb-4 flex h-[74px] w-[74px] items-center justify-center rounded-full bg-brand-mist">
+                <v.icon className="h-8 w-8 text-brand-blue" strokeWidth={1.6} />
               </div>
-            ))}
-          </div>
+              <h4 className="m-0 mb-2 font-display text-[15px] font-bold text-brand-navy">{v.title}</h4>
+              <p className="m-0 text-[12.5px] leading-[1.6] text-[#6a7688]">{v.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="bg-sky-50 py-12 lg:py-16">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-xl font-extrabold tracking-wide text-slate-800 sm:text-2xl">WHAT OUR CLIENTS SAY</h2>
-            <div className="mx-auto mt-2 h-0.5 w-16 bg-sky-400" />
-          </div>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="mt-11 bg-brand-mist">
+        <div className="mx-auto max-w-[1120px] px-7 py-11">
+          <h2 className="m-0 text-center font-display text-[22px] font-extrabold text-brand-navy md:text-[24px]">WHAT OUR CLIENTS SAY</h2>
+          <div className="mx-auto mt-1.5 h-[3px] w-[60px] rounded bg-brand-blue-bright" />
+          <div className="mt-7 grid gap-5 md:grid-cols-3">
             {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="rounded-lg bg-white p-5 shadow-sm">
-                <div className="flex items-center gap-2">
-                  <div className="grid h-7 w-7 place-items-center rounded-full bg-white shadow ring-1 ring-slate-100">
-                    <span className="text-sm font-bold text-[#4285F4]">G</span>
-                  </div>
-                  <span className="text-amber-400">★★★★★</span>
+              <div key={t.name} className="rounded-xl bg-white p-5 shadow-[0_8px_22px_rgba(11,42,91,.07)]">
+                <div className="mb-3 flex items-center gap-2">
+                  <svg width="22" height="22" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 01-2.3 3.5v2.9h3.7C21.8 18.9 23 15.9 23 12.3z"/>
+                    <path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3C3.7 21.4 7.6 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.6 14.7a7.2 7.2 0 010-4.6v-3H1.8a12 12 0 000 10.6l3.8-3z"/>
+                    <path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.2 15.1 0 12 0 7.6 0 3.7 2.6 1.8 6.4l3.8 3C6.5 6.7 9 4.8 12 4.8z"/>
+                  </svg>
+                  <span className="text-sm tracking-widest text-[#fbbc05]">★★★★★</span>
                 </div>
-                <p className="mt-3 text-sm italic leading-relaxed text-slate-700">"{t.quote}"</p>
-                <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-full bg-sky-100 text-sm font-bold text-[#0a4d8a]">
+                <p className="m-0 mb-5 text-[13px] leading-[1.6] text-[#42506a]">"{t.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#8fd0f0] to-brand-blue text-[15px] font-bold text-white">
                     {t.name[0]}
                   </div>
-                  <div className="leading-tight">
-                    <div className="text-sm font-bold text-slate-800">— {t.name}</div>
-                    <div className="text-xs text-slate-500">{t.city}</div>
+                  <div>
+                    <div className="text-[13.5px] font-bold text-brand-navy">– {t.name}</div>
+                    <div className="text-xs text-[#6a7688]">{t.city}</div>
                   </div>
                 </div>
               </div>
@@ -245,84 +166,34 @@ function AboutPage() {
         </div>
       </section>
 
-      {/* CTA BAR */}
-      <section className="bg-[#0a2547] py-8 text-white">
-        <div className="mx-auto grid max-w-7xl items-center gap-5 px-4 lg:grid-cols-[1fr_auto_auto] lg:px-8">
+      {/* CTA BAND */}
+      <section className="relative overflow-hidden bg-brand-navy">
+        <div className="absolute inset-0 bg-[repeating-linear-gradient(115deg,rgba(255,255,255,.04)_0_2px,transparent_2px_24px)]" />
+        <div className="relative mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-6 px-7 py-7">
           <div>
-            <h3 className="text-xl font-extrabold sm:text-2xl">Ready for a Clean, Healthy Pool?</h3>
-            <p className="mt-1 text-sm text-white/80">Let our experts handle the work so you can enjoy your pool worry-free.</p>
+            <div className="font-display text-[21px] font-bold text-white md:text-[23px]">Ready for a Clean, Healthy Pool?</div>
+            <div className="text-[14px] text-[#c3d6ef]">Let our experts handle the work so you can enjoy your pool worry-free.</div>
           </div>
-          <a href={PHONE_HREF} className="flex items-center justify-center gap-3 rounded bg-amber-400 px-6 py-3.5 font-extrabold text-slate-900 hover:bg-amber-500">
-            <Phone className="h-5 w-5" />
-            <div className="text-left leading-tight">
-              <div className="text-xs">CALL NOW</div>
-              <div className="text-base">{PHONE}</div>
-            </div>
-          </a>
-          <a href="/#contact" className="flex items-center justify-center gap-3 rounded border-2 border-white/40 px-6 py-3.5 font-extrabold text-white hover:bg-white/10">
-            <Calendar className="h-5 w-5" />
-            <div className="text-left leading-tight">
-              <div className="text-base">GET A FREE QUOTE</div>
-              <div className="text-xs font-normal text-white/80">Fast, Easy & No Obligation</div>
-            </div>
-          </a>
+          <div className="flex flex-wrap gap-3.5">
+            <a href={PHONE_HREF} className="flex items-center gap-3 rounded-lg bg-brand-yellow px-6 py-3.5 font-display font-bold text-brand-navy-deep">
+              <Phone className="h-5 w-5" />
+              <span className="leading-tight">
+                CALL NOW<br /><span className="text-[12.5px] font-semibold">{PHONE}</span>
+              </span>
+            </a>
+            <a href="/#quote" className="flex items-center gap-3 rounded-lg border-[1.5px] border-white/55 bg-transparent px-6 py-3.5 font-display font-bold text-white">
+              <Calendar className="h-5 w-5" />
+              <span className="leading-tight">
+                GET A FREE QUOTE<br /><span className="text-[12.5px] font-semibold">Fast, Easy &amp; No Obligation</span>
+              </span>
+            </a>
+          </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-[#0a2547] text-white">
-        <div className="mx-auto grid max-w-7xl gap-8 border-t border-white/10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-5 lg:px-8">
-          <div>
-            <div className="w-fit rounded bg-white p-2">
-              <img src={logoAsset.url} alt="Sundown Pool Service" className="h-14 w-auto" />
-            </div>
-            <p className="mt-4 text-sm text-white/80">
-              Professional pool cleaning, maintenance, and repairs. We keep your pool perfect, so you can enjoy what matters most.
-            </p>
-            <div className="mt-4 flex items-center gap-3">
-              <a href="#" aria-label="Facebook" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Facebook className="h-4 w-4" /></a>
-              <a href="#" aria-label="Instagram" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Instagram className="h-4 w-4" /></a>
-            </div>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">QUICK LINKS</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
-              {NAV.map((n) => (
-                <li key={n.label}><a href={n.href} className="hover:text-white">{n.label.charAt(0) + n.label.slice(1).toLowerCase()}</a></li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">SERVICE AREAS</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
-              {["Boca Raton", "Delray Beach", "Boynton Beach", "West Palm Beach", "Wellington", "And Surrounding Areas"].map((c) => (
-                <li key={c} className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-300" /> {c}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">CONTACT US</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
-              <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-sky-300" /> {PHONE}</li>
-              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-sky-300" /> info@sundownpool.com</li>
-              <li className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-300" /> South Florida</li>
-              <li className="flex items-start gap-2"><Clock className="mt-0.5 h-3.5 w-3.5 text-sky-300" /> <span>Mon – Fri: 7:00am – 6:00pm<br />Sat & Sun: By Appointment</span></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">LICENSED & INSURED</h4>
-            <div className="mt-3 flex items-start gap-3">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/10">
-                <Shield className="h-6 w-6 text-sky-300" />
-              </div>
-              <p className="text-sm text-white/80">We are fully licensed and insured for your peace of mind.</p>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-white/10 py-4 text-center text-xs text-white/60">
-          © {new Date().getFullYear()} Sundown Pool Service. All Rights Reserved.
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
+
+export default AboutPage;
