@@ -1,14 +1,17 @@
 import { Link } from "@tanstack/react-router";
-import { Calendar, Menu, X } from "lucide-react";
+import { Calendar, Menu, X, Phone } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/sundown-logo-color.png.asset.json";
+
+const PHONE = "(561) 376-2428";
+const PHONE_HREF = "tel:+15613762428";
 
 const NAV = [
   { label: "HOME", to: "/" },
   { label: "SERVICES", to: "/services" },
   { label: "MAINTENANCE PLANS", to: "/maintenance-plans" },
   { label: "ABOUT US", to: "/about" },
-  { label: "SERVICE AREAS", to: "/#areas" },
+  { label: "SERVICE AREAS", to: "/service-areas" },
   { label: "CONTACT", to: "/#quote" },
 ] as const;
 
