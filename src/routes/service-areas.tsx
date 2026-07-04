@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Phone, Calendar, MapPin, Clock, ShieldCheck, UserCheck,
-  Search, Check, ArrowRight,
+  Search, Check, ArrowRight, ThumbsUp, DollarSign, Heart,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -41,9 +41,6 @@ const WHY = [
   { icon: DollarSign, title: "Transparent Pricing", desc: "No hidden fees. Honest & fair." },
   { icon: Heart, title: "Local & Family-Owned", desc: "We care about our community." },
 ];
-
-// Inline icons for the WHY grid where the zip used generic icons
-import { ThumbsUp, DollarSign, Heart } from "lucide-react";
 
 function ServiceAreasPage() {
   return (
