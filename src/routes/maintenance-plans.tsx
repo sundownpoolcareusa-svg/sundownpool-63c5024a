@@ -1,19 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Phone, Calendar, FlaskConical, Wrench, ShieldCheck, Check, Menu, X, MapPin,
-  Mail, Facebook, Instagram, ChevronDown, Clock, ThumbsUp, MessageCircle,
-  Waves, ArrowRight, Gem, ClipboardList,
+  Phone, Calendar, FlaskConical, Wrench, ShieldCheck, Check,
+  ArrowRight, ClipboardList, Clock, ThumbsUp,
 } from "lucide-react";
-import logoAsset from "@/assets/sundown-logo.png.asset.json";
-import heroPool from "@/assets/hero-pool.jpg";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const Route = createFileRoute("/maintenance-plans")({
   component: MaintenancePlansPage,
   head: () => ({
     meta: [
-      { title: "Maintenance Plans — Sundown Pool Service" },
-      { name: "description", content: "Simple weekly, bi-weekly and monthly pool maintenance plans. Professional care, crystal-clear water, and worry-free service in South Florida." },
+      { title: "Maintenance Plans — Sundown Pool Care" },
+      { name: "description", content: "Simple weekly and twice-weekly pool maintenance plans. Professional care, crystal-clear water, and worry-free service in South Florida." },
     ],
   }),
 });
@@ -21,13 +20,11 @@ export const Route = createFileRoute("/maintenance-plans")({
 const PHONE = "(561) 376-2428";
 const PHONE_HREF = "tel:+15613762428";
 
-const NAV = [
-  { label: "HOME", href: "/" },
-  { label: "SERVICES", href: "/#services" },
-  { label: "MAINTENANCE PLANS", href: "/maintenance-plans", active: true },
-  { label: "ABOUT US", href: "/#about" },
-  { label: "SERVICE AREAS", href: "/#areas" },
-  { label: "CONTACT", href: "/#contact" },
+const HERO_BADGES = [
+  { icon: Calendar, label: "Reliable", sub: "Scheduling" },
+  { icon: FlaskConical, label: "Chemical", sub: "Balance" },
+  { icon: Wrench, label: "Equipment", sub: "Check" },
+  { icon: ShieldCheck, label: "Peace of", sub: "Mind" },
 ];
 
 const WHY_CHOOSE = [
@@ -38,49 +35,32 @@ const WHY_CHOOSE = [
   "100% Satisfaction Guaranteed",
 ];
 
-const HERO_BADGES = [
-  { icon: Calendar, label: "Reliable", sub: "Scheduling" },
-  { icon: FlaskConical, label: "Chemical", sub: "Balance" },
-  { icon: Wrench, label: "Equipment", sub: "Check" },
-  { icon: ShieldCheck, label: "Peace of", sub: "Mind" },
-];
-
-const TABS = ["WEEKLY", "BI-WEEKLY", "MONTHLY"] as const;
+const TABS = ["ONCE A WEEK", "TWICE A WEEK"] as const;
 
 const PRICING = {
-  WEEKLY: [
+  "ONCE A WEEK": [
     {
       name: "BASIC PLAN",
       price: "$99",
       desc: "Perfect for pools that are in good condition.",
       features: [
-        "Skim surface",
-        "Vacuum pool",
-        "Brush walls",
-        "Empty skimmer & pump basket",
-        "Check & adjust chemicals",
-        "Equipment check",
+        "Skim surface", "Vacuum pool", "Brush walls",
+        "Empty skimmer & pump basket", "Check & adjust chemicals", "Equipment check",
       ],
       cta: "CHOOSE PLAN",
       color: "teal",
-      icon: Waves,
     },
     {
       name: "STANDARD PLAN",
       price: "$129",
       desc: "Our most popular plan for complete pool care.",
       features: [
-        "Everything in Basic Plan",
-        "Test & balance chemicals",
-        "Clean tile line",
-        "Inspect filter & equipment",
-        "Backwash filter (as needed)",
-        "Check salt system (if applicable)",
-        "Report of service",
+        "Everything in Basic Plan", "Test & balance chemicals", "Clean tile line",
+        "Inspect filter & equipment", "Backwash filter (as needed)",
+        "Check salt system (if applicable)", "Report of service",
       ],
       cta: "CHOOSE PLAN",
       color: "navy",
-      icon: Waves,
       popular: true,
     },
     {
@@ -88,123 +68,50 @@ const PRICING = {
       price: "$169",
       desc: "Maximum care for a perfectly maintained pool.",
       features: [
-        "Everything in Standard Plan",
-        "Filter cleaning (as needed)",
-        "Salt cell cleaning (as needed)",
-        "Equipment deep inspection",
-        "Water level check & adjust",
-        "Priority service",
-        "15% off repairs",
+        "Everything in Standard Plan", "Filter cleaning (as needed)",
+        "Salt cell cleaning (as needed)", "Equipment deep inspection",
+        "Water level check & adjust", "Priority service", "15% off repairs",
       ],
       cta: "CHOOSE PLAN",
       color: "teal",
-      icon: Gem,
     },
   ],
-  "BI-WEEKLY": [
+  "TWICE A WEEK": [
     {
       name: "BASIC PLAN",
-      price: "$79",
+      price: "$149",
       desc: "Perfect for pools that are in good condition.",
       features: [
-        "Skim surface",
-        "Vacuum pool",
-        "Brush walls",
-        "Empty skimmer & pump basket",
-        "Check & adjust chemicals",
-        "Equipment check",
+        "Skim surface", "Vacuum pool", "Brush walls",
+        "Empty skimmer & pump basket", "Check & adjust chemicals", "Equipment check",
       ],
       cta: "CHOOSE PLAN",
       color: "teal",
-      icon: Waves,
     },
     {
       name: "STANDARD PLAN",
-      price: "$99",
+      price: "$189",
       desc: "Our most popular plan for complete pool care.",
       features: [
-        "Everything in Basic Plan",
-        "Test & balance chemicals",
-        "Clean tile line",
-        "Inspect filter & equipment",
-        "Backwash filter (as needed)",
-        "Check salt system (if applicable)",
-        "Report of service",
+        "Everything in Basic Plan", "Test & balance chemicals", "Clean tile line",
+        "Inspect filter & equipment", "Backwash filter (as needed)",
+        "Check salt system (if applicable)", "Report of service",
       ],
       cta: "CHOOSE PLAN",
       color: "navy",
-      icon: Waves,
       popular: true,
     },
     {
       name: "PREMIUM PLAN",
-      price: "$129",
+      price: "$249",
       desc: "Maximum care for a perfectly maintained pool.",
       features: [
-        "Everything in Standard Plan",
-        "Filter cleaning (as needed)",
-        "Salt cell cleaning (as needed)",
-        "Equipment deep inspection",
-        "Water level check & adjust",
-        "Priority service",
-        "15% off repairs",
+        "Everything in Standard Plan", "Filter cleaning (as needed)",
+        "Salt cell cleaning (as needed)", "Equipment deep inspection",
+        "Water level check & adjust", "Priority service", "15% off repairs",
       ],
       cta: "CHOOSE PLAN",
       color: "teal",
-      icon: Gem,
-    },
-  ],
-  MONTHLY: [
-    {
-      name: "BASIC PLAN",
-      price: "$59",
-      desc: "Perfect for pools that are in good condition.",
-      features: [
-        "Skim surface",
-        "Vacuum pool",
-        "Brush walls",
-        "Empty skimmer & pump basket",
-        "Check & adjust chemicals",
-        "Equipment check",
-      ],
-      cta: "CHOOSE PLAN",
-      color: "teal",
-      icon: Waves,
-    },
-    {
-      name: "STANDARD PLAN",
-      price: "$79",
-      desc: "Our most popular plan for complete pool care.",
-      features: [
-        "Everything in Basic Plan",
-        "Test & balance chemicals",
-        "Clean tile line",
-        "Inspect filter & equipment",
-        "Backwash filter (as needed)",
-        "Check salt system (if applicable)",
-        "Report of service",
-      ],
-      cta: "CHOOSE PLAN",
-      color: "navy",
-      icon: Waves,
-      popular: true,
-    },
-    {
-      name: "PREMIUM PLAN",
-      price: "$99",
-      desc: "Maximum care for a perfectly maintained pool.",
-      features: [
-        "Everything in Standard Plan",
-        "Filter cleaning (as needed)",
-        "Salt cell cleaning (as needed)",
-        "Equipment deep inspection",
-        "Water level check & adjust",
-        "Priority service",
-        "15% off repairs",
-      ],
-      cta: "CHOOSE PLAN",
-      color: "teal",
-      icon: Gem,
     },
   ],
 };
@@ -213,133 +120,59 @@ const ALL_PLANS = [
   { icon: ShieldCheck, label: "Licensed & Insured", sub: "Technicians" },
   { icon: Clock, label: "On-Time, Every Time", sub: "Service" },
   { icon: ThumbsUp, label: "Satisfaction", sub: "Guaranteed" },
-  { icon: MessageCircle, label: "Easy Communication", sub: "& Updates" },
+  { icon: Calendar, label: "Easy Communication", sub: "& Updates" },
 ];
 
 const HOW_IT_WORKS = [
-  {
-    step: 1,
-    icon: Calendar,
-    title: "SCHEDULE",
-    desc: "Choose your plan and we'll set up your service schedule.",
-  },
-  {
-    step: 2,
-    icon: Wrench,
-    title: "WE CLEAN & CHECK",
-    desc: "Our technician visits and performs a complete service.",
-  },
-  {
-    step: 3,
-    icon: FlaskConical,
-    title: "WE TEST & BALANCE",
-    desc: "We test your water and balance chemicals for perfect results.",
-  },
-  {
-    step: 4,
-    icon: Waves,
-    title: "YOU ENJOY",
-    desc: "Relax and enjoy your clean, healthy, crystal-clear pool!",
-  },
+  { n: "1", icon: Calendar, title: "Schedule", desc: "Choose your plan and we'll set up your service schedule." },
+  { n: "2", icon: Wrench, title: "We Clean & Check", desc: "Our technician visits and performs a complete service." },
+  { n: "3", icon: FlaskConical, title: "We Test & Balance", desc: "We test your water and balance chemicals for perfect results." },
+  { n: "4", icon: ArrowRight, title: "You Enjoy", desc: "Relax and enjoy your clean, healthy, crystal-clear pool!" },
 ];
 
 function MaintenancePlansPage() {
-  const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<keyof typeof PRICING>("WEEKLY");
+  const [tab, setTab] = useState<keyof typeof PRICING>("ONCE A WEEK");
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      {/* HEADER */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
-          <a href="/" className="flex items-center">
-            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-12 w-auto sm:h-16 lg:h-16" />
-          </a>
-          <nav className="hidden items-center gap-7 lg:flex">
-            {NAV.map((n) => (
-              <a
-                key={n.label}
-                href={n.href}
-                className={`flex items-center gap-1 text-[13px] font-bold tracking-wide hover:text-[#0a4d8a] ${
-                  n.active ? "text-[#0a4d8a]" : "text-slate-800"
-                }`}
-              >
-                {n.label}
-                {n.label === "SERVICES" && <ChevronDown className="h-3.5 w-3.5" />}
-              </a>
-            ))}
-          </nav>
-          <div className="hidden items-center gap-4 lg:flex">
-            <a href={PHONE_HREF} className="flex items-center gap-2 text-sm font-bold text-slate-900">
-              <Phone className="h-4 w-4 text-[#0a4d8a]" /> {PHONE}
-            </a>
-            <a href="/#contact" className="rounded bg-[#f5b900] px-4 py-2.5 text-xs font-extrabold tracking-wide text-slate-900 hover:bg-[#e0a800]">
-              GET A FREE QUOTE
-            </a>
-          </div>
-          <button onClick={() => setOpen((v) => !v)} aria-label="Menu" className="grid h-10 w-10 place-items-center rounded-md text-slate-800 lg:hidden">
-            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </div>
-        {open && (
-          <nav className="border-t border-slate-100 bg-white lg:hidden">
-            <div className="flex flex-col px-4 py-3">
-              {NAV.map((n) => (
-                <a key={n.label} href={n.href} onClick={() => setOpen(false)} className="border-b border-slate-100 py-3 text-sm font-bold tracking-wide text-slate-800">
-                  {n.label}
-                </a>
-              ))}
-              <a href={PHONE_HREF} className="mt-3 flex items-center gap-2 text-sm font-bold">
-                <Phone className="h-4 w-4 text-[#0a4d8a]" /> {PHONE}
-              </a>
-            </div>
-          </nav>
-        )}
-      </header>
+    <div className="w-full overflow-x-hidden bg-white font-body text-brand-ink">
+      <SiteHeader active="MAINTENANCE PLANS" />
 
       {/* HERO */}
-      <section className="relative">
-        <div className="relative">
-          <img src={heroPool} alt="Pool maintenance" className="h-[600px] w-full object-cover lg:h-[580px]" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a2547]/95 via-[#0a2547]/80 to-[#0a2547]/50" />
-          <div className="absolute inset-0">
-            <div className="mx-auto flex h-full max-w-7xl flex-col justify-center px-4 py-16 lg:flex-row lg:items-center lg:px-8">
-              <div className="min-w-0 flex-1 text-white lg:pr-12">
-                <h1 className="whitespace-nowrap text-2xl font-extrabold uppercase tracking-tight sm:text-3xl lg:text-3xl">
-                  POOL MAINTENANCE PLANS
-                </h1>
-                <p className="whitespace-nowrap text-lg font-extrabold text-[#33b5c5] sm:text-xl lg:text-2xl">
-                  Simple Plans. Crystal Clear Results.
-                </p>
-                <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/90 sm:text-base">
-                  Keep your pool clean, safe, and swim-ready year-round with our professional maintenance plans. We handle the work, so you can enjoy your pool worry-free.
-                </p>
-                <div className="mt-8 grid grid-cols-2 gap-4 sm:flex sm:flex-wrap sm:gap-6">
-                  {HERO_BADGES.map((b) => (
-                    <div key={b.label} className="flex items-center gap-3">
-                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/30 bg-white/10">
-                        <b.icon className="h-6 w-6 text-white" />
-                      </div>
-                      <div className="text-xs font-bold leading-tight">
-                        <div>{b.label}</div>
-                        <div className="font-normal text-white/80">{b.sub}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+      <section className="relative overflow-hidden bg-brand-navy text-white">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1d4f86] via-[#123f70] to-brand-navy" />
+        <div className="absolute inset-y-0 right-0 w-[52%] bg-gradient-to-br from-[#8fd6f2] via-[#2f9fdb] to-[#0f6fb2]" />
+        <div className="absolute inset-y-0 right-0 w-[52%] bg-gradient-to-r from-brand-navy/85 to-brand-navy/10" />
+        <div className="relative mx-auto max-w-[1180px] px-7 pb-24 pt-12">
+          <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+            <div>
+              <h1 className="mb-1 font-display text-[34px] font-extrabold leading-tight tracking-[-.3px] md:text-[40px]">
+                POOL MAINTENANCE PLANS
+              </h1>
+              <div className="mb-5 font-display text-[24px] font-bold text-brand-blue-bright md:text-[27px]">
+                Simple Plans. Crystal Clear Results.
               </div>
-
-              <div className="mt-8 w-full max-w-sm rounded-lg bg-white p-6 shadow-2xl lg:mt-0">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#0a4d8a]">
-                    <ClipboardList className="h-5 w-5 text-white" />
+              <p className="mb-7 max-w-[470px] text-[16px] leading-[1.6] text-[#d8e6f5]">
+                Keep your pool clean, safe, and swim-ready year-round with our professional maintenance plans. We handle the work, so you can enjoy your pool worry-free.
+              </p>
+              <div className="flex flex-wrap gap-7">
+                {HERO_BADGES.map((b) => (
+                  <div key={b.label} className="flex items-center gap-2.5 text-[13.5px] font-semibold">
+                    <b.icon className="h-7 w-7" strokeWidth={1.7} />
+                    <span>{b.label}<br />{b.sub}</span>
                   </div>
-                  <h3 className="text-lg font-extrabold text-[#0a2547]">WHY CHOOSE OUR PLANS?</h3>
-                </div>
-                <ul className="mt-4 space-y-3">
+                ))}
+              </div>
+            </div>
+            <div className="relative">
+              <div className="absolute left-1/2 top-[-18px] z-10 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full bg-[#1668b3] shadow-[0_6px_16px_rgba(0,0,0,.3)]">
+                <ClipboardList className="h-5 w-5 text-white" />
+              </div>
+              <div className="rounded-xl bg-white p-6 pt-8 text-brand-navy shadow-[0_18px_40px_rgba(0,0,0,.25)]">
+                <h3 className="mb-4 text-center font-display text-[15px] font-bold">WHY CHOOSE OUR PLANS?</h3>
+                <ul className="flex flex-col gap-3.5 text-[13px] text-[#42506a]">
                   {WHY_CHOOSE.map((item) => (
-                    <li key={item} className="flex items-start gap-3 text-sm text-slate-700">
-                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-[#0a4d8a]" />
+                    <li key={item} className="flex items-center gap-2.5">
+                      <Check className="h-4 w-4 shrink-0 text-brand-blue-bright" />
                       {item}
                     </li>
                   ))}
@@ -348,127 +181,102 @@ function MaintenancePlansPage() {
             </div>
           </div>
         </div>
-        <svg viewBox="0 0 1440 60" className="block h-10 w-full -mt-1 fill-white" preserveAspectRatio="none">
-          <path d="M0,30 C360,80 1080,-20 1440,30 L1440,60 L0,60 Z" />
+        <svg viewBox="0 0 1440 90" preserveAspectRatio="none" className="absolute -bottom-px left-0 block h-14 w-full">
+          <path d="M0,60 C360,100 1080,0 1440,55 L1440,90 L0,90 Z" fill="#fff" />
         </svg>
       </section>
 
-      {/* PRICING */}
-      <section className="bg-white py-14 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-xl font-extrabold tracking-wide text-[#0a2547] sm:text-2xl lg:text-3xl">
-              CHOOSE THE PLAN THAT'S RIGHT FOR YOU
-            </h2>
+      {/* PLANS */}
+      <section className="mx-auto max-w-[1080px] px-7 pb-3 pt-8">
+        <h2 className="m-0 mb-5 text-center font-display text-[24px] font-extrabold text-brand-navy md:text-[26px]">
+          CHOOSE THE PLAN THAT'S RIGHT FOR YOU
+        </h2>
+        <div className="mb-8 flex justify-center">
+          <div className="flex gap-1 rounded-lg border border-[#dce7f2] bg-[#eef3f9] p-1">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`rounded-md px-5 py-2 font-display text-[12px] font-bold tracking-[.5px] transition ${
+                  tab === t ? "bg-brand-navy text-white" : "bg-transparent text-brand-navy hover:bg-white"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
           </div>
-
-          <div className="mt-8 flex justify-center">
-            <div className="inline-flex overflow-hidden rounded border border-slate-200">
-              {TABS.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  className={`px-6 py-2.5 text-xs font-extrabold tracking-wide sm:px-10 sm:text-sm ${
-                    tab === t
-                      ? "bg-[#0a4d8a] text-white"
-                      : "bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            {PRICING[tab].map((plan) => (
-              <div key={plan.name} className={`relative rounded-lg border border-slate-200 bg-white shadow-sm ${plan.popular ? "ring-2 ring-[#0a2547]" : ""}`}>
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded bg-[#f5b900] px-4 py-1 text-xs font-extrabold tracking-wide text-slate-900">
-                    MOST POPULAR
-                  </div>
-                )}
-                <div className={`rounded-t-lg py-3 text-center ${plan.color === "navy" ? "bg-[#0a2547]" : "bg-[#00a3a3]"}`}>
-                  <h3 className="text-base font-extrabold tracking-wide text-white">{plan.name}</h3>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-3">
+          {PRICING[tab].map((plan) => (
+            <div
+              key={plan.name}
+              className={`overflow-hidden rounded-xl bg-white shadow-[0_10px_28px_rgba(11,42,91,.07)] transition hover:shadow-[0_20px_44px_rgba(11,42,91,.16)] ${
+                plan.popular ? "relative border-2 border-brand-navy lg:-mt-1.5" : "border border-[#e2ebf4]"
+              }`}
+            >
+              {plan.popular && (
+                <div className="bg-brand-yellow py-1.5 text-center font-display text-[11px] font-extrabold tracking-widest text-brand-navy-deep">
+                  MOST POPULAR
                 </div>
-                <div className="p-6">
-                  <div className="flex justify-center py-3">
-                    <plan.icon className="h-16 w-16 text-[#00a3a3]" strokeWidth={1} />
-                  </div>
-                  <p className="text-center text-sm text-slate-600">{plan.desc}</p>
-                  <ul className="mt-5 space-y-2.5">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm text-slate-700">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#0a4d8a]" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-6 text-center">
-                    <div className="text-xs font-bold uppercase tracking-wide text-slate-500">STARTING AT</div>
-                    <div className="mt-1 flex items-center justify-center gap-1">
-                      <span className="text-3xl font-extrabold text-[#0a2547]">{plan.price}</span>
-                      <span className="text-sm text-slate-500">/month</span>
-                    </div>
-                  </div>
-                  <a
-                    href="/#contact"
-                    className={`mt-5 block rounded py-3 text-center text-sm font-extrabold tracking-wide text-white ${
-                      plan.color === "navy" ? "bg-[#0a2547] hover:bg-[#0b305a]" : "bg-[#00a3a3] hover:bg-[#008f8f]"
-                    }`}
-                  >
+              )}
+              <div className={`py-3.5 text-center font-display text-[17px] font-bold tracking-[.5px] text-white ${plan.color === "navy" ? "bg-brand-navy" : "bg-[#1a8e9c]"}`}>
+                {plan.name}
+              </div>
+              <div className="p-6 text-center">
+                <p className="m-0 mb-5 text-[13px] text-[#6a7688]">{plan.desc}</p>
+                <ul className="mb-5 flex flex-col gap-2.5 text-left text-[13px] text-[#3b485e]">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2">
+                      <Check className={`h-4 w-4 shrink-0 ${plan.color === "navy" ? "text-brand-blue" : "text-[#1a8e9c]"}`} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <div className="rounded-lg bg-[#f4f8fb] p-4">
+                  <a href="/#quote" className={`block rounded-md py-3 text-center font-display text-[13px] font-bold text-white ${plan.color === "navy" ? "bg-brand-navy" : "bg-[#1a8e9c]"}`}>
                     {plan.cta}
                   </a>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ALL PLANS INCLUDE */}
-      <section className="bg-white pb-14 lg:pb-20">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-xl font-extrabold tracking-wide text-[#0a2547] sm:text-2xl">ALL PLANS INCLUDE</h2>
-            <div className="mx-auto mt-2 h-0.5 w-12 bg-[#00a3a3]" />
-          </div>
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {ALL_PLANS.map((p) => (
-              <div key={p.label} className="flex items-center gap-3">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#0a2547]">
-                  <p.icon className="h-6 w-6 text-white" />
-                </div>
-                <div className="text-sm leading-tight">
-                  <div className="font-extrabold text-[#0a2547]">{p.label}</div>
-                  <div className="text-slate-600">{p.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+      <section className="mx-auto max-w-[1080px] px-7 pb-3 pt-10">
+        <h2 className="m-0 text-center font-display text-[22px] font-extrabold text-brand-navy">ALL PLANS INCLUDE</h2>
+        <div className="mx-auto mt-1.5 h-[3px] w-[60px] rounded bg-brand-blue-bright" />
+        <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {ALL_PLANS.map((p) => (
+            <div key={p.label} className="flex items-center justify-center gap-3 text-left">
+              <p.icon className="h-7 w-7 text-brand-navy" strokeWidth={1.7} />
+              <div className="font-display text-[13px] font-bold text-brand-navy">{p.label}<br /><span className="font-normal text-[#6a7688]">{p.sub}</span></div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="bg-slate-50 py-14 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-xl font-extrabold tracking-wide text-[#0a2547] sm:text-2xl">HOW IT WORKS</h2>
-            <div className="mx-auto mt-2 h-0.5 w-12 bg-[#00a3a3]" />
-          </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {HOW_IT_WORKS.map((step, i) => (
-              <div key={step.title} className="relative flex items-start gap-4">
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#0a4d8a] text-sm font-extrabold text-white">
-                  {step.step}
+      <section className="mt-9 bg-brand-mist">
+        <div className="mx-auto max-w-[1080px] px-7 py-10">
+          <h2 className="m-0 text-center font-display text-[22px] font-extrabold text-brand-navy md:text-[24px]">HOW IT WORKS</h2>
+          <div className="mx-auto mt-1.5 h-[3px] w-[60px] rounded bg-brand-blue-bright" />
+          <div className="mt-8 grid gap-6 md:grid-cols-7 md:items-start">
+            {HOW_IT_WORKS.map((s, i) => (
+              <div key={s.title} className={`text-center ${i < HOW_IT_WORKS.length - 1 ? "md:col-span-2" : "md:col-span-1"}`}>
+                <div className="relative mx-auto mb-3.5 h-[82px] w-[82px]">
+                  <div className="flex h-[82px] w-[82px] items-center justify-center rounded-full border border-[#cfe3f4] bg-white">
+                    <s.icon className="h-8 w-8 text-brand-blue" strokeWidth={1.5} />
+                  </div>
+                  <div className="absolute -left-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1668b3] font-display text-[13px] font-bold text-white">
+                    {s.n}
+                  </div>
                 </div>
-                <div className="rounded-lg bg-white p-4 shadow-sm">
-                  <step.icon className="h-8 w-8 text-[#00a3a3]" strokeWidth={1.5} />
-                  <h3 className="mt-2 text-sm font-extrabold text-[#0a2547]">{step.title}</h3>
-                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{step.desc}</p>
-                </div>
+                <h4 className="m-0 mb-1.5 font-display text-[13px] font-bold uppercase text-brand-navy">{s.title}</h4>
+                <p className="m-0 text-[12px] leading-[1.5] text-[#6a7688]">{s.desc}</p>
                 {i < HOW_IT_WORKS.length - 1 && (
-                  <ArrowRight className="absolute -right-3 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-[#0a4d8a] lg:block" />
+                  <div className="hidden px-2 pt-7 text-[22px] text-[#9cc4e4] md:block">›</div>
                 )}
               </div>
             ))}
@@ -477,79 +285,28 @@ function MaintenancePlansPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-[#0a2547] py-12">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 lg:flex-row lg:px-8">
+      <section className="relative overflow-hidden bg-brand-navy">
+        <div className="absolute inset-0 bg-[radial-gradient(70%_140%_at_10%_50%,rgba(45,143,212,.35),transparent_60%)]" />
+        <div className="relative mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-6 px-7 py-7">
           <div className="flex items-center gap-4">
-            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#0a4d8a]">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#1668b3]">
               <Phone className="h-7 w-7 text-white" />
             </div>
-            <div className="text-white">
-              <div className="text-lg font-extrabold">HAVE QUESTIONS?</div>
-              <div className="text-lg font-extrabold">WE'RE HERE TO HELP!</div>
+            <div className="font-display text-[19px] font-extrabold leading-tight text-white md:text-[21px]">
+              HAVE QUESTIONS?<br />WE'RE HERE TO HELP!
             </div>
           </div>
-          <div className="text-center text-white lg:text-left">
-            <div className="text-sm text-white/80">Call us or request a free quote today.</div>
-            <div className="text-2xl font-extrabold">{PHONE}</div>
+          <div className="text-center">
+            <div className="text-[14px] text-[#c3d6ef]">Call us or request a free quote today.</div>
+            <a href={PHONE_HREF} className="font-display text-[24px] font-extrabold text-white md:text-[26px]">{PHONE}</a>
           </div>
-          <a href="/#contact" className="flex items-center gap-2 rounded bg-[#f5b900] px-6 py-3 text-sm font-extrabold text-slate-900 hover:bg-[#e0a800]">
+          <a href="/#quote" className="flex items-center gap-2 rounded-lg bg-brand-yellow px-6 py-3.5 font-display text-[13px] font-extrabold tracking-wide text-brand-navy-deep">
             GET A FREE QUOTE <ArrowRight className="h-4 w-4" />
           </a>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-[#0a2547] text-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-5 lg:px-8">
-          <div>
-            <img src="/sundown-logo-white.png" alt="Sundown Pool Service" className="h-24 w-auto" />
-            <p className="mt-4 text-sm text-white/80">
-              Professional pool cleaning, green pool cleanup, maintenance and repairs. We keep your pool perfect, so you can enjoy what matters most.
-            </p>
-            <div className="mt-4 flex items-center gap-3">
-              <a href="#" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Facebook className="h-4 w-4" /></a>
-              <a href="#" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Instagram className="h-4 w-4" /></a>
-            </div>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">QUICK LINKS</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
-              {NAV.slice(0, 5).map((n) => (
-                <li key={n.label}><a href={n.href} className="hover:text-white">{n.label.charAt(0) + n.label.slice(1).toLowerCase()}</a></li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">SERVICE AREAS</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
-              {["Osprey", "Sarasota", "Venice", "Nokomis", "Siesta Key", "And Surrounding Areas"].map((c) => (
-                <li key={c} className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-400" /> {c}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">CONTACT US</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
-              <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-sky-400" /> {PHONE}</li>
-              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-sky-400" /> hello@sundownpoolservice.com</li>
-              <li className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-400" /> 4008 Destination Dr, Osprey, FL 34229</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">LICENSED & INSURED</h4>
-            <div className="mt-3 flex items-start gap-3">
-              <ShieldCheck className="h-8 w-8 shrink-0 text-sky-400" strokeWidth={1.5} />
-              <p className="text-sm text-white/80">We are fully licensed and insured for your peace of mind.</p>
-            </div>
-            <Link to="/auth" className="mt-4 inline-block text-xs text-white/50 hover:text-white">Staff Login →</Link>
-          </div>
-        </div>
-        <div className="border-t border-white/10">
-          <div className="mx-auto max-w-7xl px-4 py-4 text-center text-xs text-white/60 lg:px-8">
-            © {new Date().getFullYear()} Sundown Pool Service. All Rights Reserved.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

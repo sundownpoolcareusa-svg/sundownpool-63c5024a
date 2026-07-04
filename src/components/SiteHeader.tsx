@@ -1,14 +1,17 @@
 import { Link } from "@tanstack/react-router";
-import { Calendar, Menu, X } from "lucide-react";
+import { Calendar, Menu, X, Phone } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/sundown-logo-color.png.asset.json";
+
+const PHONE = "(561) 376-2428";
+const PHONE_HREF = "tel:+15613762428";
 
 const NAV = [
   { label: "HOME", to: "/" },
   { label: "SERVICES", to: "/services" },
   { label: "MAINTENANCE PLANS", to: "/maintenance-plans" },
   { label: "ABOUT US", to: "/about" },
-  { label: "SERVICE AREAS", to: "/#areas" },
+  { label: "SERVICE AREAS", to: "/service-areas" },
   { label: "CONTACT", to: "/#quote" },
 ] as const;
 
@@ -34,7 +37,14 @@ export function SiteHeader({ active }: { active?: string }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <a
+            href={PHONE_HREF}
+            className="hidden items-center gap-2 font-display text-[17px] font-bold text-brand-navy md:inline-flex"
+          >
+            <Phone className="h-4 w-4 text-brand-blue" />
+            {PHONE}
+          </a>
           <a
             href="/#quote"
             className="hidden items-center gap-2 rounded-lg bg-brand-yellow px-4 py-2.5 font-display text-[13px] font-bold text-brand-navy-deep md:inline-flex"
