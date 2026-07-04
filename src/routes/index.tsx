@@ -1,21 +1,25 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import {
-  Phone, Calendar, Shield, Award, Clock, ThumbsUp, CheckCircle2, ArrowRight,
-  Menu, X, Droplets, Wrench, Filter, FlaskConical, Grid3x3, Sparkles,
-  DollarSign, ShieldCheck, MapPin, Mail, Facebook, Instagram,
+  Phone, Calendar, Shield, Star, Clock, ThumbsUp, CheckCircle2,
+  Droplets, Wrench, Filter, FlaskConical, Sparkles, Grid3x3,
+  CalendarDays, DollarSign, ShieldCheck, MapPin,
 } from "lucide-react";
-import logoAsset from "@/assets/sundown-logo.png.asset.json";
-import heroPool from "@/assets/hero-pool.jpg";
-import beforePool from "@/assets/before-pool.jpg";
-import afterPool from "@/assets/after-pool.jpg";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import heroBg from "@/assets/hero-bg.png.asset.json";
+import beforeGreen from "@/assets/before-green.png.asset.json";
+import afterClear from "@/assets/after-clear.png.asset.json";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
   head: () => ({
     meta: [
-      { title: "Sundown Pool Service — Professional Pool Care in South Florida" },
-      { name: "description", content: "Weekly maintenance, green pool recovery, equipment repairs, filter cleaning and water treatment. Fast, reliable pool service with free estimates in Osprey, FL." },
+      { title: "Sundown Pool Care — Professional Pool Cleaning in South Florida" },
+      { name: "description", content: "Weekly maintenance, green pool cleanup, filter cleaning, and equipment repair. Licensed, insured, 5-star rated pool service in Osprey, Sarasota, Venice and surrounding areas." },
+      { property: "og:title", content: "Sundown Pool Care — Professional Pool Cleaning" },
+      { property: "og:description", content: "Family owned. 5-star rated. On-time every time. Get a free quote today." },
+      { property: "og:image", content: heroBg.url },
+      { name: "twitter:image", content: heroBg.url },
     ],
   }),
 });
@@ -23,13 +27,11 @@ export const Route = createFileRoute("/")({
 const PHONE = "(561) 376-2428";
 const PHONE_HREF = "tel:+15613762428";
 
-const NAV = [
-  { label: "HOME", href: "#home" },
-  { label: "SERVICES", href: "/services" },
-  { label: "MAINTENANCE PLANS", href: "/maintenance-plans" },
-  { label: "ABOUT US", href: "/about" },
-  { label: "SERVICE AREAS", href: "#areas" },
-  { label: "CONTACT", href: "#contact" },
+const TRUST = [
+  { icon: Shield, label: "Licensed", label2: "& Insured" },
+  { icon: Star, label: "5-Star", label2: "Rated" },
+  { icon: Clock, label: "On-Time", label2: "Every Time" },
+  { icon: ThumbsUp, label: "100%", label2: "Satisfaction" },
 ];
 
 const SERVICES = [
@@ -37,335 +39,249 @@ const SERVICES = [
   { icon: Droplets, title: "GREEN POOL CLEANUP", desc: "We remove algae and restore your pool water to be crystal clear.", popular: true },
   { icon: Filter, title: "FILTER CLEANING", desc: "Deep cleaning for sand, cartridge and DE filters for maximum performance." },
   { icon: Wrench, title: "POOL EQUIPMENT REPAIR", desc: "Pump, heater, filter, and salt system repairs. We fix it right the first time." },
-  { icon: FlaskConical, title: "WATER TESTING & CHEMICAL BALANCING", desc: "We balance your pool chemicals to keep the water safe, clean and healthy." },
-  { icon: Grid3x3, title: "POOL TILE CLEANING", desc: "Remove buildup and calcium from tiles to keep your pool looking beautiful." },
+  { icon: FlaskConical, title: "WATER TESTING & CHEMICALS", desc: "We balance your pool chemicals to keep the water safe, clean and healthy." },
+  { icon: Grid3x3, title: "TILE & DECK CLEANING", desc: "Restore the beauty of your pool tiles, deck and surrounding surfaces." },
 ];
 
-const TESTIMONIALS = [
-  { name: "Jennifer M.", text: "Amazing service! My pool was green and they got it crystal clear in just 2 days. Very professional and reliable!" },
-  { name: "Mark T.", text: "Best pool service in South Florida. They are always on time and my pool has never looked better." },
-  { name: "Sarah K.", text: "Great communication and fair pricing. I highly recommend Sundown Pool Service to everyone!" },
+const REVIEWS = [
+  { initial: "M", name: "Maria S.", quote: "Sundown transformed my green pool into a crystal clear oasis in just 3 days. Professional, punctual and honest pricing. Highly recommend!" },
+  { initial: "J", name: "James R.", quote: "Best pool service in South Florida. They show up every week like clockwork and my water has never looked better. Family owned and it shows." },
+  { initial: "L", name: "Linda K.", quote: "Fixed my pump the same day I called. Fair price, no upsell, and my pool is running quieter than ever. These guys really know their stuff." },
 ];
 
-const TRUST = [
-  { icon: Shield, label: "Licensed", sub: "& Insured" },
-  { icon: Award, label: "5-Star", sub: "Rated" },
-  { icon: Clock, label: "On-Time", sub: "Every Time" },
-  { icon: ThumbsUp, label: "100%", sub: "Satisfaction" },
-];
-
-const BENEFITS = [
-  { icon: Calendar, title: "EASY SCHEDULING", desc: "We work around your schedule." },
+const FEATURES = [
+  { icon: CalendarDays, title: "EASY SCHEDULING", desc: "We work around your schedule." },
   { icon: DollarSign, title: "NO HIDDEN FEES", desc: "Transparent pricing you can trust." },
   { icon: ShieldCheck, title: "SATISFACTION GUARANTEED", desc: "We're not happy until you're happy." },
   { icon: MapPin, title: "LOCAL & TRUSTED", desc: "Proudly serving South Florida communities." },
 ];
 
 function LandingPage() {
-  const [open, setOpen] = useState(false);
-
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      {/* NAV */}
-      <header className="sticky top-0 z-50 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
-          <a href="#home" className="flex items-center">
-            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-12 w-auto sm:h-16 lg:h-16" />
-          </a>
-          <nav className="hidden items-center gap-7 lg:flex">
-            {NAV.map((n) => (
-              <a key={n.label} href={n.href} className="text-[13px] font-bold tracking-wide text-slate-800 hover:text-[#0a4d8a]">
-                {n.label}
-              </a>
-            ))}
-          </nav>
-          <div className="hidden items-center gap-4 lg:flex">
-            <a href={PHONE_HREF} className="flex items-center gap-2 text-sm font-bold text-slate-900">
-              <Phone className="h-4 w-4 text-[#0a4d8a]" /> {PHONE}
-            </a>
-            <a href="#contact" className="rounded bg-amber-400 px-4 py-2.5 text-xs font-extrabold tracking-wide text-slate-900 hover:bg-amber-500">
-              GET A FREE QUOTE
-            </a>
-          </div>
-          <button onClick={() => setOpen((v) => !v)} aria-label="Menu" className="grid h-10 w-10 place-items-center rounded-md text-slate-800 lg:hidden">
-            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </div>
-        {open && (
-          <nav className="border-t border-slate-100 bg-white lg:hidden">
-            <div className="flex flex-col px-4 py-3">
-              {NAV.map((n) => (
-                <a key={n.label} href={n.href} onClick={() => setOpen(false)} className="border-b border-slate-100 py-3 text-sm font-bold tracking-wide text-slate-800">
-                  {n.label}
-                </a>
-              ))}
-              <a href={PHONE_HREF} className="mt-3 flex items-center gap-2 text-sm font-bold">
-                <Phone className="h-4 w-4 text-[#0a4d8a]" /> {PHONE}
-              </a>
-            </div>
-          </nav>
-        )}
-      </header>
+    <div className="w-full overflow-x-hidden bg-white font-body text-brand-ink">
+      <SiteHeader active="HOME" />
 
       {/* HERO */}
-      <section id="home" className="relative">
-        <div className="relative">
-          <img src={heroPool} alt="Luxury pool" className="h-[560px] w-full object-cover sm:h-[640px] lg:h-[720px]" width={1600} height={900} />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a2547]/85 via-[#0a2547]/55 to-transparent lg:from-[#0a2547]/80 lg:via-[#0a2547]/30" />
-          <div className="absolute inset-0">
-            <div className="mx-auto flex h-full max-w-7xl flex-col justify-start px-4 pb-10 pt-24 sm:justify-center sm:pt-10 lg:px-8">
-              <div className="max-w-2xl text-white">
-                <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
-                  Professional Pool Care <span className="text-sky-400">& Green Pool Cleanup</span> in Southwest Florida
-                </h1>
-                <p className="mt-5 max-w-md text-sm leading-relaxed text-white/90 sm:text-base">
-                  Weekly maintenance, green pool recovery, equipment repairs, filter cleaning, and water treatment. Fast, reliable service with free estimates.
-                </p>
+      <section
+        className="relative overflow-hidden text-white"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgba(3,10,24,.9) 0%, rgba(3,10,24,.68) 40%, rgba(3,10,24,.32) 66%, rgba(3,10,24,.05) 90%), url(${heroBg.url})`,
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div className="relative mx-auto max-w-[1180px] px-7 pb-24 pt-16 md:pt-20">
+          <div className="max-w-[560px]">
+            <h1 className="mb-5 font-display text-[36px] font-extrabold leading-[1.12] tracking-[-.5px] md:text-[47px]">
+              Crystal Clear Pools, <span className="text-brand-blue-bright">Every Week.</span> Guaranteed.
+            </h1>
+            <p className="mb-6 max-w-[470px] text-[16.5px] leading-[1.6] text-[#d8e6f5]">
+              Family-owned pool care in South Florida. From weekly maintenance to green-pool recovery — we keep your water clean, safe, and swim-ready year-round.
+            </p>
 
-                <div className="mt-6 flex flex-wrap gap-x-6 gap-y-4">
-                  {TRUST.map((t) => (
-                    <div key={t.label} className={`flex items-center gap-2 ${t.label === "Licensed" ? "hidden sm:flex" : ""}`}>
-                      <t.icon className="h-6 w-6 text-white" />
-                      <div className="text-xs leading-tight">
-                        <div className="font-semibold">{t.label}</div>
-                        <div className="text-white/80">{t.sub}</div>
-                      </div>
-                    </div>
-                  ))}
+            <div className="mb-7 flex flex-wrap gap-6">
+              {TRUST.map((t) => (
+                <div key={t.label} className="flex items-center gap-2.5 text-[13.5px] font-semibold">
+                  <t.icon className="h-5 w-5" strokeWidth={2} />
+                  <span>{t.label}<br />{t.label2}</span>
                 </div>
+              ))}
+            </div>
 
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <a href={PHONE_HREF} className="flex items-center justify-center gap-3 rounded bg-amber-400 px-6 py-4 font-extrabold text-slate-900 hover:bg-amber-500">
-                    <Phone className="h-5 w-5" />
-                    <div className="text-left leading-tight">
-                      <div className="text-xs">CALL NOW</div>
-                      <div className="text-base">{PHONE}</div>
-                    </div>
-                  </a>
-                  <a href="#contact" className="flex items-center justify-center gap-3 rounded border-2 border-white/40 bg-[#0a2547]/70 px-6 py-4 font-extrabold text-white backdrop-blur hover:bg-[#0a2547]">
-                    <Calendar className="h-5 w-5" />
-                    <div className="text-left leading-tight">
-                      <div className="text-base">GET A FREE QUOTE</div>
-                      <div className="text-xs font-normal text-white/80">It's Fast & Easy</div>
-                    </div>
-                  </a>
-                </div>
+            <div className="flex flex-wrap gap-3.5">
+              <a
+                href={PHONE_HREF}
+                className="flex items-center gap-3 rounded-[9px] bg-brand-yellow px-6 py-4 font-display font-bold text-brand-navy-deep"
+              >
+                <Phone className="h-5 w-5" />
+                <span className="leading-tight">
+                  CALL NOW<br /><span className="text-[13px] font-semibold">{PHONE}</span>
+                </span>
+              </a>
+              <a
+                href="#quote"
+                className="flex items-center gap-3 rounded-[9px] border-[1.5px] border-white/55 bg-white/10 px-6 py-4 font-display font-bold text-white"
+              >
+                <Calendar className="h-5 w-5" />
+                <span className="leading-tight">
+                  GET A FREE QUOTE<br /><span className="text-[13px] font-semibold">It's Fast &amp; Easy</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          {/* Reviews card */}
+          <div className="mt-10 w-full max-w-[280px] rounded-xl bg-white p-5 text-brand-navy shadow-[0_18px_40px_rgba(0,0,0,.25)] lg:absolute lg:right-7 lg:bottom-24 lg:mt-0">
+            <div className="mb-2 flex items-center gap-2.5">
+              <svg width="26" height="26" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 01-2.3 3.5v2.9h3.7C21.8 18.9 23 15.9 23 12.3z"/>
+                <path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3C3.7 21.4 7.6 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.6 14.7a7.2 7.2 0 010-4.6v-3H1.8a12 12 0 000 10.6l3.8-3z"/>
+                <path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.2 15.1 0 12 0 7.6 0 3.7 2.6 1.8 6.4l3.8 3C6.5 6.7 9 4.8 12 4.8z"/>
+              </svg>
+              <div>
+                <span className="font-display text-[22px] font-extrabold">5.0</span>{" "}
+                <span className="text-[15px] tracking-widest text-[#fbbc05]">★★★★★</span>
               </div>
-
-              {/* Trust card */}
-              <div className="mt-8 w-full max-w-sm rounded-lg bg-white p-4 shadow-2xl lg:absolute lg:right-8 lg:top-1/2 lg:mt-0 lg:-translate-y-1/2">
-                <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                  <div className="grid h-9 w-9 place-items-center rounded-full bg-white shadow ring-1 ring-slate-100">
-                    <span className="text-base font-bold text-[#4285F4]">G</span>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-lg font-extrabold text-slate-900">5.0</span>
-                      <span className="text-amber-400">★★★★★</span>
-                    </div>
-                    <div className="text-xs text-slate-500">Based on 200+ Google Reviews</div>
-                  </div>
-                </div>
-                <div className="mt-3 flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-[#0a4d8a]" />
-                  <span className="text-sm font-semibold text-slate-800">Family Owned & Operated</span>
-                </div>
-              </div>
+            </div>
+            <div className="mb-3 text-[11.5px] text-[#6a7688]">Based on 200+ Google Reviews</div>
+            <div className="flex items-center gap-2.5 border-t border-[#eef2f7] pt-3 text-[13.5px] font-semibold">
+              <CheckCircle2 className="h-5 w-5 text-brand-blue" />
+              <span>Family Owned<br />&amp; Operated</span>
             </div>
           </div>
         </div>
 
-        {/* Wave divider */}
-        <svg viewBox="0 0 1440 60" className="block h-10 w-full -mt-1 fill-white" preserveAspectRatio="none">
-          <path d="M0,30 C360,80 1080,-20 1440,30 L1440,60 L0,60 Z" />
+        <svg viewBox="0 0 1440 90" preserveAspectRatio="none" className="absolute -bottom-px left-0 block h-16 w-full">
+          <path d="M0,50 C360,110 1080,-20 1440,45 L1440,90 L0,90 Z" fill="#fff" />
         </svg>
       </section>
 
       {/* BEFORE / AFTER */}
-      <section className="bg-white py-12 lg:py-16">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-3">
-              <span className="h-px w-12 bg-slate-300" />
-              <h2 className="text-base font-extrabold tracking-wide text-[#0a4d8a] sm:text-lg">FROM GREEN TO CRYSTAL CLEAR</h2>
-              <span className="h-px w-12 bg-slate-300" />
-            </div>
-            <p className="mt-1 font-serif text-2xl italic text-sky-500">in Just Days!</p>
+      <section className="mx-auto max-w-[1180px] px-7 pb-6 pt-14">
+        <div className="mb-8 text-center">
+          <h2 className="m-0 font-display text-[28px] font-extrabold tracking-[.5px] text-brand-navy md:text-[30px]">
+            FROM GREEN TO CRYSTAL CLEAR
+          </h2>
+          <div className="mt-1 font-script text-[34px] text-brand-blue">in Just Days!</div>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-[1fr_1fr_340px]">
+          <div className="relative min-h-[250px] overflow-hidden rounded-xl shadow-[0_10px_26px_rgba(0,0,0,.12)]">
+            <img src={beforeGreen.url} alt="Green pool before service" className="absolute inset-0 h-full w-full object-cover" />
+            <span className="absolute left-3.5 top-3.5 rounded bg-[#3a7d1e] px-3.5 py-1 text-xs font-bold tracking-widest text-white">BEFORE</span>
+            <span className="absolute bottom-3 right-3.5 font-mono text-[11px] text-white/70">Green Pool</span>
           </div>
-
-          <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_1fr_minmax(0,1.1fr)] lg:items-stretch">
-            <div className="relative overflow-hidden rounded-lg shadow-md">
-              <img src={beforePool} alt="Before" className="h-64 w-full object-cover sm:h-72" loading="lazy" width={800} height={600} />
-              <span className="absolute left-3 top-3 rounded bg-emerald-700 px-3 py-1 text-xs font-bold tracking-wide text-white">BEFORE</span>
-            </div>
-            <div className="relative overflow-hidden rounded-lg shadow-md">
-              <img src={afterPool} alt="After" className="h-64 w-full object-cover sm:h-72" loading="lazy" width={800} height={600} />
-              <span className="absolute left-3 top-3 rounded bg-sky-500 px-3 py-1 text-xs font-bold tracking-wide text-white">AFTER</span>
-              <div className="absolute left-1/2 top-1/2 hidden h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white shadow-lg lg:grid">
-                <ArrowRight className="h-6 w-6 text-[#0a4d8a]" />
-              </div>
-            </div>
-
-            <div className="rounded-lg bg-[#0a2547] p-6 text-white lg:p-7">
-              <h3 className="text-xl font-extrabold leading-tight">Your Pool Deserves<br />the Best Care</h3>
-              <div className="mt-2 h-0.5 w-10 bg-sky-400" />
-              <p className="mt-4 text-sm leading-relaxed text-white/90">
-                We keep your pool clean, safe, and swim-ready year-round so you can relax and enjoy.
-              </p>
-              <ul className="mt-5 space-y-2.5">
-                {["Reliable & On-Time Service", "Expert Technicians", "Quality You Can Trust", "Affordable Pricing"].map((b) => (
-                  <li key={b} className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="h-5 w-5 text-sky-400" /> {b}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="relative min-h-[250px] overflow-hidden rounded-xl shadow-[0_10px_26px_rgba(0,0,0,.12)]">
+            <img src={afterClear.url} alt="Crystal clear pool after service" className="absolute inset-0 h-full w-full object-cover" />
+            <span className="absolute left-3.5 top-3.5 rounded bg-brand-blue px-3.5 py-1 text-xs font-bold tracking-widest text-white">AFTER</span>
+            <span className="absolute bottom-3 right-3.5 font-mono text-[11px] text-white/90">Clean Pool</span>
+          </div>
+          <div className="rounded-xl bg-brand-mist p-6 lg:p-7">
+            <h3 className="mb-2 font-display text-[19px] font-extrabold uppercase text-brand-navy">Ready for a swim-ready pool?</h3>
+            <div className="mb-4 h-[3px] w-[52px] rounded bg-brand-blue-bright" />
+            <p className="mb-5 text-[14px] leading-[1.6] text-[#4b5b78]">
+              We keep your pool clean, safe, and swim-ready year-round so you can relax and enjoy.
+            </p>
+            <ul className="flex flex-col gap-3 text-[14px] font-semibold text-brand-navy">
+              {[
+                "Reliable & On-Time Service",
+                "Expert Technicians",
+                "Quality You Can Trust",
+                "Affordable Pricing",
+              ].map((t) => (
+                <li key={t} className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4.5 w-4.5 text-brand-blue-bright" /> {t}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
 
       {/* SERVICES */}
-      <section id="services" className="bg-white pb-12 lg:pb-16">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-xl font-extrabold tracking-wide text-[#0a4d8a] sm:text-2xl">OUR POOL SERVICES</h2>
-            <div className="mx-auto mt-2 h-0.5 w-16 bg-sky-400" />
-          </div>
-
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {SERVICES.map((s) => (
-              <div key={s.title} className="relative rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
-                <s.icon className="h-10 w-10 text-[#0a4d8a]" strokeWidth={1.5} />
-                <h3 className="mt-4 text-sm font-extrabold tracking-wide text-slate-900">{s.title}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-600">{s.desc}</p>
-                {s.popular && (
-                  <span className="absolute bottom-3 right-3 rounded bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-slate-900">POPULAR</span>
-                )}
+      <section className="mx-auto max-w-[1180px] px-7 pb-4 pt-12">
+        <div className="mb-8 text-center">
+          <h2 className="m-0 font-display text-[26px] font-extrabold text-brand-navy md:text-[28px]">OUR POOL SERVICES</h2>
+          <div className="mx-auto mt-2.5 h-[3px] w-16 rounded bg-brand-blue-bright" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+          {SERVICES.map((s) => (
+            <div
+              key={s.title}
+              className="relative rounded-xl border border-[#e7eef6] bg-white p-6 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(11,42,91,.14)]"
+            >
+              <div className="mb-3.5 flex h-11 items-center justify-center">
+                <s.icon className="h-9 w-9 text-brand-blue" strokeWidth={1.8} />
               </div>
-            ))}
-          </div>
+              <h4 className="mb-2.5 font-display text-[14.5px] font-bold uppercase leading-[1.3] tracking-[.3px] text-brand-navy">{s.title}</h4>
+              <p className="m-0 text-[12.5px] leading-[1.55] text-[#6a7688]">{s.desc}</p>
+              {s.popular && (
+                <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded bg-brand-yellow px-2.5 py-0.5 text-[10px] font-extrabold tracking-widest text-brand-navy-deep">
+                  POPULAR
+                </span>
+              )}
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* TESTIMONIALS + QUOTE */}
-      <section id="about" className="bg-white pb-12 lg:pb-16">
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-xl font-extrabold tracking-wide text-slate-800 sm:text-2xl">WHAT OUR CLIENTS SAY</h2>
-            <div className="mx-auto mt-2 h-0.5 w-16 bg-sky-400" />
-          </div>
-
-          <div className="mt-8 grid gap-5 lg:grid-cols-[2fr_1fr]">
-            <div className="grid gap-5 sm:grid-cols-3">
-              {TESTIMONIALS.map((t) => (
-                <div key={t.name} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="grid h-7 w-7 place-items-center rounded-full bg-white shadow ring-1 ring-slate-100">
-                      <span className="text-sm font-bold text-[#4285F4]">G</span>
-                    </div>
-                    <span className="text-amber-400">★★★★★</span>
+      {/* TESTIMONIALS + FORM */}
+      <section id="quote" className="mx-auto max-w-[1180px] px-7 pb-12 pt-12">
+        <div className="grid gap-9 lg:grid-cols-[1fr_340px]">
+          <div>
+            <h2 className="m-0 text-center font-display text-[24px] font-extrabold text-brand-navy md:text-[26px]">WHAT OUR CLIENTS SAY</h2>
+            <div className="mx-auto mb-7 mt-1.5 h-[3px] w-16 rounded bg-brand-blue-bright" />
+            <div className="grid gap-4 md:grid-cols-3">
+              {REVIEWS.map((r) => (
+                <div key={r.name} className="rounded-xl border border-[#e7eef6] bg-white p-5 shadow-[0_6px_18px_rgba(11,42,91,.05)]">
+                  <div className="mb-3 flex items-center gap-2">
+                    <svg width="22" height="22" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 01-2.3 3.5v2.9h3.7C21.8 18.9 23 15.9 23 12.3z"/>
+                      <path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3C3.7 21.4 7.6 24 12 24z"/>
+                      <path fill="#FBBC05" d="M5.6 14.7a7.2 7.2 0 010-4.6v-3H1.8a12 12 0 000 10.6l3.8-3z"/>
+                      <path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.2 15.1 0 12 0 7.6 0 3.7 2.6 1.8 6.4l3.8 3C6.5 6.7 9 4.8 12 4.8z"/>
+                    </svg>
+                    <span className="text-sm tracking-widest text-[#fbbc05]">★★★★★</span>
                   </div>
-                  <p className="mt-3 text-sm italic leading-relaxed text-slate-700">"{t.text}"</p>
-                  <div className="mt-4 flex items-center gap-2">
-                    <div className="grid h-8 w-8 place-items-center rounded-full bg-sky-100 text-xs font-bold text-[#0a4d8a]">
-                      {t.name[0]}
+                  <p className="mb-4 text-[13px] italic leading-[1.6] text-[#42506a]">{r.quote}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-gradient-to-br from-[#8fd0f0] to-brand-blue text-sm font-bold text-white">
+                      {r.initial}
                     </div>
-                    <span className="text-sm font-semibold text-slate-700">— {t.name}</span>
+                    <div className="text-[13px] font-bold text-brand-navy">– {r.name}</div>
                   </div>
                 </div>
               ))}
             </div>
-
-            <div id="contact" className="rounded-lg bg-[#0a2547] p-6 text-white">
-              <h3 className="text-lg font-extrabold">GET YOUR FREE QUOTE</h3>
-              <form className="mt-4 space-y-3" onSubmit={(e) => e.preventDefault()}>
-                <input className="w-full rounded border border-white/20 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400" placeholder="Full Name" />
-                <input className="w-full rounded border border-white/20 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400" placeholder="Phone Number" />
-                <input className="w-full rounded border border-white/20 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400" placeholder="Email Address" />
-                <select className="w-full rounded border border-white/20 bg-white px-3 py-2.5 text-sm text-slate-500">
-                  <option>What do you need help with?</option>
-                  <option>Weekly Maintenance</option>
-                  <option>Green Pool Cleanup</option>
-                  <option>Equipment Repair</option>
-                  <option>Other</option>
-                </select>
-                <button className="w-full rounded bg-amber-400 py-3 text-sm font-extrabold tracking-wide text-slate-900 hover:bg-amber-500">
-                  GET MY FREE QUOTE
-                </button>
-                <p className="text-center text-xs text-white/70">No commitment. Fast response!</p>
-              </form>
-            </div>
           </div>
+
+          <QuoteForm />
         </div>
       </section>
 
-      {/* BENEFITS BAR */}
-      <section className="bg-sky-50 py-8">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
-          {BENEFITS.map((b) => (
-            <div key={b.title} className="flex items-start gap-3">
-              <b.icon className="mt-1 h-7 w-7 shrink-0 text-[#0a4d8a]" strokeWidth={1.5} />
+      {/* FEATURE STRIP */}
+      <section className="border-t border-[#dcebf7] bg-brand-mist">
+        <div className="mx-auto grid max-w-[1180px] gap-6 px-7 py-9 sm:grid-cols-2 lg:grid-cols-4">
+          {FEATURES.map((f) => (
+            <div key={f.title} className="flex items-start gap-3.5">
+              <f.icon className="h-7 w-7 shrink-0 text-brand-blue" strokeWidth={1.8} />
               <div>
-                <h4 className="text-sm font-extrabold tracking-wide text-slate-900">{b.title}</h4>
-                <p className="text-xs text-slate-600">{b.desc}</p>
+                <div className="font-display text-[13px] font-bold uppercase tracking-[.4px] text-brand-navy">{f.title}</div>
+                <div className="mt-1 text-[12.5px] text-[#5a6b82]">{f.desc}</div>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-[#0a2547] text-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-5 lg:px-8">
-          <div>
-            <img src={logoAsset.url} alt="Sundown Pool Service" className="h-24 w-auto brightness-0 invert" />
-            <p className="mt-4 text-sm text-white/80">
-              Professional pool cleaning, maintenance and repairs. We keep your pool perfect, so you can enjoy what matters most.
-            </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">QUICK LINKS</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
-              {NAV.slice(0, 5).map((n) => (
-                <li key={n.label}><a href={n.href} className="hover:text-white">{n.label.charAt(0) + n.label.slice(1).toLowerCase()}</a></li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">SERVICE AREAS</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
-              {["Osprey", "Sarasota", "Venice", "Nokomis", "Siesta Key", "And Surrounding Areas"].map((c) => (
-                <li key={c} className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-400" /> {c}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">CONTACT US</h4>
-            <ul className="mt-3 space-y-2 text-sm text-white/80">
-              <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-sky-400" /> {PHONE}</li>
-              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-sky-400" /> hello@sundownpoolservice.com</li>
-              <li className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 text-sky-400" /> 4008 Destination Dr, Osprey, FL 34229</li>
-            </ul>
-            <div className="mt-4 flex items-center gap-3">
-              <a href="#" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Facebook className="h-4 w-4" /></a>
-              <a href="#" className="grid h-8 w-8 place-items-center rounded-full bg-white/10 hover:bg-white/20"><Instagram className="h-4 w-4" /></a>
-            </div>
-          </div>
-          <div>
-            <h4 className="text-sm font-extrabold tracking-wide">LICENSED & INSURED</h4>
-            <div className="mt-3 flex items-start gap-3">
-              <ShieldCheck className="h-8 w-8 shrink-0 text-sky-400" strokeWidth={1.5} />
-              <p className="text-sm text-white/80">We are fully licensed and insured for your peace of mind.</p>
-            </div>
-            <Link to="/auth" className="mt-4 inline-block text-xs text-white/50 hover:text-white">Staff Login →</Link>
-          </div>
-        </div>
-        <div className="border-t border-white/10">
-          <div className="mx-auto max-w-7xl px-4 py-4 text-center text-xs text-white/60 lg:px-8">
-            © {new Date().getFullYear()} Sundown Pool Service. All Rights Reserved.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
+  );
+}
+
+function QuoteForm() {
+  return (
+    <form
+      onSubmit={(e) => { e.preventDefault(); alert("Thanks! We'll be in touch shortly."); }}
+      className="rounded-2xl bg-brand-navy p-7 text-white"
+    >
+      <h3 className="mb-5 font-display text-[20px] font-bold">GET YOUR FREE QUOTE</h3>
+      <div className="flex flex-col gap-3">
+        <input required placeholder="Full Name" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] placeholder:text-white/60" />
+        <input required placeholder="Phone Number" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] placeholder:text-white/60" />
+        <input required type="email" placeholder="Email Address" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] placeholder:text-white/60" />
+        <select className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] text-[#9fb2cf]">
+          <option>What do you need help with?</option>
+          <option>Weekly Maintenance</option>
+          <option>Green Pool Cleanup</option>
+          <option>Equipment Repair</option>
+        </select>
+        <button className="cursor-pointer rounded-lg bg-brand-yellow px-4 py-3.5 font-display text-sm font-extrabold tracking-wide text-brand-navy-deep">
+          GET MY FREE QUOTE
+        </button>
+        <div className="text-center text-[11.5px] text-[#9fb2cf]">No commitment. Fast response!</div>
+      </div>
+    </form>
   );
 }
