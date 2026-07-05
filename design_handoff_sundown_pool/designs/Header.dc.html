@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  .hnav{color:#0b2a5b;font-family:'Montserrat',sans-serif;font-weight:600;font-size:13.5px;text-decoration:none;letter-spacing:.2px;white-space:nowrap;padding:5px 0;border-bottom:2px solid transparent}
+  .hnav:hover{color:#2a8fd4}
+</style>
+<style id="rsp">
+@media(max-width:860px){
+[style*="justify-content:space-between"][style*="gap:20px"]{flex-wrap:wrap!important;justify-content:center!important}
+nav{flex-wrap:wrap!important;justify-content:center!important;gap:10px 14px!important}
+}
+</style>
+</helmet>
+<div style="font-family:'Open Sans',sans-serif;position:relative;z-index:30">
+  <sc-if value="{{ showTop }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#0a2450;color:#c9d6ec;font-size:12.5px">
+      <div style="max-width:1180px;margin:0 auto;padding:9px 28px;display:flex;align-items:center;justify-content:space-between;gap:14px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <span style="display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9d6ec" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path></svg>Licensed &amp; Insured</span>
+          <span style="opacity:.4">|</span>
+          <span style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="#f5b301"><path d="M12 3l2.5 5 5.5.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.5-.8L12 3z"></path></svg>5-Star Rated on Google <span style="color:#f5b301;letter-spacing:1px">★★★★★</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:18px">
+          <span style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="#c9d6ec"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"></path></svg>{{ topLocation }}</span>
+          <sc-if value="{{ topPhone }}" hint-placeholder-val="{{ true }}">
+            <span style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="#c9d6ec"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1l-2.2 2.3z"></path></svg>(561) 376-2428</span>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <header style="background:#fff;border-bottom:1px solid #eef2f7">
+    <div style="max-width:1180px;margin:0 auto;padding:2px 28px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+        <a href="Home.dc.html" style="display:flex;align-items:center;text-decoration:none">
+          <img src="assets/sundown-logo.png" alt="Sundown Pool Care" style="height:85px;width:auto;display:block">
+        </a>
+
+        <nav style="display:{{ inlineNavDisplay }};align-items:center;gap:24px">
+          <a href="Home.dc.html" class="hnav" style="color:{{ c_home }};border-color:{{ b_home }}">HOME</a>
+          <a href="Services.dc.html" class="hnav" style="color:{{ c_services }};border-color:{{ b_services }}">SERVICES ▾</a>
+          <a href="Maintenance Plans.dc.html" class="hnav" style="color:{{ c_maint }};border-color:{{ b_maint }}">MAINTENANCE PLANS</a>
+          <a href="About Us.dc.html" class="hnav" style="color:{{ c_about }};border-color:{{ b_about }}">ABOUT US</a>
+          <a href="Service Areas.dc.html" class="hnav" style="color:{{ c_area }};border-color:{{ b_area }}">SERVICE AREAS</a>
+          <a href="Service Areas.dc.html" class="hnav">CONTACT</a>
+        </nav>
+
+        <div style="display:flex;align-items:center;gap:18px">
+          <sc-if value="{{ headerPhone }}" hint-placeholder-val="{{ true }}">
+            <a href="tel:5613762428" style="display:flex;align-items:center;gap:8px;color:#0b2a5b;font-family:'Montserrat',sans-serif;font-weight:700;font-size:17px;text-decoration:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="#2a8fd4"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1l-2.2 2.3z"></path></svg>(561) 376-2428</a>
+          </sc-if>
+          <a href="Home.dc.html#quote" style="display:flex;align-items:center;gap:8px;background:#f5b301;color:#0b2340;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:11px 18px;border-radius:8px;text-decoration:none;white-space:nowrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#0b2340"><path d="M7 2v2H5a2 2 0 00-2 2v13a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm12 7v10H5V9h14z"></path></svg>
+            GET A FREE QUOTE
+          </a>
+        </div>
+      </div>
+
+      <nav style="display:{{ stackedNavDisplay }};align-items:center;justify-content:center;gap:30px;margin-top:12px">
+        <a href="Home.dc.html" class="hnav" style="color:{{ c_home }};border-color:{{ b_home }}">HOME</a>
+        <a href="Services.dc.html" class="hnav" style="color:{{ c_services }};border-color:{{ b_services }}">SERVICES ▾</a>
+        <a href="Maintenance Plans.dc.html" class="hnav" style="color:{{ c_maint }};border-color:{{ b_maint }}">MAINTENANCE PLANS</a>
+        <a href="About Us.dc.html" class="hnav" style="color:{{ c_about }};border-color:{{ b_about }}">ABOUT US</a>
+        <a href="Service Areas.dc.html" class="hnav" style="color:{{ c_area }};border-color:{{ b_area }}">SERVICE AREAS</a>
+        <a href="Service Areas.dc.html" class="hnav">CONTACT</a>
+      </nav>
+    </div>
+  </header>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:130},&quot;topbar&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;south&quot;,&quot;sarasota&quot;],&quot;default&quot;:&quot;south&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;inline&quot;,&quot;stacked&quot;],&quot;default&quot;:&quot;stacked&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;services&quot;,&quot;maintenance&quot;,&quot;about&quot;,&quot;servicearea&quot;],&quot;default&quot;:&quot;services&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals(){
+    const topbar = this.props.topbar ?? "none";
+    const layout = this.props.layout ?? "inline";
+    const active = this.props.active ?? "home";
+    const A="#2a8fd4", N="#0b2a5b", T="transparent";
+    const on = k => active===k ? A : N;
+    const bd = k => active===k ? A : T;
+    return {
+      showTop: topbar !== "none",
+      topLocation: topbar === "sarasota" ? "Serving Sarasota & Surrounding Areas" : "Serving South Florida",
+      topPhone: topbar === "sarasota",
+      headerPhone: layout === "stacked",
+      inlineNavDisplay: layout === "inline" ? "flex" : "none",
+      stackedNavDisplay: layout === "stacked" ? "flex" : "none",
+      c_home:on("home"), b_home:bd("home"),
+      c_services:on("services"), b_services:bd("services"),
+      c_maint:on("maintenance"), b_maint:bd("maintenance"),
+      c_about:on("about"), b_about:bd("about"),
+      c_area:on("servicearea"), b_area:bd("servicearea")
+    };
+  }
+}
+</script>
+</body>
+</html>

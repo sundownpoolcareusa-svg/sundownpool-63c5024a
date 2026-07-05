@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0}</style>
+<script src="image-slot.js"></script>
+<style id="rsp">
+@media(max-width:860px){
+[style*="grid-template-columns:1fr 340px"],[style*="grid-template-columns:1fr 320px"],[style*="grid-template-columns:1fr 1fr 340px"],[style*="grid-template-columns:0.9fr 1.1fr"],[style*="grid-template-columns:0.85fr 1.15fr"],[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+[style*="grid-template-columns:repeat(6"],[style*="grid-template-columns:repeat(5"],[style*="grid-template-columns:repeat(4"]{grid-template-columns:1fr 1fr!important}
+[style*="auto 1fr auto 1fr auto 1fr"]{grid-template-columns:1fr!important}
+[style*="auto 1fr auto 1fr auto 1fr"]>div:nth-child(even){display:none!important}
+[style*="1.5fr 1fr 1.35fr"]{grid-template-columns:1fr 1fr!important}
+[style*="right:28px"][style*="bottom:96px"]{position:static!important;width:auto!important;margin:24px 0 0!important;right:auto!important;bottom:auto!important}
+[style*="justify-content:space-between"][style*="gap:20px"]{flex-wrap:wrap!important;justify-content:center!important}
+nav{flex-wrap:wrap!important;justify-content:center!important;gap:10px 14px!important}
+}
+@media(max-width:560px){
+[style*="grid-template-columns:repeat("],[style*="grid-template-columns:1fr 1fr"],[style*="1.5fr 1fr 1.35fr"]{grid-template-columns:1fr!important}
+h1{font-size:30px!important;line-height:1.15!important}
+}
+</style>
+</helmet>
+<div style="font-family:'Open Sans',sans-serif;color:#26364d;background:#fff;width:100%;overflow-x:hidden">
+
+  <dc-import name="Header" topbar="none" layout="inline" active="about" hint-size="100%,90px"></dc-import>
+
+  <!-- HERO -->
+  <section style="background:linear-gradient(180deg,#f3f9fd,#eaf4fb)">
+    <div style="max-width:1180px;margin:0 auto;padding:46px 28px 40px;display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center">
+      <div>
+        <div style="color:#2a8fd4;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;margin-bottom:12px">ABOUT US</div>
+        <h1 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:42px;color:#0b2a5b;margin:0 0 4px;line-height:1.1">Your Pool. Our Passion.</h1>
+        <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:26px;color:#37a7e6;margin-bottom:22px">Reliable Care You Can Count On.</div>
+        <p style="font-size:15.5px;line-height:1.7;color:#42506a;margin:0 0 28px;max-width:480px">At Sundown Pool Care, we believe a clean, healthy pool brings people together and creates the best moments. That's why we're dedicated to providing professional, honest, and high-quality pool care for homes and businesses across South Florida.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0;border-top:1px solid #d6e6f2;padding-top:20px">
+          <div style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#0b2a5b;padding-right:18px;border-right:1px solid #d6e6f2"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="1.7"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>Licensed<br>&amp; Insured</div>
+          <div style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#0b2a5b;padding:0 18px;border-right:1px solid #d6e6f2"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="1.7"><circle cx="9" cy="9" r="3"></circle><path d="M3 20c0-3 3-5 6-5s6 2 6 5M16 6a3 3 0 010 6"></path></svg>Local &amp;<br>Family-Owned</div>
+          <div style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#0b2a5b;padding:0 18px;border-right:1px solid #d6e6f2"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="1.7"><circle cx="12" cy="9" r="5"></circle><path d="M9 13l-1 8 4-2 4 2-1-8"></path></svg>5-Star<br>Service</div>
+          <div style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#0b2a5b;padding-left:18px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="1.7"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>On-Time,<br>Every Time</div>
+        </div>
+      </div>
+      <image-slot id="about-hero" style="display:block;width:100%;height:360px;border-radius:14px;box-shadow:0 20px 46px rgba(11,42,91,.18)" shape="rounded" radius="14" fit="cover" placeholder="Drop technician photo"></image-slot>
+    </div>
+  </section>
+
+  <!-- OUR STORY -->
+  <section style="max-width:1180px;margin:0 auto;padding:54px 28px;display:grid;grid-template-columns:0.9fr 1.1fr;gap:44px;align-items:center">
+    <image-slot id="about-story" style="display:block;width:100%;height:320px;border-radius:14px;box-shadow:0 16px 40px rgba(11,42,91,.16)" shape="rounded" radius="14" fit="cover" placeholder="Drop family photo"></image-slot>
+    <div>
+      <div style="color:#2a8fd4;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;margin-bottom:10px">OUR STORY</div>
+      <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:28px;color:#0b2a5b;margin:0 0 18px">Built on Experience. Driven by Excellence.</h2>
+      <p style="font-size:14.5px;line-height:1.7;color:#42506a;margin:0 0 14px">With years of experience in the pool care industry, Sundown Pool Care was founded with a simple mission: to treat every pool as if it were our own.</p>
+      <p style="font-size:14.5px;line-height:1.7;color:#42506a;margin:0 0 14px">We know that every pool is unique, which is why we customize our services to meet your specific needs. From routine maintenance to complete green pool recovery, we have the knowledge, tools, and dedication to get the job done right.</p>
+      <p style="font-size:14.5px;line-height:1.7;color:#42506a;margin:0 0 18px">We're proud to be a trusted partner for hundreds of satisfied customers throughout South Florida.</p>
+      <div style="font-family:'Caveat',cursive;font-size:27px;color:#2a8fd4;border-bottom:2px solid #37a7e6;display:inline-block;padding-bottom:3px">We care for your pool like it's our own.</div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section style="position:relative;background:#0b2a5b;color:#fff;overflow:hidden">
+    <div style="position:absolute;inset:0;background:linear-gradient(120deg,#123f70,#0b2a5b 70%)"></div>
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.04) 0 2px,transparent 2px 24px)"></div>
+    <div style="position:relative;max-width:1180px;margin:0 auto;padding:38px 28px;display:grid;grid-template-columns:repeat(4,1fr)">
+      <div style="display:flex;align-items:center;gap:16px;padding:6px 24px;border-right:1px solid rgba(255,255,255,.12)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7fb6e6" stroke-width="1.5"><circle cx="9" cy="8" r="3.4"></circle><path d="M3 20c0-3.5 3-6 6-6s6 2.5 6 6M16 6a3 3 0 010 6M21 20c0-2.5-1.5-4.5-4-5.4"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:30px">500+</div><div style="font-size:12.5px;color:#c3d6ef">Happy Customers<br>and growing</div></div></div>
+      <div style="display:flex;align-items:center;gap:16px;padding:6px 24px;border-right:1px solid rgba(255,255,255,.12)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7fb6e6" stroke-width="1.5"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v4M16 3v4"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:30px">10+</div><div style="font-size:12.5px;color:#c3d6ef">Years of<br>Experience</div></div></div>
+      <div style="display:flex;align-items:center;gap:16px;padding:6px 24px;border-right:1px solid rgba(255,255,255,.12)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7fb6e6" stroke-width="1.5"><path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"></path><circle cx="12" cy="9" r="2.4"></circle></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:22px">South Florida</div><div style="font-size:12.5px;color:#c3d6ef">Proudly serving<br>our community</div></div></div>
+      <div style="display:flex;align-items:center;gap:16px;padding:6px 24px"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7fb6e6" stroke-width="1.5"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:30px">100%</div><div style="font-size:12.5px;color:#c3d6ef">Satisfaction<br>Guaranteed</div></div></div>
+    </div>
+  </section>
+
+  <!-- VALUES -->
+  <section style="max-width:1080px;margin:0 auto;padding:50px 28px 10px">
+    <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:26px;color:#0b2a5b;text-align:center;margin:0 0 6px">OUR VALUES</h2>
+    <div style="width:60px;height:3px;background:#37a7e6;border-radius:2px;margin:0 auto 34px"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:22px">
+      <sc-for list="{{ values }}" as="v" hint-placeholder-count="4">
+        <div style="text-align:center;padding:0 8px">
+          <div style="width:74px;height:74px;border-radius:50%;background:#eef6fc;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">{{ v.icon }}</div>
+          <h4 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;color:#0b2a5b;margin:0 0 8px">{{ v.title }}</h4>
+          <p style="font-size:12.5px;line-height:1.6;color:#6a7688;margin:0">{{ v.desc }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section style="background:#eef6fc;margin-top:44px">
+    <div style="max-width:1120px;margin:0 auto;padding:44px 28px">
+      <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:24px;color:#0b2a5b;text-align:center;margin:0 0 6px">WHAT OUR CLIENTS SAY</h2>
+      <div style="width:60px;height:3px;background:#37a7e6;border-radius:2px;margin:0 auto 30px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+        <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="3">
+          <div style="background:#fff;border-radius:12px;padding:22px 20px;box-shadow:0 8px 22px rgba(11,42,91,.07)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+              <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 01-2.3 3.5v2.9h3.7C21.8 18.9 23 15.9 23 12.3z"></path><path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3C3.7 21.4 7.6 24 12 24z"></path><path fill="#FBBC05" d="M5.6 14.7a7.2 7.2 0 010-4.6v-3H1.8a12 12 0 000 10.6l3.8-3z"></path><path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.2 15.1 0 12 0 7.6 0 3.7 2.6 1.8 6.4l3.8 3C6.5 6.7 9 4.8 12 4.8z"></path></svg>
+              <span style="color:#fbbc05;font-size:14px;letter-spacing:1px">★★★★★</span>
+            </div>
+            <p style="font-size:13px;line-height:1.6;color:#42506a;margin:0 0 20px">{{ r.quote }}</p>
+            <div style="display:flex;align-items:center;gap:11px">
+              <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#8fd0f0,#2a8fd4);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px">{{ r.initial }}</div>
+              <div><div style="font-size:13.5px;font-weight:700;color:#0b2a5b">– {{ r.name }}</div><div style="font-size:12px;color:#6a7688">{{ r.loc }}</div></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BAND -->
+  <section style="position:relative;background:#0b2a5b;overflow:hidden">
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.04) 0 2px,transparent 2px 24px)"></div>
+    <div style="position:relative;max-width:1180px;margin:0 auto;padding:30px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
+      <div><div style="color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:23px">Ready for a Clean, Healthy Pool?</div><div style="color:#c3d6ef;font-size:14px;margin-top:3px">Let our experts handle the work so you can enjoy your pool worry-free.</div></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a href="tel:5613762428" style="display:flex;align-items:center;gap:11px;background:#f5b301;color:#0b2340;font-family:'Montserrat',sans-serif;font-weight:700;padding:14px 24px;border-radius:9px;text-decoration:none;line-height:1.1"><svg width="20" height="20" viewBox="0 0 24 24" fill="#0b2340"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1l-2.2 2.3z"></path></svg><span>CALL NOW<br><span style="font-size:12.5px;font-weight:600">(561) 376-2428</span></span></a>
+        <a href="Home.dc.html#quote" style="display:flex;align-items:center;gap:11px;background:transparent;border:1.5px solid rgba(255,255,255,.55);color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;padding:14px 24px;border-radius:9px;text-decoration:none;line-height:1.1"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M7 2v2H5a2 2 0 00-2 2v13a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm12 7v10H5V9h14z"></path></svg><span>GET A FREE QUOTE<br><span style="font-size:12.5px;font-weight:600">Fast, Easy &amp; No Obligation</span></span></a>
+      </div>
+    </div>
+  </section>
+
+  <dc-import name="Footer" region="south" hint-size="100%,520px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  vic(inner){ return React.createElement('svg',{width:34,height:34,viewBox:'0 0 24 24',fill:'none',stroke:'#2a8fd4',strokeWidth:1.5,strokeLinecap:'round',strokeLinejoin:'round',dangerouslySetInnerHTML:{__html:inner}}); }
+  renderVals(){
+    return {
+      values:[
+        {title:"Integrity",desc:"We believe in honest communication, fair pricing, and doing the right thing.",icon:this.vic('<path d="M8 12l2 2 3-4M4 11l6-6 4 4 6-6"/><path d="M14 9l6 6-4 4-6-6"/>')},
+        {title:"Quality",desc:"We use the best products, equipment, and techniques to deliver the best results.",icon:this.vic('<circle cx="12" cy="9" r="5"/><path d="M9 13l-1 8 4-2 4 2-1-8"/>')},
+        {title:"Reliability",desc:"We show up on time, every time, and get the job done right.",icon:this.vic('<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 3-6 6-6s6 2.5 6 6M16 6a3 3 0 010 6"/>')},
+        {title:"Care",desc:"We treat your pool with the same care and attention as our own.",icon:this.vic('<path d="M12 20s-7-4.5-7-10a4 4 0 017-2.5A4 4 0 0119 10c0 5.5-7 10-7 10z"/>')}
+      ],
+      reviews:[
+        {quote:'"Sundown Pool Care is the best! Our green pool looked brand new in just a few days. Professional, on time, and very affordable."',name:"Melissa R.",loc:"Boca Raton, FL",initial:"M"},
+        {quote:'"Reliable service every week. They take care of everything so we can just enjoy our pool. Highly recommend!"',name:"David L.",loc:"Delray Beach, FL",initial:"D"},
+        {quote:'"Great communication and excellent results. Our pool has never been cleaner!"',name:"Sarah K.",loc:"Wellington, FL",initial:"S"}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

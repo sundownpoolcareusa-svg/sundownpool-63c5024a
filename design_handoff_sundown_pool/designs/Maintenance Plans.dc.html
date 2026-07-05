@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0}
+.pbtn{cursor:pointer;font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;letter-spacing:.5px;padding:9px 20px;border:none;border-radius:6px;background:transparent;color:#0b2a5b}
+.plan:hover{box-shadow:0 20px 44px rgba(11,42,91,.16)}
+.plan{transition:box-shadow .2s}</style>
+<style id="rsp">
+@media(max-width:860px){
+[style*="grid-template-columns:1fr 340px"],[style*="grid-template-columns:1fr 320px"],[style*="grid-template-columns:1fr 1fr 340px"],[style*="grid-template-columns:0.9fr 1.1fr"],[style*="grid-template-columns:0.85fr 1.15fr"],[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+[style*="grid-template-columns:repeat(6"],[style*="grid-template-columns:repeat(5"],[style*="grid-template-columns:repeat(4"]{grid-template-columns:1fr 1fr!important}
+[style*="auto 1fr auto 1fr auto 1fr"]{grid-template-columns:1fr!important}
+[style*="auto 1fr auto 1fr auto 1fr"]>div:nth-child(even){display:none!important}
+[style*="1.5fr 1fr 1.35fr"]{grid-template-columns:1fr 1fr!important}
+[style*="right:28px"][style*="bottom:96px"]{position:static!important;width:auto!important;margin:24px 0 0!important;right:auto!important;bottom:auto!important}
+[style*="justify-content:space-between"][style*="gap:20px"]{flex-wrap:wrap!important;justify-content:center!important}
+nav{flex-wrap:wrap!important;justify-content:center!important;gap:10px 14px!important}
+}
+@media(max-width:560px){
+[style*="grid-template-columns:repeat("],[style*="grid-template-columns:1fr 1fr"],[style*="1.5fr 1fr 1.35fr"]{grid-template-columns:1fr!important}
+h1{font-size:30px!important;line-height:1.15!important}
+}
+</style>
+</helmet>
+<div style="font-family:'Open Sans',sans-serif;color:#26364d;background:#fff;width:100%;overflow-x:hidden">
+
+  <dc-import name="Header" topbar="none" layout="inline" active="maintenance" hint-size="100%,90px"></dc-import>
+
+  <!-- HERO -->
+  <section style="position:relative;background:#0b2a5b;color:#fff;overflow:hidden">
+    <div style="position:absolute;inset:0;background:linear-gradient(135deg,#1d4f86 0%,#123f70 45%,#0b2a5b 100%)"></div>
+    <div style="position:absolute;top:0;right:0;width:52%;height:100%;background:linear-gradient(160deg,#8fd6f2,#2f9fdb 55%,#0f6fb2)"></div>
+    <div style="position:absolute;top:0;right:0;width:52%;height:100%;background:linear-gradient(90deg,rgba(11,42,91,.85),rgba(11,42,91,.1))"></div>
+    <div style="position:relative;max-width:1180px;margin:0 auto;padding:46px 28px 90px;display:grid;grid-template-columns:1fr 320px;gap:30px;align-items:start">
+      <div>
+        <h1 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:40px;margin:0 0 4px;letter-spacing:-.3px">POOL MAINTENANCE PLANS</h1>
+        <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:27px;color:#37a7e6;margin-bottom:20px">Simple Plans. Crystal Clear Results.</div>
+        <p style="font-size:16px;line-height:1.6;color:#d8e6f5;max-width:470px;margin:0 0 28px">Keep your pool clean, safe, and swim-ready year-round with our professional maintenance plans. We handle the work, so you can enjoy your pool worry-free.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:30px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v4M16 3v4"></path></svg>Reliable<br>Scheduling</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><path d="M9 3h6M10 3v6l-4 8a2 2 0 002 3h8a2 2 0 002-3l-4-8V3"></path></svg>Chemical<br>Balance</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><path d="M14 6a3.5 3.5 0 00-4.7 4.3L4 15.6 6.4 18l5.3-5.3A3.5 3.5 0 0016 8l-2 2-2-2 2-2z"></path></svg>Equipment<br>Check</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>Peace of<br>Mind</div>
+        </div>
+      </div>
+      <div style="position:relative">
+        <div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:40px;height:40px;border-radius:50%;background:#1668b3;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(0,0,0,.3);z-index:2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h4"></path></svg></div>
+        <div style="background:#fff;color:#0b2a5b;border-radius:12px;padding:30px 24px 24px;box-shadow:0 18px 40px rgba(0,0,0,.25)">
+          <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;text-align:center;margin:0 0 18px">WHY CHOOSE OUR PLANS?</h3>
+          <div style="display:flex;flex-direction:column;gap:14px;font-size:13px;color:#42506a">
+            <div style="display:flex;gap:10px;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#37a7e6"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.2L6.6 12l1.4-1.4 2.8 2.8 5.2-5.2L17.4 9.6z"></path></svg>Consistent, professional care</div>
+            <div style="display:flex;gap:10px;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#37a7e6"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.2L6.6 12l1.4-1.4 2.8 2.8 5.2-5.2L17.4 9.6z"></path></svg>Prevent costly repairs</div>
+            <div style="display:flex;gap:10px;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#37a7e6"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.2L6.6 12l1.4-1.4 2.8 2.8 5.2-5.2L17.4 9.6z"></path></svg>Healthy, crystal-clear water</div>
+            <div style="display:flex;gap:10px;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#37a7e6"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.2L6.6 12l1.4-1.4 2.8 2.8 5.2-5.2L17.4 9.6z"></path></svg>Licensed &amp; Insured Technicians</div>
+            <div style="display:flex;gap:10px;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#37a7e6"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.2L6.6 12l1.4-1.4 2.8 2.8 5.2-5.2L17.4 9.6z"></path></svg>100% Satisfaction Guaranteed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <svg viewBox="0 0 1440 90" preserveAspectRatio="none" style="position:absolute;bottom:-1px;left:0;width:100%;height:56px;display:block"><path d="M0,60 C360,100 1080,0 1440,55 L1440,90 L0,90 Z" fill="#fff"></path></svg>
+  </section>
+
+  <!-- PLANS -->
+  <section style="max-width:1080px;margin:0 auto;padding:34px 28px 10px">
+    <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:26px;color:#0b2a5b;text-align:center;margin:0 0 22px">CHOOSE THE PLAN THAT'S RIGHT FOR YOU</h2>
+    <div style="display:flex;justify-content:center;margin-bottom:30px">
+      <div style="display:flex;background:#eef3f9;border:1px solid #dce7f2;border-radius:8px;padding:4px;gap:2px">
+        <button class="pbtn" onclick="{{ setOnce }}" style="background:{{ bgOnce }};color:{{ fgOnce }}">ONCE A WEEK</button>
+        <button class="pbtn" onclick="{{ setTwice }}" style="background:{{ bgTwice }};color:{{ fgTwice }}">TWICE A WEEK</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;align-items:start">
+
+      <div class="plan" style="background:#fff;border:1px solid #e2ebf4;border-radius:12px;overflow:hidden;box-shadow:0 10px 28px rgba(11,42,91,.07)">
+        <div style="background:#1a8e9c;color:#fff;text-align:center;padding:14px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:17px;letter-spacing:.5px">BASIC PLAN</div>
+        <div style="padding:24px 22px 22px;text-align:center">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#1a8e9c" stroke-width="1.6" style="margin:0 auto 12px;display:block"><path d="M4 18c1.5 0 1.5 1.2 3 1.2S10.5 18 12 18s1.5 1.2 3 1.2 1.5-1.2 3-1.2"></path><path d="M4 14c1.5 0 1.5 1.2 3 1.2S10.5 14 12 14s1.5 1.2 3 1.2 1.5-1.2 3-1.2"></path><path d="M9 12V6a2 2 0 014 0M9 8h4"></path></svg>
+          <p style="font-size:13px;color:#6a7688;margin:0 0 18px">Perfect for pools that are in good condition.</p>
+          <div style="text-align:left;display:flex;flex-direction:column;gap:11px;font-size:13px;color:#3b485e;margin-bottom:22px">
+            <sc-for list="{{ basic }}" as="f" hint-placeholder-count="6"><div style="display:flex;gap:9px;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a8e9c" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-5"></path></svg>{{ f }}</div></sc-for>
+          </div>
+          <div style="background:#f4f8fb;border-radius:10px;padding:16px">
+            <a href="#" style="display:block;background:#1a8e9c;color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:12px;border-radius:7px;text-decoration:none">CHOOSE PLAN</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="plan" style="position:relative;background:#fff;border:2px solid #0b2a5b;border-radius:12px;overflow:hidden;box-shadow:0 18px 40px rgba(11,42,91,.16);margin-top:-6px">
+        <div style="background:#f5b301;color:#0b2340;text-align:center;padding:6px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:11px;letter-spacing:1px">MOST POPULAR</div>
+        <div style="background:#0b2a5b;color:#fff;text-align:center;padding:14px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:17px;letter-spacing:.5px">STANDARD PLAN</div>
+        <div style="padding:24px 22px 22px;text-align:center">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="1.6" style="margin:0 auto 12px;display:block"><path d="M4 18c1.5 0 1.5 1.2 3 1.2S10.5 18 12 18s1.5 1.2 3 1.2 1.5-1.2 3-1.2"></path><path d="M4 14c1.5 0 1.5 1.2 3 1.2S10.5 14 12 14s1.5 1.2 3 1.2 1.5-1.2 3-1.2"></path><path d="M9 12V6a2 2 0 014 0M9 8h4"></path></svg>
+          <p style="font-size:13px;color:#6a7688;margin:0 0 18px">Our most popular plan for complete pool care.</p>
+          <div style="text-align:left;display:flex;flex-direction:column;gap:11px;font-size:13px;color:#3b485e;margin-bottom:22px">
+            <sc-for list="{{ standard }}" as="f" hint-placeholder-count="7"><div style="display:flex;gap:9px;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-5"></path></svg>{{ f }}</div></sc-for>
+          </div>
+          <div style="background:#f4f8fb;border-radius:10px;padding:16px">
+            <a href="#" style="display:block;background:#0b2a5b;color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:12px;border-radius:7px;text-decoration:none">CHOOSE PLAN</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="plan" style="background:#fff;border:1px solid #e2ebf4;border-radius:12px;overflow:hidden;box-shadow:0 10px 28px rgba(11,42,91,.07)">
+        <div style="background:#1a8e9c;color:#fff;text-align:center;padding:14px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:17px;letter-spacing:.5px">PREMIUM PLAN</div>
+        <div style="padding:24px 22px 22px;text-align:center">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#1a8e9c" stroke-width="1.6" style="margin:0 auto 12px;display:block"><path d="M6 3h12l4 6-10 12L2 9z"></path><path d="M2 9h20M9 3l3 6 3-6M12 9l-2 12M12 9l2 12"></path></svg>
+          <p style="font-size:13px;color:#6a7688;margin:0 0 18px">Maximum care for a perfectly maintained pool.</p>
+          <div style="text-align:left;display:flex;flex-direction:column;gap:11px;font-size:13px;color:#3b485e;margin-bottom:22px">
+            <sc-for list="{{ premium }}" as="f" hint-placeholder-count="7"><div style="display:flex;gap:9px;align-items:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a8e9c" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-5"></path></svg>{{ f }}</div></sc-for>
+          </div>
+          <div style="background:#f4f8fb;border-radius:10px;padding:16px">
+            <a href="#" style="display:block;background:#1a8e9c;color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:12px;border-radius:7px;text-decoration:none">CHOOSE PLAN</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALL PLANS INCLUDE -->
+  <section style="max-width:1080px;margin:0 auto;padding:40px 28px 10px">
+    <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:22px;color:#0b2a5b;text-align:center;margin:0 0 6px">ALL PLANS INCLUDE</h2>
+    <div style="width:60px;height:3px;background:#37a7e6;border-radius:2px;margin:0 auto 26px"></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+      <div style="display:flex;gap:12px;align-items:center;justify-content:center;text-align:left"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="1.7"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#0b2a5b">Licensed &amp; Insured Technicians</div></div>
+      <div style="display:flex;gap:12px;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="1.7"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#0b2a5b">On-Time, Every Time Service</div></div>
+      <div style="display:flex;gap:12px;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="1.7"><path d="M7 11v9H4v-9h3zm3 0l1.5-6a2 2 0 013.9.5V9h4a2 2 0 012 2.3l-1.2 7A2 2 0 0120.2 20H10v-9z"></path></svg><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#0b2a5b">Satisfaction Guaranteed</div></div>
+      <div style="display:flex;gap:12px;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0b2a5b" stroke-width="1.7"><path d="M4 5h16v11H8l-4 4V5z"></path><path d="M8 10h.01M12 10h.01M16 10h.01"></path></svg><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#0b2a5b">Easy Communication &amp; Updates</div></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section style="background:#eef6fc;margin-top:36px">
+    <div style="max-width:1080px;margin:0 auto;padding:40px 28px">
+      <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:24px;color:#0b2a5b;text-align:center;margin:0 0 6px">HOW IT WORKS</h2>
+      <div style="width:60px;height:3px;background:#37a7e6;border-radius:2px;margin:0 auto 30px"></div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:start;gap:6px">
+        <sc-for list="{{ steps }}" as="st" hint-placeholder-count="4">
+          <div style="text-align:center;padding:0 6px">
+            <div style="position:relative;width:82px;height:82px;margin:0 auto 14px">
+              <div style="width:82px;height:82px;border-radius:50%;background:#fff;border:1px solid #cfe3f4;display:flex;align-items:center;justify-content:center">{{ st.icon }}</div>
+              <div style="position:absolute;top:-4px;left:-4px;width:28px;height:28px;border-radius:50%;background:#1668b3;color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center">{{ st.n }}</div>
+            </div>
+            <h4 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13.5px;color:#0b2a5b;margin:0 0 7px;text-transform:uppercase">{{ st.title }}</h4>
+            <p style="font-size:12px;line-height:1.5;color:#6a7688;margin:0">{{ st.desc }}</p>
+          </div>
+          <sc-if value="{{ st.arrow }}" hint-placeholder-val="{{ true }}"><div style="color:#9cc4e4;font-size:22px;padding-top:28px">›</div></sc-if>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BAND -->
+  <section style="background:#0b2a5b;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background:radial-gradient(70% 140% at 10% 50%,rgba(45,143,212,.35),transparent 60%)"></div>
+    <div style="position:relative;max-width:1180px;margin:0 auto;padding:30px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:16px"><div style="width:52px;height:52px;border-radius:50%;background:#1668b3;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1l-2.2 2.3z"></path></svg></div><div><div style="color:#fff;font-family:'Montserrat',sans-serif;font-weight:800;font-size:20px;line-height:1.2">HAVE QUESTIONS?<br>WE'RE HERE TO HELP!</div></div></div>
+      <div style="text-align:center"><div style="color:#c3d6ef;font-size:14px;margin-bottom:2px">Call us or request a free quote today.</div><a href="tel:5613762428" style="color:#fff;font-family:'Montserrat',sans-serif;font-weight:800;font-size:26px;text-decoration:none">(561) 376-2428</a></div>
+      <a href="Home.dc.html#quote" style="display:flex;align-items:center;gap:9px;background:#f5b301;color:#0b2340;font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;padding:15px 24px;border-radius:9px;text-decoration:none;letter-spacing:.4px">GET A FREE QUOTE →</a>
+    </div>
+  </section>
+
+  <dc-import name="Footer" region="south" hint-size="100%,520px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state={billing:"once"};
+  bic(inner){ return React.createElement('svg',{width:34,height:34,viewBox:'0 0 24 24',fill:'none',stroke:'#1668b3',strokeWidth:1.5,strokeLinecap:'round',strokeLinejoin:'round',dangerouslySetInnerHTML:{__html:inner}}); }
+  renderVals(){
+    const b=this.state.billing;
+    const price={once:[99,129,169],twice:[169,219,279]}[b];
+    const per={once:"month",twice:"month"}[b];
+    const A="#0b2a5b", W="#fff";
+    const act=k=>b===k;
+    return {
+      setOnce:()=>this.setState({billing:"once"}),
+      setTwice:()=>this.setState({billing:"twice"}),
+      bgOnce:act("once")?A:"transparent", fgOnce:act("once")?W:A,
+      bgTwice:act("twice")?A:"transparent", fgTwice:act("twice")?W:A,
+      p_basic:price[0], p_std:price[1], p_prem:price[2], per,
+      basic:["Skim surface","Vacuum pool","Brush walls","Empty skimmer & pump basket","Check & adjust chemicals","Equipment check"],
+      standard:["Everything in Basic Plan","Test & balance chemicals","Clean tile line","Inspect filter & equipment","Backwash filter (as needed)","Check salt system (if applicable)","Report of service"],
+      premium:["Everything in Standard Plan","Filter cleaning (as needed)","Salt cell cleaning (as needed)","Equipment deep inspection","Water level check & adjust","Priority service","15% off repairs"],
+      steps:[
+        {n:"1",title:"Schedule",desc:"Choose your plan and we'll set up your service schedule.",arrow:true,icon:this.bic('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>')},
+        {n:"2",title:"We Clean & Check",desc:"Our technician visits and performs a complete service.",arrow:true,icon:this.bic('<circle cx="12" cy="8" r="3"/><path d="M6 20c0-3.5 3-6 6-6s6 2.5 6 6"/>')},
+        {n:"3",title:"We Test & Balance",desc:"We test your water and balance chemicals for perfect results.",arrow:true,icon:this.bic('<path d="M9 3h6M10 3v6l-4 8a2 2 0 002 3h8a2 2 0 002-3l-4-8V3"/>')},
+        {n:"4",title:"You Enjoy",desc:"Relax and enjoy your clean, healthy, crystal-clear pool!",arrow:false,icon:this.bic('<path d="M3 16c1.5 0 1.5 1.5 3 1.5S10.5 16 12 16s1.5 1.5 3 1.5 1.5-1.5 3-1.5"/><circle cx="9" cy="9" r="2"/>')}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
