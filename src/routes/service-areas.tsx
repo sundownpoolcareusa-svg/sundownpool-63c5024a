@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import heroBg from "@/assets/hero-bg.png.asset.json";
+import heroBg from "@/assets/hero-pool.jpg";
 
 export const Route = createFileRoute("/service-areas")({
   component: ServiceAreasPage,
@@ -49,7 +49,7 @@ function ServiceAreasPage() {
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-r from-[#dff0fb] to-[#bfe0f4]">
-        <img src={heroBg.url} alt="Sarasota pool service area" className="absolute right-0 top-0 h-full w-[58%] object-cover" />
+        <img src={heroBg} alt="Sarasota pool service area" className="absolute right-0 top-0 h-full w-[58%] object-cover" />
         <div className="absolute left-0 top-0 h-full w-[52%] bg-gradient-to-r from-[#eef7fd] to-transparent" />
         <div className="relative mx-auto max-w-[1180px] px-7 pb-4 pt-12">
           <div className="max-w-[520px]">
@@ -209,7 +209,7 @@ function ServiceAreasPage() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter areas={AREAS} />
     </div>
   );
 }
