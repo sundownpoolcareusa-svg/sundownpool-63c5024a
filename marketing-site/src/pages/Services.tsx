@@ -15,6 +15,10 @@ import svcWater from "@/assets/svc-water.jpg";
 import svcTile from "@/assets/svc-tile.jpg";
 import svcSalt from "@/assets/svc-salt.jpg";
 import svcStartup from "@/assets/svc-startup.jpg";
+import hiw1 from "@/assets/handoff-icons/hiw-1.png";
+import hiw2 from "@/assets/handoff-icons/hiw-2.png";
+import hiw3 from "@/assets/handoff-icons/hiw-3.png";
+import hiw4 from "@/assets/handoff-icons/hiw-4.png";
 
 const PHONE = "(561) 376-2428";
 const PHONE_HREF = "tel:+15613762428";
@@ -38,10 +42,10 @@ const SERVICES = [
 ];
 
 const HOW = [
-  { n: "1", icon: Calendar, title: "Schedule", desc: "Choose a service and schedule your appointment." },
-  { n: "2", icon: Search, title: "We Inspect", desc: "Our technician inspects your pool and equipment." },
-  { n: "3", icon: Sparkles, title: "We Service", desc: "We clean, balance and service your pool with care." },
-  { n: "4", icon: Waves, title: "You Enjoy", desc: "Relax and enjoy your clean, healthy, crystal-clear pool!" },
+  { n: "1", img: hiw4, title: "Schedule", desc: "Choose a service and schedule your appointment." },
+  { n: "2", img: hiw3, title: "We Inspect", desc: "Our technician inspects your pool and equipment." },
+  { n: "3", img: hiw2, title: "We Service", desc: "We clean, balance and service your pool with care." },
+  { n: "4", img: hiw1, title: "You Enjoy", desc: "Relax and enjoy your clean, healthy, crystal-clear pool!" },
 ];
 
 export function ServicesPage() {
@@ -164,7 +168,7 @@ export function ServicesPage() {
                   {s.n}
                 </div>
                 <div className="-ml-3 flex h-[62px] w-[62px] items-center justify-center rounded-full bg-[#eef2f7]">
-                  <s.icon className="h-7 w-7 text-brand-blue" strokeWidth={1.6} />
+                  <img src={s.img} alt="" className="h-7 w-7" />
                 </div>
               </div>
               <div>
