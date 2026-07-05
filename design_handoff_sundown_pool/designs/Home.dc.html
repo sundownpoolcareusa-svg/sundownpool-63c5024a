@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&amp;family=Open+Sans:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0}
+  .navlink{color:#0b2a5b;font-family:'Montserrat',sans-serif;font-weight:600;font-size:14px;text-decoration:none;letter-spacing:.2px;white-space:nowrap;padding:6px 0}
+  .navlink:hover{color:#2a8fd4}
+  .svc-card:hover{box-shadow:0 14px 34px rgba(11,42,91,.14);transform:translateY(-3px)}
+  .svc-card{transition:box-shadow .2s, transform .2s}
+</style>
+<style id="rsp">
+@media(max-width:860px){
+[style*="grid-template-columns:1fr 340px"],[style*="grid-template-columns:1fr 320px"],[style*="grid-template-columns:1fr 1fr 340px"],[style*="grid-template-columns:0.9fr 1.1fr"],[style*="grid-template-columns:0.85fr 1.15fr"],[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+[style*="grid-template-columns:repeat(6"],[style*="grid-template-columns:repeat(5"],[style*="grid-template-columns:repeat(4"]{grid-template-columns:1fr 1fr!important}
+[style*="auto 1fr auto 1fr auto 1fr"]{grid-template-columns:1fr!important}
+[style*="auto 1fr auto 1fr auto 1fr"]>div:nth-child(even){display:none!important}
+[style*="1.5fr 1fr 1.35fr"]{grid-template-columns:1fr 1fr!important}
+[style*="right:28px"][style*="bottom:96px"]{position:static!important;width:auto!important;margin:24px 0 0!important;right:auto!important;bottom:auto!important}
+[style*="justify-content:space-between"][style*="gap:20px"]{flex-wrap:wrap!important;justify-content:center!important}
+nav{flex-wrap:wrap!important;justify-content:center!important;gap:10px 14px!important}
+}
+@media(max-width:560px){
+[style*="grid-template-columns:repeat("],[style*="grid-template-columns:1fr 1fr"],[style*="1.5fr 1fr 1.35fr"]{grid-template-columns:1fr!important}
+h1{font-size:30px!important;line-height:1.15!important}
+}
+</style>
+</helmet>
+<div style="font-family:'Open Sans',sans-serif;color:#26364d;background:#fff;width:100%;overflow-x:hidden">
+
+  <!-- HEADER -->
+  <header style="background:#fff;border-bottom:1px solid #eef2f7;position:relative;z-index:20">
+    <div style="max-width:1180px;margin:0 auto;padding:2px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px">
+      <a href="Home.dc.html" style="display:flex;align-items:center;text-decoration:none">
+        <img src="./chatgpt-image-jul-3-2026-11_19_20-am-mr5g1hwy.png" alt="Sundown Pool Care" style="height: 55px; width: auto; display: block">
+      </a>
+      <nav style="display:flex;align-items:center;gap:26px">
+        <a href="Home.dc.html" class="navlink" style="color:#2a8fd4">HOME</a>
+        <a href="Services.dc.html" class="navlink">SERVICES ▾</a>
+        <a href="Maintenance Plans.dc.html" class="navlink">MAINTENANCE PLANS</a>
+        <a href="About Us.dc.html" class="navlink">ABOUT US</a>
+        <a href="Service Areas.dc.html" class="navlink">SERVICE AREAS</a>
+        <a href="Service Areas.dc.html" class="navlink">CONTACT</a>
+      </nav>
+      <a href="#quote" style="display:flex;align-items:center;gap:8px;background:#f5b301;color:#0b2340;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:11px 18px;border-radius:8px;text-decoration:none;white-space:nowrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="#0b2340"><path d="M7 2v2H5a2 2 0 00-2 2v13a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm12 7v10H5V9h14z"></path></svg>
+        GET A FREE QUOTE
+      </a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  
+
+  <!-- BEFORE / AFTER -->
+  <section style="position:relative;background: linear-gradient(90deg, rgba(3,10,24,.9) 0%, rgba(3,10,24,.68) 40%, rgba(3,10,24,.32) 66%, rgba(3,10,24,.05) 90%), url(&quot;./chatgpt-image-jul-3-2026-11_54_53-am-mr547iay.png&quot;) center / cover no-repeat;color:#fff;overflow:hidden">
+    <div style="position: relative; max-width: 1180px; margin: 0 auto; padding: 70px 28px 96px">
+      <div style="max-width:560px">
+        <h1 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:47px;line-height:1.12;margin:0 0 20px;letter-spacing:-.5px">{{ heroTitle }} <span style="color: rgb(55, 167, 230);">{{ heroAccent }}</span> {{ heroTail }}</h1>
+        <p style="font-size:16.5px;line-height:1.6;color:#d8e6f5;margin:0 0 26px;max-width:470px">{{ heroSubtext }}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:26px;margin-bottom:30px">
+          <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>Licensed<br>&amp; Insured</div>
+          <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l2.5 5 5.5.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.5-.8L12 3z"></path></svg>5-Star<br>Rated</div>
+          <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>On-Time<br>Every Time</div>
+          <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M7 11v9H4v-9h3zm3 0l1.5-6a2 2 0 013.9.5V9h4a2 2 0 012 2.3l-1.2 7A2 2 0 0120.2 20H10v-9z"></path></svg>100%<br>Satisfaction</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:14px">
+          <a href="tel:5613762428" style="display:flex;align-items:center;gap:11px;background:#f5b301;color:#0b2340;font-family:'Montserrat',sans-serif;font-weight:700;padding:15px 24px;border-radius:9px;text-decoration:none;line-height:1.1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0b2340"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1l-2.2 2.3z"></path></svg>
+            <span>CALL NOW<br><span style="font-size:13px;font-weight:600">(561) 376-2428</span></span>
+          </a>
+          <a href="#quote" style="display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.55);color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;padding:15px 24px;border-radius:9px;text-decoration:none;line-height:1.1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M7 2v2H5a2 2 0 00-2 2v13a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm12 7v10H5V9h14z"></path></svg>
+            <span>GET A FREE QUOTE<br><span style="font-size:13px;font-weight:600">It's Fast &amp; Easy</span></span>
+          </a>
+        </div>
+      </div>
+      <div style="position:absolute;right:28px;bottom:96px;background:#fff;color:#0b2a5b;border-radius:12px;padding:18px 22px;box-shadow:0 18px 40px rgba(0,0,0,.25);width:250px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <svg width="26" height="26" viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 01-2.3 3.5v2.9h3.7C21.8 18.9 23 15.9 23 12.3z"></path><path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3C3.7 21.4 7.6 24 12 24z"></path><path fill="#FBBC05" d="M5.6 14.7a7.2 7.2 0 010-4.6v-3H1.8a12 12 0 000 10.6l3.8-3z"></path><path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.2 15.1 0 12 0 7.6 0 3.7 2.6 1.8 6.4l3.8 3C6.5 6.7 9 4.8 12 4.8z"></path></svg>
+          <div><span style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:22px">5.0</span> <span style="color:#fbbc05;font-size:15px;letter-spacing:1px">★★★★★</span></div>
+        </div>
+        <div style="font-size:11.5px;color:#6a7688;margin-bottom:14px">Based on 200+ Google Reviews</div>
+        <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;border-top:1px solid #eef2f7;padding-top:13px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-6"></path></svg><span style="width: 177px; height: 40px">Family Owned <br>&amp; Operated</span></div>
+      </div>
+    </div>
+    <svg viewBox="0 0 1440 90" preserveAspectRatio="none" style="position:absolute;bottom:-1px;left:0;width:100%;height:64px;display:block"><path d="M0,50 C360,110 1080,-20 1440,45 L1440,90 L0,90 Z" fill="#fff"></path></svg>
+  </section><section style="max-width:1180px;margin:0 auto;padding:54px 28px 20px">
+    <div style="text-align:center;margin-bottom:34px">
+      <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:30px;color:#0b2a5b;margin:0;letter-spacing:.5px">FROM GREEN TO CRYSTAL CLEAR</h2>
+      <div style="font-family:'Caveat',cursive;font-size:34px;color:#2a8fd4;margin-top:2px">in Just Days!</div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 340px; gap: 22px; align-items: stretch; position: relative">
+      <div style="position:relative;border-radius:12px;overflow:hidden;min-height:250px;background:linear-gradient(160deg,#6e7d3a,#4f6a2e 60%,#3c5a2a);box-shadow:0 10px 26px rgba(0,0,0,.12)">
+        <div style="position: absolute; inset: 0; background: url(&quot;./chatgpt-image-jul-3-2026-12_00_04-pm-mr54drsy.png&quot;) center / cover no-repeat"></div>
+        <span style="position:absolute;top:14px;left:14px;background:#3a7d1e;color:#fff;font-weight:700;font-size:12px;padding:5px 14px;border-radius:5px;letter-spacing:1px">BEFORE</span>
+        <span style="position:absolute;bottom:12px;right:14px;font-family:monospace;font-size:11px;color:rgba(255,255,255,.7)">Green Pool&nbsp;<br></span>
+      </div>
+      <div style="position:relative;border-radius:12px;overflow:hidden;min-height:250px;background:linear-gradient(160deg,#8fd6f2,#2f9fdb 55%,#0f6fb2);box-shadow:0 10px 26px rgba(0,0,0,.12)">
+        <div style="position: absolute; inset: 0; background: url(&quot;./chatgpt-image-jul-3-2026-12_01_08-pm-mr54f3p5.png&quot;) center / cover no-repeat"></div>
+        <span style="position:absolute;top:14px;left:14px;background:#2a8fd4;color:#fff;font-weight:700;font-size:12px;padding:5px 14px;border-radius:5px;letter-spacing:1px">AFTER</span>
+        <span style="position: absolute; bottom: 12px; right: 14px; font-family: monospace; font-size: 11px; color: #050505B3">Clean Pool</span>
+        
+      </div>
+      <div style="background:#0b2a5b;color:#fff;border-radius:12px;padding:28px 26px">
+        <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:22px;margin:0 0 6px">Your Pool Deserves the Best Care</h3>
+        <div style="width:52px;height:3px;background:#37a7e6;border-radius:2px;margin-bottom:16px"></div>
+        <p style="font-size:14px;line-height:1.6;color:#cdd9ec;margin:0 0 20px">We keep your pool clean, safe, and swim-ready year-round so you can relax and enjoy.</p>
+        <div style="display:flex;flex-direction:column;gap:13px;font-size:14px;font-weight:600">
+          <div style="display:flex;align-items:center;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="#37a7e6"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.2L6.6 12l1.4-1.4 2.8 2.8 5.2-5.2L17.4 9.6z"></path></svg>Reliable &amp; On-Time Service</div>
+          <div style="display:flex;align-items:center;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="#37a7e6"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.2L6.6 12l1.4-1.4 2.8 2.8 5.2-5.2L17.4 9.6z"></path></svg>Expert Technicians</div>
+          <div style="display:flex;align-items:center;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="#37a7e6"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.2L6.6 12l1.4-1.4 2.8 2.8 5.2-5.2L17.4 9.6z"></path></svg>Quality You Can Trust</div>
+          <div style="display:flex;align-items:center;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="#37a7e6"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1.2 14.2L6.6 12l1.4-1.4 2.8 2.8 5.2-5.2L17.4 9.6z"></path></svg>Affordable Pricing</div>
+        </div>
+      </div>
+    <div style="position: absolute; left: 350px; top: 183px; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%; background: #0b2a5b; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; box-shadow: 0 6px 16px rgba(0,0,0,.3)">→</div></div>
+  </section>
+
+  <!-- SERVICES -->
+  <section style="max-width:1180px;margin:0 auto;padding:44px 28px 10px">
+    <div style="text-align:center;margin-bottom:30px">
+      <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:28px;color:#0b2a5b;margin:0">OUR POOL SERVICES</h2>
+      <div style="width:64px;height:3px;background:#37a7e6;border-radius:2px;margin:10px auto 0"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:16px">
+      <sc-for list="{{ services }}" as="svc" hint-placeholder-count="6">
+        <div class="svc-card" style="position:relative;background:#fff;border:1px solid #e7eef6;border-radius:12px;padding:26px 16px 22px;text-align:center">
+          <sc-if value="{{ svc.popular }}" hint-placeholder-val="{{ true }}">
+            <span style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:#f5b301;color:#0b2340;font-size:10px;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:4px">POPULAR</span>
+          </sc-if>
+          <div style="height:44px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">{{ svc.icon }}</div>
+          <h4 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:14.5px;color:#0b2a5b;margin:0 0 10px;line-height:1.3;text-transform:uppercase;letter-spacing:.3px">{{ svc.title }}</h4>
+          <p style="font-size:12.5px;line-height:1.55;color:#6a7688;margin:0 0 8px">{{ svc.desc }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS + FORM -->
+  <section id="quote" style="max-width:1180px;margin:0 auto;padding:44px 28px 40px">
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:34px;align-items:start">
+      <div>
+        <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:26px;color:#0b2a5b;text-align:center;margin:0 0 6px">WHAT OUR CLIENTS SAY</h2>
+        <div style="width:64px;height:3px;background:#37a7e6;border-radius:2px;margin:0 auto 26px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+          <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="3">
+            <div style="background:#fff;border:1px solid #e7eef6;border-radius:12px;padding:20px 18px;box-shadow:0 6px 18px rgba(11,42,91,.05)">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 01-2.3 3.5v2.9h3.7C21.8 18.9 23 15.9 23 12.3z"></path><path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3C3.7 21.4 7.6 24 12 24z"></path><path fill="#FBBC05" d="M5.6 14.7a7.2 7.2 0 010-4.6v-3H1.8a12 12 0 000 10.6l3.8-3z"></path><path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.2 15.1 0 12 0 7.6 0 3.7 2.6 1.8 6.4l3.8 3C6.5 6.7 9 4.8 12 4.8z"></path></svg>
+                <span style="color:#fbbc05;font-size:14px;letter-spacing:1px">★★★★★</span>
+              </div>
+              <p style="font-size:13px;line-height:1.6;color:#42506a;margin:0 0 18px;font-style:italic">{{ r.quote }}</p>
+              <div style="display:flex;align-items:center;gap:11px">
+                <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#8fd0f0,#2a8fd4);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px">{{ r.initial }}</div>
+                <div style="font-size:13px;font-weight:700;color:#0b2a5b">– {{ r.name }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:#0b2a5b;border-radius:14px;padding:26px 24px;color:#fff">
+        <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:20px;margin:0 0 18px">GET YOUR FREE QUOTE</h3>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <input placeholder="Full Name" style="padding:12px 14px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;font-size:13.5px;font-family:'Open Sans',sans-serif">
+          <input placeholder="Phone Number" style="padding:12px 14px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;font-size:13.5px;font-family:'Open Sans',sans-serif">
+          <input placeholder="Email Address" style="padding:12px 14px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;font-size:13.5px;font-family:'Open Sans',sans-serif">
+          <select style="padding:12px 14px;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#9fb2cf;font-size:13.5px;font-family:'Open Sans',sans-serif"><option>What do you need help with?</option><option>Weekly Maintenance</option><option>Green Pool Cleanup</option><option>Equipment Repair</option></select>
+          <button style="background:#f5b301;color:#0b2340;border:none;font-family:'Montserrat',sans-serif;font-weight:800;font-size:14px;padding:14px;border-radius:8px;cursor:pointer;letter-spacing:.3px">GET MY FREE QUOTE</button>
+          <div style="text-align:center;font-size:11.5px;color:#9fb2cf">No commitment. Fast response!</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURE STRIP -->
+  <section style="background:#eef6fc;border-top:1px solid #dcebf7">
+    <div style="max-width:1180px;margin:0 auto;padding:34px 28px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px">
+      <div style="display:flex;gap:13px;align-items:flex-start"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v4M16 3v4"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#0b2a5b;text-transform:uppercase;letter-spacing:.4px">Easy Scheduling</div><div style="font-size:12.5px;color:#5a6b82;margin-top:3px">We work around your schedule.</div></div></div>
+      <div style="display:flex;gap:13px;align-items:flex-start"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M9.5 9.5a2.5 2 0 015 0c0 1.5-2.5 1.5-2.5 3"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#0b2a5b;text-transform:uppercase;letter-spacing:.4px">No Hidden Fees</div><div style="font-size:12.5px;color:#5a6b82;margin-top:3px">Transparent pricing you can trust.</div></div></div>
+      <div style="display:flex;gap:13px;align-items:flex-start"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#0b2a5b;text-transform:uppercase;letter-spacing:.4px">Satisfaction Guaranteed</div><div style="font-size:12.5px;color:#5a6b82;margin-top:3px">We're not happy until you're happy.</div></div></div>
+      <div style="display:flex;gap:13px;align-items:flex-start"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18M3 12h18"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#0b2a5b;text-transform:uppercase;letter-spacing:.4px">Local &amp; Trusted</div><div style="font-size:12.5px;color:#5a6b82;margin-top:3px">Proudly serving South Florida communities.</div></div></div>
+    </div>
+  </section><dc-import name="Footer" region="south" hint-size="100%,520px"></dc-import>
+
+  
+</div>
+<svg width="160" height="80" viewBox="0 0 160 80" preserveAspectRatio="none" style="position: absolute; left: 48px; top: 3px; width: 160px; height: 80px; overflow: visible; fill: none; stroke: #8a8378; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head" orient="auto" markerWidth="5" markerHeight="5" refX="0.8" refY="2" overflow="visible"><path d="M-3.2 -1.7 L0.8 0 L-3.2 1.7" transform="translate(0 2)" fill="none" stroke="context-stroke" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"></path></marker></defs><path d="M 0 80 L 160 0" marker-end="url(#dc-arrow-head)"></path></svg>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#0b2a5b"/><g transform="translate(20,34)"><path d="M2 14 C 12 4, 32 2, 58 12 C 40 7, 18 9, 8 20 Z" fill="#3f9ae0"/><path d="M2 24 C 14 12, 34 10, 58 20 C 40 15, 20 17, 9 28 Z" fill="#ffffff"/></g></svg>
+</template></x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;heroTitle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Professional Pool Care&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;heroAccent&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&amp; Green Pool Cleanup&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;heroTail&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;in Southwest Florida&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hero&quot;},&quot;heroSubtext&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Weekly maintenance, green pool recovery, equipment repairs, filter cleaning, and water treatment. Fast, reliable service with free estimates.&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hero&quot;}}">
+class Component extends DCLogic {
+  im(n){ return React.createElement('img',{src:'assets/svc/'+n+'.png',alt:'',style:{height:'46px',width:'auto',display:'block',margin:'0 auto'}}); }
+  ic(inner){ return React.createElement('svg',{width:34,height:34,viewBox:'0 0 24 24',fill:'none',stroke:'#2a8fd4',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round',dangerouslySetInnerHTML:{__html:inner}}); }
+  renderVals(){
+    return {
+      heroTitle: this.props.heroTitle ?? "Professional Pool Care",
+      heroAccent: this.props.heroAccent ?? "& Green Pool Cleanup",
+      heroTail: this.props.heroTail ?? "in Southwest Florida",
+      heroSubtext: this.props.heroSubtext ?? "Weekly maintenance, green pool recovery, equipment repairs, filter cleaning, and water treatment. Fast, reliable service with free estimates.",
+      services:[
+        {title:"Weekly Pool Maintenance",desc:"Regular cleaning, water testing, chemical balancing, and equipment checks.",popular:false,icon:this.im(1)},
+        {title:"Green Pool Cleanup",desc:"We remove algae and restore your pool water to be crystal clear.",popular:true,icon:this.im(2)},
+        {title:"Filter Cleaning",desc:"Deep cleaning for sand, cartridge and DE filters for maximum performance.",popular:false,icon:this.im(3)},
+        {title:"Pool Equipment Repair",desc:"Pump, heater, filter, and salt system repairs. We fix it right the first time.",popular:false,icon:this.im(4)},
+        {title:"Water Testing & Chemical Balancing",desc:"We balance your pool chemicals to keep the water safe, clean and healthy.",popular:false,icon:this.im(5)},
+        {title:"Pool Tile Cleaning",desc:"Remove buildup and calcium from tiles to keep your pool looking beautiful.",popular:false,icon:this.im(6)}
+      ],
+      reviews:[
+        {quote:'"Amazing service! My pool was green and they got it crystal clear in just 2 days. Very professional and reliable!"',name:"Jennifer M.",initial:"J"},
+        {quote:'"Best pool service in South Florida. They are always on time and my pool has never looked better."',name:"Mark T.",initial:"M"},
+        {quote:'"Great communication and fair pricing. I highly recommend Sundown Pool Care to everyone!"',name:"Sarah K.",initial:"S"}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

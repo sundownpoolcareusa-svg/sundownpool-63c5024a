@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}body{margin:0}
+  .scard:hover{box-shadow:0 16px 36px rgba(11,42,91,.16);transform:translateY(-4px)}
+  .scard{transition:box-shadow .2s,transform .2s}
+  .lm:hover{gap:11px}
+</style>
+<script src="image-slot.js"></script>
+<style id="rsp">
+@media(max-width:860px){
+[style*="grid-template-columns:1fr 340px"],[style*="grid-template-columns:1fr 320px"],[style*="grid-template-columns:1fr 1fr 340px"],[style*="grid-template-columns:0.9fr 1.1fr"],[style*="grid-template-columns:0.85fr 1.15fr"],[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+[style*="grid-template-columns:repeat(6"],[style*="grid-template-columns:repeat(5"],[style*="grid-template-columns:repeat(4"]{grid-template-columns:1fr 1fr!important}
+[style*="auto 1fr auto 1fr auto 1fr"]{grid-template-columns:1fr!important}
+[style*="auto 1fr auto 1fr auto 1fr"]>div:nth-child(even){display:none!important}
+[style*="1.5fr 1fr 1.35fr"]{grid-template-columns:1fr 1fr!important}
+[style*="right:28px"][style*="bottom:96px"]{position:static!important;width:auto!important;margin:24px 0 0!important;right:auto!important;bottom:auto!important}
+[style*="justify-content:space-between"][style*="gap:20px"]{flex-wrap:wrap!important;justify-content:center!important}
+nav{flex-wrap:wrap!important;justify-content:center!important;gap:10px 14px!important}
+}
+@media(max-width:560px){
+[style*="grid-template-columns:repeat("],[style*="grid-template-columns:1fr 1fr"],[style*="1.5fr 1fr 1.35fr"]{grid-template-columns:1fr!important}
+h1{font-size:30px!important;line-height:1.15!important}
+}
+</style>
+</helmet>
+<div style="font-family:'Open Sans',sans-serif;color:#26364d;background:#fff;width:100%;overflow-x:hidden">
+
+  <dc-import name="Header" topbar="none" layout="inline" active="services" hint-size="100%,90px"></dc-import>
+
+  <!-- HERO -->
+  <section style="position:relative;background:#0b2a5b;color:#fff;overflow:hidden">
+    <image-slot id="services-hero" style="position:absolute;inset:0;width:100%;height:100%;z-index:0" shape="rect" fit="cover" placeholder="Drop a hero photo here"></image-slot>
+    <div style="position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(3,10,24,.9) 0%,rgba(3,10,24,.62) 42%,rgba(3,10,24,.26) 70%,rgba(3,10,24,.05) 92%)"></div>
+    <div style="position:relative;z-index:2;pointer-events:none;max-width:1180px;margin:0 auto;padding:44px 28px 84px;display:grid;grid-template-columns:1fr 340px;gap:30px;align-items:start">
+      <div>
+        <div style="font-size:12px;letter-spacing:1px;color:#bcd4ef;margin-bottom:12px"><a href="Home.dc.html" style="color:#bcd4ef;text-decoration:none">HOME</a> / SERVICES</div>
+        <h1 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:46px;margin:0 0 8px;letter-spacing:-.5px">Our Pool Services</h1>
+        <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:24px;color:#37a7e6;line-height:1.2;margin-bottom:20px">Everything your pool needs.<br>All in one place.</div>
+        <p style="font-size:16px;line-height:1.6;color:#d8e6f5;max-width:440px;margin:0 0 26px">From weekly maintenance to green pool recovery and equipment repairs, we keep your pool clean, safe, and crystal clear year-round.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;pointer-events:auto">
+          <a href="tel:5613762428" style="display:flex;align-items:center;gap:11px;background:#f5b301;color:#0b2340;font-family:'Montserrat',sans-serif;font-weight:700;padding:15px 24px;border-radius:9px;text-decoration:none;line-height:1.1"><svg width="20" height="20" viewBox="0 0 24 24" fill="#0b2340"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1l-2.2 2.3z"></path></svg><span>CALL NOW<br><span style="font-size:13px;font-weight:600">(561) 376-2428</span></span></a>
+          <a href="Home.dc.html#quote" style="display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.55);color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;padding:15px 24px;border-radius:9px;text-decoration:none;line-height:1.1"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M7 2v2H5a2 2 0 00-2 2v13a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm12 7v10H5V9h14z"></path></svg><span>GET A FREE QUOTE<br><span style="font-size:13px;font-weight:600">Fast, Easy &amp; No Obligation</span></span></a>
+        </div>
+      </div>
+      <div style="pointer-events:auto;background:#fff;color:#0b2a5b;border-radius:12px;padding:22px 22px;box-shadow:0 18px 40px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;gap:12px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"></circle><path d="M3 20c0-3 3-5 6-5s6 2 6 5M17 5l1.5 1.5L22 3"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px">Experienced Technicians</div><div style="font-size:12.5px;color:#6a7688;margin-top:2px">Trained professionals you can trust.</div></div></div>
+        <div style="display:flex;gap:12px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px">On-Time Service</div><div style="font-size:12.5px;color:#6a7688;margin-top:2px">We show up when we say we will.</div></div></div>
+        <div style="display:flex;gap:12px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="1.8"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px">Satisfaction Guaranteed</div><div style="font-size:12.5px;color:#6a7688;margin-top:2px">100% satisfaction every time.</div></div></div>
+        <div style="display:flex;gap:12px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a8fd4" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M9.5 9.5a2.5 2 0 015 0c0 1.5-2.5 1.5-2.5 3"></path></svg><div><div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px">Upfront Pricing</div><div style="font-size:12.5px;color:#6a7688;margin-top:2px">No hidden fees. Honest &amp; fair.</div></div></div>
+      </div>
+    </div>
+    <svg viewBox="0 0 1440 90" preserveAspectRatio="none" style="position:absolute;bottom:-1px;left:0;width:100%;height:60px;display:block"><path d="M0,55 C360,105 1080,-10 1440,50 L1440,90 L0,90 Z" fill="#fff"></path></svg>
+  </section>
+
+  <!-- SERVICES GRID -->
+  <section style="max-width:1180px;margin:0 auto;padding:40px 28px 10px">
+    <div style="text-align:center;margin-bottom:30px">
+      <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:28px;color:#0b2a5b;margin:0">OUR POOL SERVICES</h2>
+      <div style="width:64px;height:3px;background:#37a7e6;border-radius:2px;margin:10px auto 0"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+      <sc-for list="{{ services }}" as="s" hint-placeholder-count="8">
+        <div class="scard" style="background:#fff;border:1px solid #e7eef6;border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+          <div style="position:relative;height:118px;background:{{ s.bg }}">
+            <image-slot id="svc-photo-{{ $index }}" style="position:absolute;inset:0;width:100%;height:100%;display:block" shape="rect" fit="cover" placeholder="Drop photo"></image-slot>
+            <div style="position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:50%;background:#0b2a5b;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:2">{{ s.icon }}</div>
+          </div>
+          <div style="padding:18px 18px 20px;text-align:center;display:flex;flex-direction:column;flex:1">
+            <h4 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;color:#0b2a5b;margin:0 0 9px">{{ s.title }}</h4>
+            <p style="font-size:12.5px;line-height:1.55;color:#6a7688;margin:0 0 16px;flex:1">{{ s.desc }}</p>
+            <a href="#" class="lm" style="display:inline-flex;align-items:center;gap:6px;justify-content:center;color:#2a8fd4;font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;letter-spacing:.6px;text-decoration:none;transition:gap .2s">LEARN MORE →</a>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- BLUE BANNER -->
+  <section style="max-width:1180px;margin:34px auto 0;padding:0 28px">
+    <div style="position:relative;overflow:hidden;background:linear-gradient(100deg,#12508f,#0b2a5b);border-radius:14px;padding:26px 30px;display:flex;align-items:center;justify-content:space-between;gap:24px">
+      <div style="display:flex;align-items:center;gap:16px">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>
+        <div><div style="color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:20px">Need a custom service or not sure what you need?</div><div style="color:#c3d6ef;font-size:14px;margin-top:3px">Our experts are here to help.</div></div>
+      </div>
+      <a href="Home.dc.html#quote" style="display:flex;align-items:center;gap:10px;background:#f5b301;color:#0b2340;font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;padding:14px 22px;border-radius:9px;text-decoration:none;white-space:nowrap;letter-spacing:.4px">GET A FREE QUOTE →</a>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section style="max-width:1080px;margin:0 auto;padding:48px 28px 44px">
+    <div style="text-align:center;margin-bottom:36px">
+      <h2 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:26px;color:#0b2a5b;margin:0">HOW IT WORKS</h2>
+      <div style="width:64px;height:3px;background:#37a7e6;border-radius:2px;margin:10px auto 0"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:center;gap:4px">
+      <sc-for list="{{ steps }}" as="st" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="display:flex;align-items:center;flex-shrink:0">
+            <div style="width:34px;height:34px;border-radius:50%;background:#0b2a5b;color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2">{{ st.n }}</div>
+            <div style="width:62px;height:62px;border-radius:50%;background:#eef2f7;display:flex;align-items:center;justify-content:center;margin-left:-12px">{{ st.icon }}</div>
+          </div>
+          <div>
+            <h4 style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px;color:#0b2a5b;margin:0 0 4px;text-transform:uppercase;letter-spacing:.3px">{{ st.title }}</h4>
+            <p style="font-size:12px;line-height:1.45;color:#6a7688;margin:0">{{ st.desc }}</p>
+          </div>
+        </div>
+        <sc-if value="{{ st.arrow }}" hint-placeholder-val="{{ true }}">
+          <div style="color:#1668b3;font-size:26px;font-weight:700">›</div>
+        </sc-if>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- CTA BAND -->
+  <section style="background:#0b2a5b;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background:radial-gradient(80% 140% at 90% 50%,rgba(45,143,212,.35),transparent 60%)"></div>
+    <div style="position:relative;max-width:1180px;margin:0 auto;padding:28px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:16px"><div style="width:46px;height:46px;border-radius:50%;background:#1668b3;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1l-2.2 2.3z"></path></svg></div><div><div style="color:#fff;font-family:'Montserrat',sans-serif;font-weight:800;font-size:19px">READY FOR A CLEAN, HEALTHY POOL?</div><div style="color:#c3d6ef;font-size:14px">Call us today or request your free quote online.</div></div></div>
+      <a href="tel:5613762428" style="color:#fff;font-family:'Montserrat',sans-serif;font-weight:800;font-size:23px;text-decoration:none;display:flex;align-items:center;gap:9px"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.3 1l-2.2 2.3z"></path></svg>(561) 376-2428</a>
+      <a href="Home.dc.html#quote" style="display:flex;align-items:center;gap:9px;background:#f5b301;color:#0b2340;font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;padding:14px 22px;border-radius:9px;text-decoration:none;letter-spacing:.4px">GET A FREE QUOTE →</a>
+    </div>
+  </section>
+
+  <dc-import name="Footer" region="south" hint-size="100%,520px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  ic(inner,c){ return React.createElement('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:c||'#fff',strokeWidth:1.8,strokeLinecap:'round',strokeLinejoin:'round',dangerouslySetInnerHTML:{__html:inner}}); }
+  him(n){ return React.createElement('img',{src:'assets/hiw/'+n+'.png',alt:'',style:{height:'42px',width:'auto',display:'block'}}); }
+  bic(inner){ return React.createElement('svg',{width:30,height:30,viewBox:'0 0 24 24',fill:'none',stroke:'#0b2a5b',strokeWidth:1.6,strokeLinecap:'round',strokeLinejoin:'round',dangerouslySetInnerHTML:{__html:inner}}); }
+  renderVals(){
+    const g1='linear-gradient(160deg,#8fd6f2,#2f9fdb 60%,#0f6fb2)';
+    const g2='linear-gradient(160deg,#7fbf6a,#3f6a2e 65%,#2e5522)';
+    const g3='linear-gradient(160deg,#c9d2da,#8a97a3 60%,#5f6b76)';
+    const g4='linear-gradient(160deg,#4a5763,#2b3540)';
+    return {
+      services:[
+        {title:"Weekly Pool Maintenance",desc:"Regular cleaning, water testing, chemical balancing, and equipment checks to keep your pool perfect.",bg:g1,icon:this.ic('<circle cx="9" cy="9" r="6"/><path d="M13.5 13.5L21 21"/>')},
+        {title:"Green Pool Cleanup",desc:"We remove algae and restore your pool to crystal clear quickly and safely.",bg:g2,icon:this.ic('<path d="M12 3s6 7 6 11a6 6 0 01-12 0c0-4 6-11 6-11z"/>')},
+        {title:"Filter Cleaning",desc:"Deep cleaning for sand, cartridge and DE filters for maximum performance.",bg:g3,icon:this.ic('<rect x="7" y="3" width="10" height="18" rx="3"/><path d="M7 8h10M7 13h10M7 17h10"/>')},
+        {title:"Pool Equipment Repair",desc:"Pump, heater, filter, and salt system repairs. We fix it right the first time.",bg:g4,icon:this.ic('<path d="M14 6a3.5 3.5 0 00-4.7 4.3L4 15.6 6.4 18l5.3-5.3A3.5 3.5 0 0016 8l-2 2-2-2 2-2z"/>')},
+        {title:"Water Testing & Chemical Balancing",desc:"We test your water and balance chemicals for a safe, clean and healthy pool.",bg:g1,icon:this.ic('<path d="M9 3h6M10 3v6l-4 8a2 2 0 002 3h8a2 2 0 002-3l-4-8V3"/>')},
+        {title:"Pool Tile Cleaning",desc:"Remove buildup and calcium from tiles to keep your pool looking beautiful.",bg:g1,icon:this.ic('<rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/>')},
+        {title:"Salt System Service",desc:"Salt cell cleaning, inspection and performance check for longer life and efficiency.",bg:g3,icon:this.ic('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>')},
+        {title:"Pool Start-Up",desc:"Opening service includes full inspection, cleaning, and balancing to get your pool ready.",bg:g1,icon:this.ic('<path d="M4 15c1.5 0 1.5 1.5 3 1.5S10.5 15 12 15s1.5 1.5 3 1.5 1.5-1.5 3-1.5"/><path d="M8 12V6a2 2 0 014 0"/><circle cx="8" cy="12" r="1.3"/>')}
+      ],
+      steps:[
+        {n:"1",title:"Schedule",desc:"Choose a service and schedule your appointment.",arrow:true,icon:this.him(4)},
+        {n:"2",title:"We Inspect",desc:"Our technician inspects your pool and equipment.",arrow:true,icon:this.him(3)},
+        {n:"3",title:"We Service",desc:"We clean, balance and service your pool with care.",arrow:true,icon:this.him(2)},
+        {n:"4",title:"You Enjoy",desc:"Relax and enjoy your clean, healthy, crystal-clear pool!",arrow:false,icon:this.him(1)}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
