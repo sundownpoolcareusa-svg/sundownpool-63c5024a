@@ -2,9 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { Phone, Mail, MapPin, Clock, ShieldCheck, Facebook, Instagram } from "lucide-react";
 import logoWhite from "@/assets/sundown-logo-white.png.asset.json";
 
-const AREAS = ["Osprey", "Sarasota", "Venice", "Nokomis", "Siesta Key", "And Surrounding Areas"];
+const DEFAULT_AREAS = ["Boca Raton", "Delray Beach", "Boynton Beach", "West Palm Beach", "Wellington", "And Surrounding Areas"];
 
-export function SiteFooter() {
+export function SiteFooter({ areas = DEFAULT_AREAS }: { areas?: string[] }) {
   return (
     <footer className="relative overflow-hidden bg-brand-navy font-body text-[#c3d0e6]">
       <div className="pointer-events-none absolute inset-0 [background:radial-gradient(120%_90%_at_15%_0%,rgba(35,120,200,.20),rgba(35,120,200,0)_60%)]" />
@@ -40,10 +40,10 @@ export function SiteFooter() {
 
         <div>
           <h4 className="mb-4 font-display text-[13px] font-bold tracking-[1.5px] text-white">SERVICE AREAS</h4>
-          <ul className="flex flex-col gap-2.5 text-[13.5px]">
-            {AREAS.map((a) => (
+          <ul className={`grid gap-x-4 gap-2.5 text-[13.5px] ${areas.length > 6 ? "grid-cols-2" : "grid-cols-1"}`}>
+            {areas.map((a) => (
               <li key={a} className="flex items-center gap-2 text-[#b4c4de]">
-                <MapPin className="h-3 w-3 fill-[#7fb6e6] text-[#7fb6e6]" /> {a}
+                <MapPin className="h-3 w-3 shrink-0 fill-[#7fb6e6] text-[#7fb6e6]" /> {a}
               </li>
             ))}
           </ul>

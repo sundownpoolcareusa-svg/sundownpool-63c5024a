@@ -6,9 +6,9 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import heroBg from "@/assets/hero-bg.png.asset.json";
-import beforeGreen from "@/assets/before-green.png.asset.json";
-import afterClear from "@/assets/after-clear.png.asset.json";
+import heroBg from "@/assets/hero-pool.jpg";
+import beforeGreen from "@/assets/before-pool.jpg";
+import afterClear from "@/assets/after-pool.jpg";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -18,8 +18,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Weekly maintenance, green pool cleanup, filter cleaning, and equipment repair. Licensed, insured, 5-star rated pool service in Osprey, Sarasota, Venice and surrounding areas." },
       { property: "og:title", content: "Sundown Pool Care — Professional Pool Cleaning" },
       { property: "og:description", content: "Family owned. 5-star rated. On-time every time. Get a free quote today." },
-      { property: "og:image", content: heroBg.url },
-      { name: "twitter:image", content: heroBg.url },
+      { property: "og:image", content: heroBg },
+      { name: "twitter:image", content: heroBg },
     ],
   }),
 });
@@ -39,14 +39,14 @@ const SERVICES = [
   { icon: Droplets, title: "GREEN POOL CLEANUP", desc: "We remove algae and restore your pool water to be crystal clear.", popular: true },
   { icon: Filter, title: "FILTER CLEANING", desc: "Deep cleaning for sand, cartridge and DE filters for maximum performance." },
   { icon: Wrench, title: "POOL EQUIPMENT REPAIR", desc: "Pump, heater, filter, and salt system repairs. We fix it right the first time." },
-  { icon: FlaskConical, title: "WATER TESTING & CHEMICALS", desc: "We balance your pool chemicals to keep the water safe, clean and healthy." },
-  { icon: Grid3x3, title: "TILE & DECK CLEANING", desc: "Restore the beauty of your pool tiles, deck and surrounding surfaces." },
+  { icon: FlaskConical, title: "WATER TESTING & CHEMICAL BALANCING", desc: "We balance your pool chemicals to keep the water safe, clean and healthy." },
+  { icon: Grid3x3, title: "POOL TILE CLEANING", desc: "Remove buildup and calcium from tiles to keep your pool looking beautiful." },
 ];
 
 const REVIEWS = [
-  { initial: "M", name: "Maria S.", quote: "Sundown transformed my green pool into a crystal clear oasis in just 3 days. Professional, punctual and honest pricing. Highly recommend!" },
-  { initial: "J", name: "James R.", quote: "Best pool service in South Florida. They show up every week like clockwork and my water has never looked better. Family owned and it shows." },
-  { initial: "L", name: "Linda K.", quote: "Fixed my pump the same day I called. Fair price, no upsell, and my pool is running quieter than ever. These guys really know their stuff." },
+  { initial: "J", name: "Jennifer M.", quote: "Amazing service! My pool was green and they got it crystal clear in just 2 days. Very professional and reliable!" },
+  { initial: "M", name: "Mark T.", quote: "Best pool service in South Florida. They are always on time and my pool has never looked better." },
+  { initial: "S", name: "Sarah K.", quote: "Great communication and fair pricing. I highly recommend Sundown Pool Care to everyone!" },
 ];
 
 const FEATURES = [
@@ -65,7 +65,7 @@ function LandingPage() {
       <section
         className="relative overflow-hidden text-white"
         style={{
-          backgroundImage: `linear-gradient(90deg, rgba(3,10,24,.9) 0%, rgba(3,10,24,.68) 40%, rgba(3,10,24,.32) 66%, rgba(3,10,24,.05) 90%), url(${heroBg.url})`,
+          backgroundImage: `linear-gradient(90deg, rgba(3,10,24,.9) 0%, rgba(3,10,24,.68) 40%, rgba(3,10,24,.32) 66%, rgba(3,10,24,.05) 90%), url(${heroBg})`,
           backgroundPosition: "center",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
@@ -74,10 +74,10 @@ function LandingPage() {
         <div className="relative mx-auto max-w-[1180px] px-7 pb-24 pt-16 md:pt-20">
           <div className="max-w-[560px]">
             <h1 className="mb-5 font-display text-[36px] font-extrabold leading-[1.12] tracking-[-.5px] md:text-[47px]">
-              Crystal Clear Pools, <span className="text-brand-blue-bright">Every Week.</span> Guaranteed.
+              Professional Pool Care <span className="text-brand-blue-bright">&amp; Green Pool Cleanup</span> in Southwest Florida
             </h1>
             <p className="mb-6 max-w-[470px] text-[16.5px] leading-[1.6] text-[#d8e6f5]">
-              Family-owned pool care in South Florida. From weekly maintenance to green-pool recovery — we keep your water clean, safe, and swim-ready year-round.
+              Weekly maintenance, green pool recovery, equipment repairs, filter cleaning, and water treatment. Fast, reliable service with free estimates.
             </p>
 
             <div className="mb-7 flex flex-wrap gap-6">
@@ -100,7 +100,7 @@ function LandingPage() {
                 </span>
               </a>
               <a
-                href="#quote"
+                href="/#quote"
                 className="flex items-center gap-3 rounded-[9px] border-[1.5px] border-white/55 bg-white/10 px-6 py-4 font-display font-bold text-white"
               >
                 <Calendar className="h-5 w-5" />
@@ -148,17 +148,17 @@ function LandingPage() {
         </div>
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-[1fr_1fr_340px]">
           <div className="relative min-h-[250px] overflow-hidden rounded-xl shadow-[0_10px_26px_rgba(0,0,0,.12)]">
-            <img src={beforeGreen.url} alt="Green pool before service" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={beforeGreen} alt="Green pool before service" className="absolute inset-0 h-full w-full object-cover" />
             <span className="absolute left-3.5 top-3.5 rounded bg-[#3a7d1e] px-3.5 py-1 text-xs font-bold tracking-widest text-white">BEFORE</span>
             <span className="absolute bottom-3 right-3.5 font-mono text-[11px] text-white/70">Green Pool</span>
           </div>
           <div className="relative min-h-[250px] overflow-hidden rounded-xl shadow-[0_10px_26px_rgba(0,0,0,.12)]">
-            <img src={afterClear.url} alt="Crystal clear pool after service" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={afterClear} alt="Crystal clear pool after service" className="absolute inset-0 h-full w-full object-cover" />
             <span className="absolute left-3.5 top-3.5 rounded bg-brand-blue px-3.5 py-1 text-xs font-bold tracking-widest text-white">AFTER</span>
             <span className="absolute bottom-3 right-3.5 font-mono text-[11px] text-white/90">Clean Pool</span>
           </div>
           <div className="rounded-xl bg-brand-mist p-6 lg:p-7">
-            <h3 className="mb-2 font-display text-[19px] font-extrabold uppercase text-brand-navy">Ready for a swim-ready pool?</h3>
+            <h3 className="mb-2 font-display text-[19px] font-extrabold uppercase text-brand-navy">Your Pool Deserves the Best Care</h3>
             <div className="mb-4 h-[3px] w-[52px] rounded bg-brand-blue-bright" />
             <p className="mb-5 text-[14px] leading-[1.6] text-[#4b5b78]">
               We keep your pool clean, safe, and swim-ready year-round so you can relax and enjoy.
