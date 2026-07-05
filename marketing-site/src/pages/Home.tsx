@@ -1,6 +1,5 @@
 import {
   Phone, Calendar, Shield, Star, Clock, ThumbsUp, CheckCircle2,
-  Droplets, Wrench, Filter, FlaskConical, Sparkles, Grid3x3,
   CalendarDays, DollarSign, ShieldCheck, MapPin,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -9,6 +8,12 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import heroBg from "@/assets/hero-pool.jpg";
 import beforeGreen from "@/assets/before-pool.jpg";
 import afterClear from "@/assets/after-pool.jpg";
+import svc1 from "@/assets/handoff-icons/svc-1.png";
+import svc2 from "@/assets/handoff-icons/svc-2.png";
+import svc3 from "@/assets/handoff-icons/svc-3.png";
+import svc4 from "@/assets/handoff-icons/svc-4.png";
+import svc5 from "@/assets/handoff-icons/svc-5.png";
+import svc6 from "@/assets/handoff-icons/svc-6.png";
 
 const PHONE = "(561) 376-2428";
 const PHONE_HREF = "tel:+15613762428";
@@ -21,12 +26,12 @@ const TRUST = [
 ];
 
 const SERVICES = [
-  { icon: Sparkles, title: "WEEKLY POOL MAINTENANCE", desc: "Regular cleaning, water testing, chemical balancing, and equipment checks." },
-  { icon: Droplets, title: "GREEN POOL CLEANUP", desc: "We remove algae and restore your pool water to be crystal clear.", popular: true },
-  { icon: Filter, title: "FILTER CLEANING", desc: "Deep cleaning for sand, cartridge and DE filters for maximum performance." },
-  { icon: Wrench, title: "POOL EQUIPMENT REPAIR", desc: "Pump, heater, filter, and salt system repairs. We fix it right the first time." },
-  { icon: FlaskConical, title: "WATER TESTING & CHEMICAL BALANCING", desc: "We balance your pool chemicals to keep the water safe, clean and healthy." },
-  { icon: Grid3x3, title: "POOL TILE CLEANING", desc: "Remove buildup and calcium from tiles to keep your pool looking beautiful." },
+  { img: svc1, title: "WEEKLY POOL MAINTENANCE", desc: "Regular cleaning, water testing, chemical balancing, and equipment checks." },
+  { img: svc2, title: "GREEN POOL CLEANUP", desc: "We remove algae and restore your pool water to be crystal clear.", popular: true },
+  { img: svc3, title: "FILTER CLEANING", desc: "Deep cleaning for sand, cartridge and DE filters for maximum performance." },
+  { img: svc4, title: "POOL EQUIPMENT REPAIR", desc: "Pump, heater, filter, and salt system repairs. We fix it right the first time." },
+  { img: svc5, title: "WATER TESTING & CHEMICAL BALANCING", desc: "We balance your pool chemicals to keep the water safe, clean and healthy." },
+  { img: svc6, title: "POOL TILE CLEANING", desc: "Remove buildup and calcium from tiles to keep your pool looking beautiful." },
 ];
 
 const REVIEWS = [
@@ -182,7 +187,7 @@ export function HomePage() {
               className="relative rounded-xl border border-[#e7eef6] bg-white p-6 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(11,42,91,.14)]"
             >
               <div className="mb-3.5 flex h-11 items-center justify-center">
-                <s.icon className="h-9 w-9 text-brand-blue" strokeWidth={1.8} />
+                <img src={s.img} alt="" className="h-11 w-auto" />
               </div>
               <h4 className="mb-2.5 font-display text-[14.5px] font-bold uppercase leading-[1.3] tracking-[.3px] text-brand-navy">{s.title}</h4>
               <p className="m-0 text-[12.5px] leading-[1.55] text-[#6a7688]">{s.desc}</p>
