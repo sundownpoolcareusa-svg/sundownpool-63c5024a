@@ -8,9 +8,9 @@ export function SiteFooter() {
   return (
     <footer className="relative overflow-hidden bg-brand-navy font-body text-[#c3d0e6]">
       <div className="pointer-events-none absolute inset-0 [background:radial-gradient(120%_90%_at_15%_0%,rgba(35,120,200,.20),rgba(35,120,200,0)_60%)]" />
-      <div className="relative mx-auto grid max-w-[1180px] gap-8 px-7 py-14 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1.35fr_1.4fr_1.15fr]">
+      <div className="relative mx-auto grid max-w-[1180px] gap-8 px-7 py-14 md:grid-cols-2 lg:grid-cols-[400px_1fr_1fr_1fr_1fr]">
         <div>
-          <img src={logoWhite} alt="Sundown Pool Care" className="mb-4 h-[100px] w-auto" />
+          <img src={logoWhite} alt="Sundown Pool Care" className="mb-4 h-[100px] w-auto max-w-none" />
           <p className="mb-5 max-w-[250px] text-[13.5px] leading-[1.7] text-[#a9bad6]">
             Professional pool cleaning, green pool cleanup, maintenance, and repairs. We keep your pool perfect, so you can enjoy what matters most.
           </p>
