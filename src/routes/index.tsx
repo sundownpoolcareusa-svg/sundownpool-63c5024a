@@ -5,9 +5,9 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import heroBg from "@/assets/hero-pool.jpg";
-import beforeGreen from "@/assets/before-pool.jpg";
-import afterClear from "@/assets/after-pool.jpg";
+import heroBg from "@/assets/hero-pool-new.png";
+import beforeGreen from "@/assets/before-pool-new.png";
+import afterClear from "@/assets/after-pool-new.png";
 import svc1 from "@/assets/handoff-icons/svc-1.png";
 import svc2 from "@/assets/handoff-icons/svc-2.png";
 import svc3 from "@/assets/handoff-icons/svc-3.png";

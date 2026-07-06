@@ -5,7 +5,7 @@ import {
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import heroBg from "@/assets/hero-pool.jpg";
+import heroBg from "@/assets/service-area-new.png";
 
 const PHONE = "(561) 376-2428";
 const PHONE_HREF = "tel:+15613762428";

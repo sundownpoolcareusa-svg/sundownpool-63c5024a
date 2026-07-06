@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import heroBg from "@/assets/hero-pool.jpg";
+import heroBg from "@/assets/service-area-new.png";
 
 export const Route = createFileRoute("/service-areas")({
   component: ServiceAreasPage,

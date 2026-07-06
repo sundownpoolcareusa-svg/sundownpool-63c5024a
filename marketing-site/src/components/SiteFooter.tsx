@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin, Clock, ShieldCheck, Facebook, Instagram } from "lucide-react";
-import logoWhite from "@/assets/sundown-logo-white.png";
+import logoWhite from "@/assets/sundown-logo-new-white.png";
 
 const DEFAULT_AREAS = ["Boca Raton", "Delray Beach", "Boynton Beach", "West Palm Beach", "Wellington", "And Surrounding Areas"];
 
