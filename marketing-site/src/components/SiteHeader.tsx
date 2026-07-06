@@ -1,10 +1,7 @@
 import { Link } from "react-router-dom";
-import { Calendar, Menu, X, Phone } from "lucide-react";
+import { Calendar, Menu, X } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/sundown-logo-new-black.png";
-
-const PHONE = "(561) 376-2428";
-const PHONE_HREF = "tel:+15613762428";
 
 const NAV = [
   { label: "HOME", to: "/" },
@@ -21,7 +18,7 @@ export function SiteHeader({ active }: { active?: string }) {
     <header className="relative z-20 border-b border-[#eef2f7] bg-white">
       <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-5 px-5 py-1 md:px-7">
         <Link to="/" className="flex items-center">
-          <img src={logo} alt="Sundown Pool Care" className="h-[55px] w-auto" />
+          <img src={logo} alt="Sundown Pool Care" className="h-11 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
@@ -38,13 +35,6 @@ export function SiteHeader({ active }: { active?: string }) {
         </nav>
 
         <div className="flex items-center gap-4">
-          <a
-            href={PHONE_HREF}
-            className="hidden items-center gap-2 font-display text-[17px] font-bold text-brand-navy md:inline-flex"
-          >
-            <Phone className="h-4 w-4 text-brand-blue" />
-            {PHONE}
-          </a>
           <a
             href="/#quote"
             className="hidden items-center gap-2 rounded-lg bg-brand-yellow px-4 py-2.5 font-display text-[13px] font-bold text-brand-navy-deep md:inline-flex"
