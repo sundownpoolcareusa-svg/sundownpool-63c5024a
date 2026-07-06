@@ -5,8 +5,8 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import technicianImg from "@/assets/about-technician.jpg";
-import familyImg from "@/assets/about-family.jpg";
+import technicianImg from "@/assets/about-technician-new.png";
+import familyImg from "@/assets/about-family-new.png";
 
 export const Route = createFileRoute("/about")({
   component: AboutPage,

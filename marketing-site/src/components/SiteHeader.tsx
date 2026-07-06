@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Calendar, Menu, X, Phone } from "lucide-react";
 import { useState } from "react";
-import logo from "@/assets/sundown-logo.png";
+import logo from "@/assets/sundown-logo-new-black.png";
 
 const PHONE = "(561) 376-2428";
 const PHONE_HREF = "tel:+15613762428";

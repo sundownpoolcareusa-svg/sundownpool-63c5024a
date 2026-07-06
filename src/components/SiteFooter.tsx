@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Phone, Mail, MapPin, Clock, ShieldCheck, Facebook, Instagram } from "lucide-react";
-import logoWhite from "@/assets/sundown-logo-white.png.asset.json";
+import logoWhite from "@/assets/sundown-logo-new-white.png";
 
 const DEFAULT_AREAS = ["Boca Raton", "Delray Beach", "Boynton Beach", "West Palm Beach", "Wellington", "And Surrounding Areas"];
 
@@ -10,7 +10,7 @@ export function SiteFooter({ areas = DEFAULT_AREAS }: { areas?: string[] }) {
       <div className="pointer-events-none absolute inset-0 [background:radial-gradient(120%_90%_at_15%_0%,rgba(35,120,200,.20),rgba(35,120,200,0)_60%)]" />
       <div className="relative mx-auto grid max-w-[1180px] gap-8 px-7 py-14 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1.35fr_1.4fr_1.15fr]">
         <div>
-          <img src={logoWhite.url} alt="Sundown Pool Care" className="mb-4 h-[90px] w-auto" />
+          <img src={logoWhite} alt="Sundown Pool Care" className="mb-4 h-[90px] w-auto" />
           <p className="mb-5 max-w-[250px] text-[13.5px] leading-[1.7] text-[#a9bad6]">
             Professional pool cleaning, green pool cleanup, maintenance, and repairs. We keep your pool perfect, so you can enjoy what matters most.
           </p>

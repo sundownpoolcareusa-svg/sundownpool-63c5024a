@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Calendar, Menu, X, Phone } from "lucide-react";
 import { useState } from "react";
-import logo from "@/assets/sundown-logo-color.png.asset.json";
+import logo from "@/assets/sundown-logo-new-black.png";
 
 const PHONE = "(561) 376-2428";
 const PHONE_HREF = "tel:+15613762428";
@@ -21,7 +21,7 @@ export function SiteHeader({ active }: { active?: string }) {
     <header className="relative z-20 border-b border-[#eef2f7] bg-white">
       <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-5 px-5 py-1 md:px-7">
         <Link to="/" className="flex items-center">
-          <img src={logo.url} alt="Sundown Pool Care" className="h-[55px] w-auto" />
+          <img src={logo} alt="Sundown Pool Care" className="h-[55px] w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex">
