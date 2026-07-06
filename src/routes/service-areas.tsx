@@ -6,6 +6,7 @@ import {
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import heroBg from "@/assets/service-area-new.png";
+import mapImg from "@/assets/service-area-map.png";
 
 export const Route = createFileRoute("/service-areas")({
   component: ServiceAreasPage,
@@ -118,15 +119,9 @@ function ServiceAreasPage() {
           </div>
         </div>
 
-        {/* Map placeholder */}
-        <div className="relative h-[490px] overflow-hidden rounded-[14px] bg-[#e7efe4] shadow-[0_16px_40px_rgba(11,42,91,.14)]">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-[#6a7688]">
-              <MapPin className="mx-auto mb-2 h-12 w-12 text-brand-blue" />
-              <div className="font-display text-lg font-bold text-brand-navy">Sarasota County &amp; Beyond</div>
-              <div className="text-sm">Drop your map image here</div>
-            </div>
-          </div>
+        {/* Map */}
+        <div className="relative h-[490px] overflow-hidden rounded-[14px] shadow-[0_16px_40px_rgba(11,42,91,.14)]">
+          <img src={mapImg} alt="Map of Sarasota County service area" className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute right-4 top-4 w-[210px] rounded-[10px] bg-[#1668b3] p-4 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]">
             <div className="mb-1 font-display text-[14px] font-bold leading-tight">Serving Sarasota County &amp; Beyond!</div>
             <div className="text-[12px] text-[#d6e6f5]">Our team is local, experienced, and ready to help.</div>
