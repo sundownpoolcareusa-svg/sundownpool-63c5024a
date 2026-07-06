@@ -209,7 +209,7 @@ function ServiceAreasPage() {
         </div>
       </section>
 
-      <SiteFooter areas={AREAS} />
+      <SiteFooter />
     </div>
   );
 }
