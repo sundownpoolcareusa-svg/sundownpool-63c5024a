@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import {
   Phone, Calendar, UserCheck, Clock, BadgeCheck, DollarSign,
   ShieldCheck, ArrowRight, Search, Droplet, Trash2, Wrench,
@@ -160,25 +161,27 @@ export function ServicesPage() {
           <h2 className="m-0 font-display text-[24px] font-extrabold text-brand-navy md:text-[26px]">HOW IT WORKS</h2>
           <div className="mx-auto mt-2.5 h-[3px] w-16 rounded bg-brand-blue-bright" />
         </div>
-        <div className="grid gap-4 md:grid-cols-7 md:items-center">
+        <div className="grid items-center gap-2 md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
           {HOW.map((s, i) => (
-            <div key={s.title} className={`flex items-center gap-3 ${i < HOW.length - 1 ? "md:col-span-2" : "md:col-span-1"}`}>
-              <div className="flex items-center">
-                <div className="z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-brand-navy font-display text-[15px] font-bold text-white">
-                  {s.n}
+            <Fragment key={s.title}>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center">
+                  <div className="z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-brand-navy font-display text-[15px] font-bold text-white">
+                    {s.n}
+                  </div>
+                  <div className="-ml-3 flex h-[62px] w-[62px] items-center justify-center rounded-full bg-[#eef2f7]">
+                    <img src={s.img} alt="" className="h-7 w-7" />
+                  </div>
                 </div>
-                <div className="-ml-3 flex h-[62px] w-[62px] items-center justify-center rounded-full bg-[#eef2f7]">
-                  <img src={s.img} alt="" className="h-7 w-7" />
+                <div>
+                  <h4 className="m-0 mb-1 font-display text-[13px] font-bold uppercase tracking-[.3px] text-brand-navy">{s.title}</h4>
+                  <p className="m-0 text-[12px] leading-[1.45] text-[#6a7688]">{s.desc}</p>
                 </div>
-              </div>
-              <div>
-                <h4 className="m-0 mb-1 font-display text-[13px] font-bold uppercase tracking-[.3px] text-brand-navy">{s.title}</h4>
-                <p className="m-0 text-[12px] leading-[1.45] text-[#6a7688]">{s.desc}</p>
               </div>
               {i < HOW.length - 1 && (
-                <div className="hidden px-2 text-[26px] font-bold text-[#1668b3] md:block">›</div>
+                <div className="hidden px-1 text-[26px] font-bold text-[#1668b3] md:block">›</div>
               )}
-            </div>
+            </Fragment>
           ))}
         </div>
       </section>
