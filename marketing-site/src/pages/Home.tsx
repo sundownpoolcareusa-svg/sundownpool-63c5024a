@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Phone, Calendar, Shield, Star, Clock, ThumbsUp, CheckCircle2,
   CalendarDays, DollarSign, ShieldCheck, MapPin,
@@ -277,11 +278,14 @@ function QuoteForm() {
       if (data.success) {
         setStatus("success");
         form.reset();
+        toast.success("Thanks! Your quote request has been sent — we'll be in touch shortly.");
       } else {
         setStatus("error");
+        toast.error("Something went wrong. Please call us instead.");
       }
     } catch {
       setStatus("error");
+      toast.error("Something went wrong. Please call us instead.");
     }
   }
 
@@ -305,13 +309,7 @@ function QuoteForm() {
         >
           {status === "loading" ? "SENDING..." : "GET MY FREE QUOTE"}
         </button>
-        {status === "success" ? (
-          <div className="text-center text-[12px] font-semibold text-green-400">Thanks! We'll be in touch shortly.</div>
-        ) : status === "error" ? (
-          <div className="text-center text-[12px] font-semibold text-red-400">Something went wrong. Please call us instead.</div>
-        ) : (
-          <div className="text-center text-[11.5px] text-[#9fb2cf]">No commitment. Fast response!</div>
-        )}
+        <div className="text-center text-[11.5px] text-[#9fb2cf]">No commitment. Fast response!</div>
       </div>
     </form>
   );
