@@ -117,7 +117,7 @@ const HOW_IT_WORKS = [
 export function MaintenancePlansPage() {
   useDocumentTitle(
     "Maintenance Plans — Sundown Pool Care",
-    "Simple weekly and twice-weekly pool maintenance plans. Professional care, crystal-clear water, and worry-free service in South Florida.",
+    "Simple weekly and twice-weekly pool maintenance plans. Professional care, crystal-clear water, and worry-free service in Southwest Florida.",
   );
   const [tab, setTab] = useState<keyof typeof PLANS>("ONCE A WEEK");
 

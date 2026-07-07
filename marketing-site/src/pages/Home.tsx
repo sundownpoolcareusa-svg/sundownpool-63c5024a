@@ -38,7 +38,7 @@ const SERVICES = [
 
 const REVIEWS = [
   { initial: "J", name: "Jennifer M.", quote: "Amazing service! My pool was green and they got it crystal clear in just 2 days. Very professional and reliable!" },
-  { initial: "M", name: "Mark T.", quote: "Best pool service in South Florida. They are always on time and my pool has never looked better." },
+  { initial: "M", name: "Mark T.", quote: "Best pool service in Southwest Florida. They are always on time and my pool has never looked better." },
   { initial: "S", name: "Sarah K.", quote: "Great communication and fair pricing. I highly recommend Sundown Pool Care to everyone!" },
 ];
 
@@ -46,12 +46,12 @@ const FEATURES = [
   { icon: CalendarDays, title: "EASY SCHEDULING", desc: "We work around your schedule." },
   { icon: DollarSign, title: "NO HIDDEN FEES", desc: "Transparent pricing you can trust." },
   { icon: ShieldCheck, title: "SATISFACTION GUARANTEED", desc: "We're not happy until you're happy." },
-  { icon: MapPin, title: "LOCAL & TRUSTED", desc: "Proudly serving South Florida communities." },
+  { icon: MapPin, title: "LOCAL & TRUSTED", desc: "Proudly serving Southwest Florida communities." },
 ];
 
 export function HomePage() {
   useDocumentTitle(
-    "Sundown Pool Care — Professional Pool Cleaning in South Florida",
+    "Sundown Pool Care — Professional Pool Cleaning in Southwest Florida",
     "Weekly maintenance, green pool cleanup, filter cleaning, and equipment repair. Licensed, insured, 5-star rated pool service in Osprey, Sarasota, Venice and surrounding areas.",
   );
   return (
