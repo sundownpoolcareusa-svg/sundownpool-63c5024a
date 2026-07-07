@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Phone, Calendar, Shield, Star, Clock, ThumbsUp, CheckCircle2,
@@ -265,27 +266,62 @@ function LandingPage() {
   );
 }
 
+const WEB3FORMS_ACCESS_KEY = "bffed41d-8fa6-499b-ade6-2664078a606b";
+
 function QuoteForm() {
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setStatus("loading");
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    formData.append("access_key", WEB3FORMS_ACCESS_KEY);
+    formData.append("subject", "New Quote Request — Sundown Pool Care");
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus("success");
+        form.reset();
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+  }
+
   return (
-    <form
-      onSubmit={(e) => { e.preventDefault(); alert("Thanks! We'll be in touch shortly."); }}
-      className="rounded-2xl bg-brand-navy p-7 text-white"
-    >
+    <form onSubmit={handleSubmit} className="rounded-2xl bg-brand-navy p-7 text-white">
       <h3 className="mb-5 font-display text-[20px] font-bold">GET YOUR FREE QUOTE</h3>
       <div className="flex flex-col gap-3">
-        <input required placeholder="Full Name" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] placeholder:text-white/60" />
-        <input required placeholder="Phone Number" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] placeholder:text-white/60" />
-        <input required type="email" placeholder="Email Address" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] placeholder:text-white/60" />
-        <select className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] text-[#9fb2cf]">
-          <option>What do you need help with?</option>
+        <input required name="name" placeholder="Full Name" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] placeholder:text-white/60" />
+        <input required name="phone" placeholder="Phone Number" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] placeholder:text-white/60" />
+        <input required type="email" name="email" placeholder="Email Address" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] placeholder:text-white/60" />
+        <select required name="service" defaultValue="" className="rounded-md border border-white/20 bg-white/5 px-3.5 py-3 text-[13.5px] text-[#9fb2cf]">
+          <option value="" disabled>What do you need help with?</option>
           <option>Weekly Maintenance</option>
           <option>Green Pool Cleanup</option>
           <option>Equipment Repair</option>
         </select>
-        <button className="cursor-pointer rounded-lg bg-brand-yellow px-4 py-3.5 font-display text-sm font-extrabold tracking-wide text-brand-navy-deep">
-          GET MY FREE QUOTE
+        <button
+          type="submit"
+          disabled={status === "loading"}
+          className="cursor-pointer rounded-lg bg-brand-yellow px-4 py-3.5 font-display text-sm font-extrabold tracking-wide text-brand-navy-deep disabled:opacity-60"
+        >
+          {status === "loading" ? "SENDING..." : "GET MY FREE QUOTE"}
         </button>
-        <div className="text-center text-[11.5px] text-[#9fb2cf]">No commitment. Fast response!</div>
+        {status === "success" ? (
+          <div className="text-center text-[12px] font-semibold text-green-400">Thanks! We'll be in touch shortly.</div>
+        ) : status === "error" ? (
+          <div className="text-center text-[12px] font-semibold text-red-400">Something went wrong. Please call us instead.</div>
+        ) : (
+          <div className="text-center text-[11.5px] text-[#9fb2cf]">No commitment. Fast response!</div>
+        )}
       </div>
     </form>
   );
