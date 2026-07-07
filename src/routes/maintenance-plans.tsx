@@ -12,7 +12,7 @@ export const Route = createFileRoute("/maintenance-plans")({
   head: () => ({
     meta: [
       { title: "Maintenance Plans — Sundown Pool Care" },
-      { name: "description", content: "Simple weekly and twice-weekly pool maintenance plans. Professional care, crystal-clear water, and worry-free service in South Florida." },
+      { name: "description", content: "Simple weekly and twice-weekly pool maintenance plans. Professional care, crystal-clear water, and worry-free service in Southwest Florida." },
     ],
   }),
 });

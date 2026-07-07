@@ -78,15 +78,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sundown Pool Care — Pool Cleaning & Maintenance in South Florida" },
-      { name: "description", content: "Professional pool cleaning, green pool recovery, weekly maintenance and equipment repair in South Florida. Licensed, insured, 5-star rated." },
+      { title: "Sundown Pool Care — Pool Cleaning & Maintenance in Southwest Florida" },
+      { name: "description", content: "Professional pool cleaning, green pool recovery, weekly maintenance and equipment repair in Southwest Florida. Licensed, insured, 5-star rated." },
       { name: "author", content: "Sundown Pool Care" },
-      { property: "og:title", content: "Sundown Pool Care — Pool Cleaning & Maintenance in South Florida" },
+      { property: "og:title", content: "Sundown Pool Care — Pool Cleaning & Maintenance in Southwest Florida" },
       { property: "og:description", content: "Weekly pool maintenance, green-to-clear recovery, filter cleaning and equipment repair. Family owned, 5-star rated." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Sundown Pool Care" },
-      { name: "twitter:description", content: "Professional pool care in South Florida. Family owned, 5-star rated." },
+      { name: "twitter:description", content: "Professional pool care in Southwest Florida. Family owned, 5-star rated." },
     ],
     links: [
       {

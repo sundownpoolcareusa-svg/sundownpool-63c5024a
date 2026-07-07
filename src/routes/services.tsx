@@ -26,7 +26,7 @@ export const Route = createFileRoute("/services")({
   head: () => ({
     meta: [
       { title: "Our Pool Services — Sundown Pool Care" },
-      { name: "description", content: "Weekly maintenance, green pool recovery, filter cleaning, equipment repair, water testing and more. Professional pool care in South Florida." },
+      { name: "description", content: "Weekly maintenance, green pool recovery, filter cleaning, equipment repair, water testing and more. Professional pool care in Southwest Florida." },
     ],
   }),
 });

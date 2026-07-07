@@ -52,7 +52,7 @@ const HOW = [
 export function ServicesPage() {
   useDocumentTitle(
     "Our Pool Services — Sundown Pool Care",
-    "Weekly maintenance, green pool recovery, filter cleaning, equipment repair, water testing and more. Professional pool care in South Florida.",
+    "Weekly maintenance, green pool recovery, filter cleaning, equipment repair, water testing and more. Professional pool care in Southwest Florida.",
   );
   return (
     <div className="w-full overflow-x-hidden bg-white font-body text-brand-ink">

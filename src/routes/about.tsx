@@ -12,8 +12,8 @@ export const Route = createFileRoute("/about")({
   component: AboutPage,
   head: () => ({
     meta: [
-      { title: "About Us — Sundown Pool Care | Trusted Pool Care in South Florida" },
-      { name: "description", content: "Sundown Pool Care treats every pool like our own. Family-owned, licensed and insured, with years of experience serving homes and businesses across South Florida." },
+      { title: "About Us — Sundown Pool Care | Trusted Pool Care in Southwest Florida" },
+      { name: "description", content: "Sundown Pool Care treats every pool like our own. Family-owned, licensed and insured, with years of experience serving homes and businesses across Southwest Florida." },
     ],
   }),
 });
@@ -31,7 +31,7 @@ const HERO_BADGES = [
 const STATS = [
   { icon: Users, big: "500+", label: "Happy Customers", sub: "and growing" },
   { icon: Calendar, big: "10+", label: "Years of", sub: "Experience" },
-  { icon: MapPin, big: "South Florida", label: "Proudly serving", sub: "our community" },
+  { icon: MapPin, big: "Southwest Florida", label: "Proudly serving", sub: "our community" },
   { icon: Shield, big: "100%", label: "Satisfaction", sub: "Guaranteed" },
 ];
 
@@ -65,7 +65,7 @@ function AboutPage() {
               Reliable Care You Can Count On.
             </div>
             <p className="m-0 mb-7 max-w-[480px] text-[15.5px] leading-[1.7] text-[#42506a]">
-              At Sundown Pool Care, we believe a clean, healthy pool brings people together and creates the best moments. That's why we're dedicated to providing professional, honest, and high-quality pool care for homes and businesses across South Florida.
+              At Sundown Pool Care, we believe a clean, healthy pool brings people together and creates the best moments. That's why we're dedicated to providing professional, honest, and high-quality pool care for homes and businesses across Southwest Florida.
             </p>
             <div className="flex flex-wrap gap-0 border-t border-[#d6e6f2] pt-5">
               {HERO_BADGES.map((b, i) => (
@@ -91,7 +91,7 @@ function AboutPage() {
           <div className="space-y-3.5 text-[14.5px] leading-[1.7] text-[#42506a]">
             <p>With years of experience in the pool care industry, Sundown Pool Care was founded with a simple mission: to treat every pool as if it were our own.</p>
             <p>We know that every pool is unique, which is why we customize our services to meet your specific needs. From routine maintenance to complete green pool recovery, we have the knowledge, tools, and dedication to get the job done right.</p>
-            <p>We're proud to be a trusted partner for hundreds of satisfied customers throughout South Florida.</p>
+            <p>We're proud to be a trusted partner for hundreds of satisfied customers throughout Southwest Florida.</p>
           </div>
           <div className="mt-4 inline-block border-b-2 border-brand-blue-bright pb-1 font-script text-[26px] text-brand-blue">
             We care for your pool like it's our own.
