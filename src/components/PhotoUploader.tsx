@@ -1,0 +1,89 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Upload, X, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+export function PhotoUploader({
+  label,
+  value,
+  onChange,
+  bucket = "client-photos",
+  folder,
+}: {
+  label: string;
+  value: string[];
+  onChange: (paths: string[]) => void;
+  bucket?: string;
+  folder: string; // e.g. `${userId}/pool`
+}) {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of Array.from(files)) {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
+        if (error) throw error;
+        uploaded.push(path);
+      }
+      onChange([...value, ...uploaded]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeAt = async (idx: number) => {
+    const path = value[idx];
+    onChange(value.filter((_, i) => i !== idx));
+    try { await supabase.storage.from(bucket).remove([path]); } catch { /* ignore */ }
+  };
+
+  return (
+    <div>
+      <label className="text-sm font-semibold text-slate-700">{label}</label>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {value.map((path, idx) => (
+          <PhotoThumb key={path} path={path} bucket={bucket} onRemove={() => removeAt(idx)} />
+        ))}
+        <label className="grid h-20 w-20 cursor-pointer place-items-center rounded-md border-2 border-dashed border-slate-300 text-slate-400 hover:border-[var(--brand-blue)] hover:text-[var(--brand-blue)]">
+          {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
+            disabled={uploading}
+          />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+export function PhotoThumb({ path, bucket = "client-photos", onRemove }: { path: string; bucket?: string; onRemove?: () => void }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    supabase.storage.from(bucket).createSignedUrl(path, 60 * 60).then(({ data }) => {
+      if (alive && data?.signedUrl) setUrl(data.signedUrl);
+    });
+    return () => { alive = false; };
+  }, [path, bucket]);
+  return (
+    <div className="group relative h-20 w-20 overflow-hidden rounded-md border border-slate-200 bg-slate-100">
+      {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center"><Loader2 className="h-4 w-4 animate-spin text-slate-400" /></div>}
+      {onRemove && (
+        <button type="button" onClick={onRemove} className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white opacity-0 transition group-hover:opacity-100">
+          <X className="h-3 w-3" />
+        </button>
+      )}
+    </div>
+  );
+}
