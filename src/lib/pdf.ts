@@ -31,7 +31,10 @@ export async function downloadElementAsPdf(el: HTMLElement, filename: string) {
   window.addEventListener("afterprint", onAfter);
 
   try {
+    // Force reflow so the print media styles fully apply before printing
+    void document.body.offsetHeight;
     window.print();
+
   } finally {
     // Fallback in case afterprint doesn't fire
     setTimeout(() => {
