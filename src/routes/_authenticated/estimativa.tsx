@@ -40,6 +40,7 @@ function statusBadge(s: string) {
 function EstimativaPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Estimate | null>(null);
   const [tab, setTab] = useState("Todas");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
