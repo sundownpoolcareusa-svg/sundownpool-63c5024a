@@ -4,8 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { Modal } from "@/components/Modal";
 import {
-  Plus, Search, Filter, Calendar, Eye, MoreVertical, Smartphone, Share2, Upload, ChevronDown,
-  ChevronLeft, ChevronRight,
+  Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
+  ChevronLeft, ChevronRight, Pencil, Trash2, Users,
 } from "lucide-react";
 import { listClients, fmtDate, initials, type Client } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -22,10 +22,18 @@ const avatarColors = [
   "bg-cyan-200 text-cyan-800", "bg-amber-200 text-amber-800",
 ];
 
+type ClientFull = Client & {
+  address?: string | null; city?: string | null; state?: string | null; zip?: string | null;
+  service_days?: string[] | null; notes?: string | null;
+};
+
 function ClientesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [viewClient, setViewClient] = useState<ClientFull | null>(null);
+  const [editClient, setEditClient] = useState<ClientFull | null>(null);
+  const [deleteClient, setDeleteClient] = useState<ClientFull | null>(null);
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: listClients });
 
   const filtered = clients.filter((c) =>
@@ -39,6 +47,19 @@ function ClientesPage() {
     const d = new Date(c.created_at);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
+
+  const delMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("clients").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Client deleted");
+      qc.invalidateQueries({ queryKey: ["clients"] });
+      setDeleteClient(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -138,7 +159,7 @@ function ClientesPage() {
                         <div className="text-xs text-[var(--brand-blue)]">{c.email || "—"}</div>
                       </td>
                       <td className="py-4">
-                        <div className="text-slate-900">{c.address || "—"}</div>
+                        <div className="text-slate-900">{(c as ClientFull).address || "—"}</div>
                         <div className="text-xs text-slate-500">{c.city || ""}</div>
                       </td>
                       <td className="py-4 text-slate-700">{fmtDate(c.created_at)}</td>
@@ -146,10 +167,31 @@ function ClientesPage() {
                         <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.status === "Ativo" ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"}`}>{c.status}</span>
                       </td>
                       <td className="py-4">
-                        <div className="flex items-center gap-3 text-[var(--brand-blue)]">
-                          <Eye className="h-4 w-4 cursor-pointer" />
-                          <Calendar className="h-4 w-4 cursor-pointer" />
-                          <MoreVertical className="h-4 w-4 cursor-pointer text-slate-400" />
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setViewClient(c as ClientFull)}
+                            title="View details"
+                            className="text-[var(--brand-blue)] hover:opacity-70"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditClient(c as ClientFull)}
+                            title="Edit"
+                            className="text-[var(--brand-blue)] hover:opacity-70"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteClient(c as ClientFull)}
+                            title="Delete"
+                            className="text-red-500 hover:opacity-70"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -169,7 +211,70 @@ function ClientesPage() {
         </section>
       </main>
 
-      <NewClientModal open={open} onClose={() => setOpen(false)} onCreated={() => qc.invalidateQueries({ queryKey: ["clients"] })} />
+      <ClientFormModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["clients"] })}
+      />
+      <ClientFormModal
+        open={!!editClient}
+        onClose={() => setEditClient(null)}
+        editing={editClient}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["clients"] })}
+      />
+
+      <Modal open={!!viewClient} onClose={() => setViewClient(null)} title="Client Details">
+        {viewClient && (
+          <div className="space-y-3 text-sm">
+            <Row label="Name" value={viewClient.name} />
+            <Row label="Type" value={viewClient.client_type} />
+            <Row label="Status" value={viewClient.status} />
+            <Row label="Email" value={viewClient.email || "—"} />
+            <Row label="Phone" value={viewClient.phone || "—"} />
+            <Row label="Address" value={viewClient.address || "—"} />
+            <div className="grid grid-cols-3 gap-3">
+              <Row label="City" value={viewClient.city || "—"} />
+              <Row label="State" value={viewClient.state || "—"} />
+              <Row label="Zipcode" value={viewClient.zip || "—"} />
+            </div>
+            <Row label="Service days" value={(viewClient.service_days && viewClient.service_days.length) ? viewClient.service_days.join(", ") : "—"} />
+            <Row label="Notes" value={viewClient.notes || "—"} />
+            <Row label="Registered" value={fmtDate(viewClient.created_at)} />
+            <div className="flex justify-end pt-2">
+              <button onClick={() => setViewClient(null)} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Close</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!deleteClient} onClose={() => setDeleteClient(null)} title="Delete client" maxWidth="max-w-md">
+        {deleteClient && (
+          <div className="space-y-4">
+            <p className="text-sm text-slate-700">
+              Are you sure you want to delete <b>{deleteClient.name}</b>? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setDeleteClient(null)} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
+              <button
+                disabled={delMut.isPending}
+                onClick={() => delMut.mutate(deleteClient.id)}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {delMut.isPending ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-slate-900">{value}</div>
     </div>
   );
 }
@@ -184,31 +289,62 @@ const WEEKDAYS = [
   { v: "Dom", label: "Domingo" },
 ];
 
-function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-  const empty = { name: "", email: "", phone: "", address: "", city: "", state: "", zip: "", client_type: "Residential", service_days: [] as string[] };
+function ClientFormModal({
+  open, onClose, onSaved, editing,
+}: { open: boolean; onClose: () => void; onSaved: () => void; editing?: ClientFull | null }) {
+  const empty = { name: "", email: "", phone: "", address: "", city: "", state: "", zip: "", client_type: "Residential", status: "Ativo", service_days: [] as string[] };
   const [form, setForm] = useState(empty);
+
+  // reset when editing changes
+  const editingId = editing?.id ?? null;
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  if (open && editingId !== loadedId) {
+    if (editing) {
+      setForm({
+        name: editing.name || "",
+        email: editing.email || "",
+        phone: editing.phone || "",
+        address: editing.address || "",
+        city: editing.city || "",
+        state: editing.state || "",
+        zip: editing.zip || "",
+        client_type: editing.client_type || "Residential",
+        status: editing.status || "Ativo",
+        service_days: editing.service_days || [],
+      });
+    } else {
+      setForm(empty);
+    }
+    setLoadedId(editingId);
+  }
+  if (!open && loadedId !== null) setLoadedId(null);
 
   const toggleDay = (d: string) =>
     setForm((f) => ({ ...f, service_days: f.service_days.includes(d) ? f.service_days.filter((x) => x !== d) : [...f.service_days, d] }));
 
   const mut = useMutation({
     mutationFn: async (values: typeof form) => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Not authenticated");
-      const { error } = await supabase.from("clients").insert({ ...values, user_id: u.user.id });
-      if (error) throw error;
+      if (editing) {
+        const { error } = await supabase.from("clients").update(values).eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const { data: u } = await supabase.auth.getUser();
+        if (!u.user) throw new Error("Not authenticated");
+        const { error } = await supabase.from("clients").insert({ ...values, user_id: u.user.id });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
-      toast.success("Client created!");
+      toast.success(editing ? "Client updated!" : "Client created!");
       setForm(empty);
-      onCreated();
+      onSaved();
       onClose();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
-    <Modal open={open} onClose={onClose} title="New Client">
+    <Modal open={open} onClose={onClose} title={editing ? "Edit Client" : "New Client"}>
       <form
         onSubmit={(e) => { e.preventDefault(); mut.mutate(form); }}
         className="space-y-4"
@@ -228,11 +364,19 @@ function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: 
           <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
           <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
         </div>
-        <div>
-          <label className="text-sm font-semibold text-slate-700">Type</label>
-          <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
-            <option>Residential</option><option>Commercial</option>
-          </select>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Type</label>
+            <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+              <option>Residential</option><option>Commercial</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Status</label>
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+              <option>Ativo</option><option>Inativo</option>
+            </select>
+          </div>
         </div>
         <div>
           <label className="text-sm font-semibold text-slate-700">Recurring Service Days</label>
@@ -256,7 +400,7 @@ function NewClientModal({ open, onClose, onCreated }: { open: boolean; onClose: 
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
           <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-            {mut.isPending ? "Saving..." : "Save Client"}
+            {mut.isPending ? "Saving..." : editing ? "Update Client" : "Save Client"}
           </button>
         </div>
       </form>
@@ -272,6 +416,3 @@ function Field({ label, value, onChange, type = "text", required = false }: { la
     </div>
   );
 }
-
-// Re-export icon import that's referenced
-import { Users } from "lucide-react";
