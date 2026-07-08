@@ -245,7 +245,7 @@ function ClientesPage() {
             <Row label="Type" value={viewClient.client_type} />
             <Row label="Status" value={viewClient.status} />
             <Row label="Email" value={viewClient.email || "—"} />
-            <Row label="Phone" value={viewClient.phone || "—"} />
+            <Row label="Phone" value={viewClient.phone ? formatPhone(viewClient.phone) : "—"} />
             <Row label="Address" value={viewClient.address || "—"} />
             <div className="grid grid-cols-3 gap-3">
               <Row label="City" value={viewClient.city || "—"} />
