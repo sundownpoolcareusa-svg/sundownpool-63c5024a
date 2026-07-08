@@ -323,9 +323,6 @@ function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; on
 
 type ItemRow = { name: string; description: string; qty: number; unit_price: number };
 
-function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: listClients, enabled: open });
-  const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates, enabled: open });
 
 function EstimateFormModal({
   open, editing, onClose, onSaved,
