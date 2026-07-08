@@ -199,7 +199,7 @@ function Row({ icon: Icon, label, value }: { icon: React.ComponentType<{ classNa
   );
 }
 
-function EstimateDetail({ estimate }: { estimate: Estimate }) {
+function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; onEdit: () => void; onDelete: () => void }) {
   const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.position - b.position);
   const pdfRef = useRef<HTMLDivElement>(null);
   const { share, modal: shareModal } = useShareLink();
