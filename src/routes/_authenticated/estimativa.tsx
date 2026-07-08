@@ -6,7 +6,7 @@ import { Modal } from "@/components/Modal";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, User, MapPin,
-  Wrench, ListChecks, CalendarDays, Clock, ShieldCheck, Phone, CheckCircle2, Trash2,
+  Wrench, ListChecks, CalendarDays, Clock, ShieldCheck, Phone, CheckCircle2, Trash2, Pencil,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
 import { listEstimates, listClients, nextNumber, fmt, fmtDate, type Estimate } from "@/lib/db";
