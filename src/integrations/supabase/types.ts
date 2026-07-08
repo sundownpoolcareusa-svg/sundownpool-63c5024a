@@ -21,10 +21,13 @@ export type Database = {
           client_type: string
           created_at: string
           email: string | null
+          equipment_photos: string[]
           id: string
+          monthly_value: number
           name: string
           notes: string | null
           phone: string | null
+          pool_photos: string[]
           service_days: string[]
           state: string | null
           status: string
@@ -38,10 +41,13 @@ export type Database = {
           client_type?: string
           created_at?: string
           email?: string | null
+          equipment_photos?: string[]
           id?: string
+          monthly_value?: number
           name: string
           notes?: string | null
           phone?: string | null
+          pool_photos?: string[]
           service_days?: string[]
           state?: string | null
           status?: string
@@ -55,10 +61,13 @@ export type Database = {
           client_type?: string
           created_at?: string
           email?: string | null
+          equipment_photos?: string[]
           id?: string
+          monthly_value?: number
           name?: string
           notes?: string | null
           phone?: string | null
+          pool_photos?: string[]
           service_days?: string[]
           state?: string | null
           status?: string

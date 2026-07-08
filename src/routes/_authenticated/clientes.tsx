@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { Modal } from "@/components/Modal";
@@ -7,8 +7,9 @@ import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users,
 } from "lucide-react";
-import { listClients, fmtDate, initials, type Client } from "@/lib/db";
+import { listClients, fmtDate, initials, fmt, type Client } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -25,6 +26,9 @@ const avatarColors = [
 type ClientFull = Client & {
   address?: string | null; city?: string | null; state?: string | null; zip?: string | null;
   service_days?: string[] | null; notes?: string | null;
+  monthly_value?: number | null;
+  pool_photos?: string[] | null;
+  equipment_photos?: string[] | null;
 };
 
 function ClientesPage() {
@@ -238,8 +242,25 @@ function ClientesPage() {
               <Row label="Zipcode" value={viewClient.zip || "—"} />
             </div>
             <Row label="Service days" value={(viewClient.service_days && viewClient.service_days.length) ? viewClient.service_days.join(", ") : "—"} />
+            <Row label="Valor mensal" value={fmt(Number(viewClient.monthly_value || 0))} />
             <Row label="Notes" value={viewClient.notes || "—"} />
             <Row label="Registered" value={fmtDate(viewClient.created_at)} />
+            {(viewClient.pool_photos && viewClient.pool_photos.length > 0) && (
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fotos da piscina</div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {viewClient.pool_photos.map((p) => <PhotoThumb key={p} path={p} />)}
+                </div>
+              </div>
+            )}
+            {(viewClient.equipment_photos && viewClient.equipment_photos.length > 0) && (
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fotos dos equipamentos</div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {viewClient.equipment_photos.map((p) => <PhotoThumb key={p} path={p} />)}
+                </div>
+              </div>
+            )}
             <div className="flex justify-end pt-2">
               <button onClick={() => setViewClient(null)} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Close</button>
             </div>
@@ -292,8 +313,16 @@ const WEEKDAYS = [
 function ClientFormModal({
   open, onClose, onSaved, editing,
 }: { open: boolean; onClose: () => void; onSaved: () => void; editing?: ClientFull | null }) {
-  const empty = { name: "", email: "", phone: "", address: "", city: "", state: "", zip: "", client_type: "Residential", status: "Ativo", service_days: [] as string[] };
+  const empty = {
+    name: "", email: "", phone: "", address: "", city: "", state: "", zip: "",
+    client_type: "Residential", status: "Ativo", service_days: [] as string[],
+    monthly_value: 0 as number,
+    pool_photos: [] as string[],
+    equipment_photos: [] as string[],
+  };
   const [form, setForm] = useState(empty);
+  const [userId, setUserId] = useState<string>("anon");
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUserId(data.user.id); }); }, []);
 
   // reset when editing changes
   const editingId = editing?.id ?? null;
@@ -311,6 +340,9 @@ function ClientFormModal({
         client_type: editing.client_type || "Residential",
         status: editing.status || "Ativo",
         service_days: editing.service_days || [],
+        monthly_value: Number(editing.monthly_value || 0),
+        pool_photos: editing.pool_photos || [],
+        equipment_photos: editing.equipment_photos || [],
       });
     } else {
       setForm(empty);
@@ -397,6 +429,27 @@ function ClientFormModal({
             })}
           </div>
         </div>
+        <div>
+          <label className="text-sm font-semibold text-slate-700">Valor mensal da piscina (USD)</label>
+          <input
+            type="number" min="0" step="0.01"
+            value={form.monthly_value}
+            onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
+            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+          />
+        </div>
+        <PhotoUploader
+          label="Fotos da piscina"
+          value={form.pool_photos}
+          onChange={(v) => setForm({ ...form, pool_photos: v })}
+          folder={`${userId}/pool`}
+        />
+        <PhotoUploader
+          label="Fotos dos equipamentos"
+          value={form.equipment_photos}
+          onChange={(v) => setForm({ ...form, equipment_photos: v })}
+          folder={`${userId}/equipment`}
+        />
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
           <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
