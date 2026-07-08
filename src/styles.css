@@ -178,23 +178,20 @@
     background: white;
   }
 
-  /* Hide everything except the designated PDF area */
-  body * {
-    visibility: hidden;
+  /* When printing, hide the app and show only the cloned #print-root */
+  body.printing > *:not(#print-root) {
+    display: none !important;
   }
-  .pdf-print,
-  .pdf-print * {
-    visibility: visible;
+  body.printing #print-root {
+    display: block;
   }
-  .pdf-print {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+  body.printing #print-root .pdf-print {
     border: 0 !important;
     box-shadow: none !important;
     padding: 0 !important;
   }
+}
+
 }
 
 
