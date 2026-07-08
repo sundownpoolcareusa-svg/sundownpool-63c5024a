@@ -7,11 +7,22 @@ import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users,
 } from "lucide-react";
-import { listClients, fmtDate, initials, fmt, type Client } from "@/lib/db";
+import { listClients, fmtDate, initials, fmt, type Client, type Invoice } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
+
+function formatPhone(input: string): string {
+  const digits = (input || "").replace(/\D/g, "").slice(0, 10);
+  const p1 = digits.slice(0, 3);
+  const p2 = digits.slice(3, 6);
+  const p3 = digits.slice(6, 10);
+  if (digits.length <= 3) return p1 ? `(${p1}` : "";
+  if (digits.length <= 6) return `(${p1}) ${p2}`;
+  return `(${p1}) ${p2}-${p3}`;
+}
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   component: ClientesPage,
