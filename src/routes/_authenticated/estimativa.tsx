@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
 import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
+import { useShareLink } from "@/components/ShareLink";
+import { Link2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estimativa")({
   component: EstimativaPage,
