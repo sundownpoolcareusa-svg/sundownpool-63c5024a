@@ -1,3 +1,6 @@
+import html2canvas from "html2canvas-pro";
+import { jsPDF } from "jspdf";
+
 export function formatPhone(raw: string | null | undefined): string {
   if (!raw) return "";
   const digits = raw.replace(/\D/g, "").slice(-10);
@@ -5,40 +8,37 @@ export function formatPhone(raw: string | null | undefined): string {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
-// Uses the browser's native print-to-PDF. Clones the element into a print-only
-// container so the rest of the app (sidebar, nav, list) isn't included.
+// Renders the element to a clean PDF (no browser print headers/footers).
 export async function downloadElementAsPdf(el: HTMLElement, filename: string) {
-  const prevTitle = document.title;
-  document.title = filename;
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+    logging: false,
+  });
 
-  const printRoot = document.createElement("div");
-  printRoot.id = "print-root";
-  const clone = el.cloneNode(true) as HTMLElement;
-  printRoot.appendChild(clone);
-  document.body.appendChild(printRoot);
-  document.body.classList.add("printing");
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF("p", "mm", "letter");
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 10;
+  const availableWidth = pageWidth - margin * 2;
+  const availableHeight = pageHeight - margin * 2;
 
-  const cleanup = () => {
-    document.body.classList.remove("printing");
-    printRoot.remove();
-    document.title = prevTitle;
-  };
+  const imgWidth = canvas.width;
+  const imgHeight = canvas.height;
+  const scale = availableWidth / imgWidth;
+  const scaledHeight = imgHeight * scale;
 
-  const onAfter = () => {
-    window.removeEventListener("afterprint", onAfter);
-    cleanup();
-  };
-  window.addEventListener("afterprint", onAfter);
+  let yOffset = 0;
+  let pageIndex = 0;
 
-  try {
-    // Force reflow so the print media styles fully apply before printing
-    void document.body.offsetHeight;
-    window.print();
-
-  } finally {
-    // Fallback in case afterprint doesn't fire
-    setTimeout(() => {
-      if (document.getElementById("print-root")) cleanup();
-    }, 2000);
+  while (yOffset < scaledHeight) {
+    if (pageIndex > 0) pdf.addPage();
+    pdf.addImage(imgData, "PNG", margin, margin - yOffset, availableWidth, scaledHeight);
+    yOffset += availableHeight;
+    pageIndex++;
   }
+
+  pdf.save(`${filename}.pdf`);
 }
