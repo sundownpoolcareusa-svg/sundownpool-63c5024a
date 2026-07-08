@@ -35,6 +35,7 @@ export type Estimate = {
   total: number;
   notes: string | null;
   created_at: string;
+  public_token: string;
   client?: Client;
   estimate_items?: EstimateItem[];
 };

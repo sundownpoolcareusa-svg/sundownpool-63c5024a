@@ -130,6 +130,7 @@ export type Database = {
           id: string
           notes: string | null
           number: string
+          public_token: string
           status: string
           subtotal: number
           title: string | null
@@ -146,6 +147,7 @@ export type Database = {
           id?: string
           notes?: string | null
           number: string
+          public_token?: string
           status?: string
           subtotal?: number
           title?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           id?: string
           notes?: string | null
           number?: string
+          public_token?: string
           status?: string
           subtotal?: number
           title?: string | null

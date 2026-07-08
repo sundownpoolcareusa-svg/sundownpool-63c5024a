@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
 import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
+import { useShareLink } from "@/components/ShareLink";
 
 export const Route = createFileRoute("/_authenticated/invoice")({
   component: InvoicePage,
@@ -191,9 +192,11 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
   });
 
   const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/i/${invoice.public_token}`;
+  const { share, modal: shareModal } = useShareLink();
 
   return (
     <>
+      {shareModal}
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">Invoice</h2>
@@ -214,10 +217,10 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             {isPaid ? <><X className="h-4 w-4" /> Mark Unpaid</> : <><Check className="h-4 w-4" /> Mark Paid</>}
           </button>
           <button
-            onClick={() => { navigator.clipboard.writeText(publicUrl); toast.success("Link copied! Share with client."); }}
+            onClick={() => share(publicUrl, `Invoice ${invoice.number}`)}
             className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
           >
-            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> <span className="hidden sm:inline">Copy Client </span>Link
+            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> <span className="hidden sm:inline">Client </span>Link
           </button>
           <button
             onClick={() => {

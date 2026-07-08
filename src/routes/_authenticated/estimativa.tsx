@@ -5,7 +5,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { Modal } from "@/components/Modal";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import {
-  Plus, Search, Filter, FileText, Mail, Download, MoreHorizontal, User, MapPin,
+  Plus, Search, Filter, FileText, Download, MoreHorizontal, User, MapPin,
   Wrench, ListChecks, CalendarDays, Clock, ShieldCheck, Phone, CheckCircle2, Trash2,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
 import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
+import { useShareLink } from "@/components/ShareLink";
+import { Link2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/estimativa")({
   component: EstimativaPage,
@@ -178,15 +180,23 @@ function Row({ icon: Icon, label, value }: { icon: React.ComponentType<{ classNa
 function EstimateDetail({ estimate }: { estimate: Estimate }) {
   const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.position - b.position);
   const pdfRef = useRef<HTMLDivElement>(null);
+  const { share, modal: shareModal } = useShareLink();
+  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/e/${estimate.public_token}`;
   return (
     <>
+      {shareModal}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-extrabold text-slate-900 sm:text-xl">Estimate #{estimate.number}</h2>
           {statusBadge(estimate.status)}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> Send</button>
+          <button
+            onClick={() => share(publicUrl, `Estimate ${estimate.number}`)}
+            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+          >
+            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> Send
+          </button>
           <button
             onClick={() => {
               if (!pdfRef.current) return;
