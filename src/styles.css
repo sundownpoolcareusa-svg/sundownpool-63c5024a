@@ -176,6 +176,9 @@
   html,
   body {
     background: white;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
   }
 
   /* When printing, hide the app and show only the cloned #print-root */
@@ -184,13 +187,18 @@
   }
   body.printing #print-root {
     display: block;
+    break-after: avoid-page;
+    page-break-after: avoid;
   }
   body.printing #print-root .pdf-print {
     border: 0 !important;
     box-shadow: none !important;
     padding: 0 !important;
+    break-after: avoid-page;
+    page-break-after: avoid;
   }
 }
+
 
 }
 
