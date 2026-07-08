@@ -484,3 +484,74 @@ function Field({ label, value, onChange, type = "text", required = false }: { la
     </div>
   );
 }
+
+function ClientInvoicesHistory({ clientId }: { clientId: string }) {
+  const { data: invoices = [], isLoading } = useQuery({
+    queryKey: ["client-invoices", clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("client_id", clientId)
+        .order("invoice_date", { ascending: false });
+      if (error) throw error;
+      return data as Invoice[];
+    },
+  });
+
+  const totalPaid = invoices.filter((i) => i.status === "PAID").reduce((s, i) => s + Number(i.total || 0), 0);
+  const totalOpen = invoices.filter((i) => i.status !== "PAID").reduce((s, i) => s + Number(i.total || 0), 0);
+
+  return (
+    <div className="mt-2 border-t pt-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-bold text-slate-900">Histórico de Invoices</h3>
+        <div className="text-xs text-slate-500">
+          {invoices.length} total • <span className="text-green-600 font-semibold">{fmt(totalPaid)} paid</span> • <span className="text-amber-600 font-semibold">{fmt(totalOpen)} open</span>
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="py-4 text-center text-xs text-slate-500">Loading...</div>
+      ) : invoices.length === 0 ? (
+        <div className="rounded-md border border-dashed border-slate-200 py-6 text-center text-xs text-slate-500">
+          Nenhuma invoice ainda para este cliente.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 text-left text-slate-500">
+                <th className="py-2 font-medium">Number</th>
+                <th className="py-2 font-medium">Date</th>
+                <th className="py-2 font-medium">Due</th>
+                <th className="py-2 font-medium">Status</th>
+                <th className="py-2 text-right font-medium">Total</th>
+                <th className="py-2 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((inv) => (
+                <tr key={inv.id} className="border-b border-slate-100">
+                  <td className="py-2 font-semibold text-slate-900">{inv.number}</td>
+                  <td className="py-2 text-slate-700">{fmtDate(inv.invoice_date)}</td>
+                  <td className="py-2 text-slate-700">{fmtDate(inv.due_date)}</td>
+                  <td className="py-2">
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      inv.status === "PAID" ? "bg-green-100 text-green-700" :
+                      inv.status === "OVERDUE" ? "bg-red-100 text-red-700" :
+                      "bg-amber-100 text-amber-700"
+                    }`}>{inv.status}</span>
+                  </td>
+                  <td className="py-2 text-right font-semibold text-slate-900">{fmt(Number(inv.total || 0))}</td>
+                  <td className="py-2 text-right">
+                    <Link to="/invoice" className="text-[var(--brand-blue)] hover:underline">Open</Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
