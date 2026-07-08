@@ -5,14 +5,37 @@ export function formatPhone(raw: string | null | undefined): string {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
-// Uses the browser's native print-to-PDF. Temporarily swapping document.title
-// makes Chrome/Edge suggest that name as the saved PDF filename.
-export async function downloadElementAsPdf(_el: HTMLElement, filename: string) {
+// Uses the browser's native print-to-PDF. Clones the element into a print-only
+// container so the rest of the app (sidebar, nav, list) isn't included.
+export async function downloadElementAsPdf(el: HTMLElement, filename: string) {
   const prevTitle = document.title;
   document.title = filename;
+
+  const printRoot = document.createElement("div");
+  printRoot.id = "print-root";
+  const clone = el.cloneNode(true) as HTMLElement;
+  printRoot.appendChild(clone);
+  document.body.appendChild(printRoot);
+  document.body.classList.add("printing");
+
+  const cleanup = () => {
+    document.body.classList.remove("printing");
+    printRoot.remove();
+    document.title = prevTitle;
+  };
+
+  const onAfter = () => {
+    window.removeEventListener("afterprint", onAfter);
+    cleanup();
+  };
+  window.addEventListener("afterprint", onAfter);
+
   try {
     window.print();
   } finally {
-    setTimeout(() => { document.title = prevTitle; }, 1000);
+    // Fallback in case afterprint doesn't fire
+    setTimeout(() => {
+      if (document.getElementById("print-root")) cleanup();
+    }, 2000);
   }
 }
