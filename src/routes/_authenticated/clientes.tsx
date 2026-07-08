@@ -272,6 +272,7 @@ function ClientesPage() {
                 </div>
               </div>
             )}
+            <ClientInvoicesHistory clientId={viewClient.id} />
             <div className="flex justify-end pt-2">
               <button onClick={() => setViewClient(null)} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Close</button>
             </div>
