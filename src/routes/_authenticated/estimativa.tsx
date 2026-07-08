@@ -229,6 +229,12 @@ function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; on
           >
             <Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF
           </button>
+          <button onClick={onEdit} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium">
+            <Pencil className="h-4 w-4 text-[var(--brand-blue)]" /> Edit
+          </button>
+          <button onClick={onDelete} className="flex items-center gap-2 rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600">
+            <Trash2 className="h-4 w-4" /> Delete
+          </button>
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
