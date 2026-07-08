@@ -63,6 +63,20 @@ function EstimativaPage() {
     onSuccess: () => { toast.success("Estimate approved!"); qc.invalidateQueries({ queryKey: ["estimates"] }); },
   });
 
+  const del = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("estimate_items").delete().eq("estimate_id", id);
+      const { error } = await supabase.from("estimates").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Estimate deleted");
+      setSelectedId(null);
+      qc.invalidateQueries({ queryKey: ["estimates"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div className="min-h-screen bg-slate-50">
       <AppHeader />
