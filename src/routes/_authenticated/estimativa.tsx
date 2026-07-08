@@ -130,7 +130,14 @@ function EstimativaPage() {
         {/* CENTER */}
         <section className="space-y-4 lg:col-span-6">
           {selected ? (
-            <EstimateDetail estimate={selected} />
+            <EstimateDetail
+              estimate={selected}
+              onEdit={() => setEditing(selected)}
+              onDelete={() => {
+                if (confirm(`Delete estimate ${selected.number}?`)) del.mutate(selected.id);
+              }}
+            />
+
           ) : (
             <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-16 text-center">
               <FileText className="mx-auto h-12 w-12 text-slate-300" />
