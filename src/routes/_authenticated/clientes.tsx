@@ -313,8 +313,16 @@ const WEEKDAYS = [
 function ClientFormModal({
   open, onClose, onSaved, editing,
 }: { open: boolean; onClose: () => void; onSaved: () => void; editing?: ClientFull | null }) {
-  const empty = { name: "", email: "", phone: "", address: "", city: "", state: "", zip: "", client_type: "Residential", status: "Ativo", service_days: [] as string[] };
+  const empty = {
+    name: "", email: "", phone: "", address: "", city: "", state: "", zip: "",
+    client_type: "Residential", status: "Ativo", service_days: [] as string[],
+    monthly_value: 0 as number,
+    pool_photos: [] as string[],
+    equipment_photos: [] as string[],
+  };
   const [form, setForm] = useState(empty);
+  const [userId, setUserId] = useState<string>("anon");
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUserId(data.user.id); }); }, []);
 
   // reset when editing changes
   const editingId = editing?.id ?? null;
@@ -332,6 +340,9 @@ function ClientFormModal({
         client_type: editing.client_type || "Residential",
         status: editing.status || "Ativo",
         service_days: editing.service_days || [],
+        monthly_value: Number(editing.monthly_value || 0),
+        pool_photos: editing.pool_photos || [],
+        equipment_photos: editing.equipment_photos || [],
       });
     } else {
       setForm(empty);
