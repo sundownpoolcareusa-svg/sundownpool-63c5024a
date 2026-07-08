@@ -395,7 +395,7 @@ function ClientFormModal({
         <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
         <div className="grid grid-cols-2 gap-4">
           <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <Field label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+          <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} />
         </div>
         <AddressAutocomplete
           value={form.address}
