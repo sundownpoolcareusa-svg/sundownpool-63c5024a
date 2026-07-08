@@ -185,7 +185,12 @@ function EstimativaPage() {
         </aside>
       </main>
 
-      <NewEstimateModal open={open} onClose={() => setOpen(false)} onCreated={() => qc.invalidateQueries({ queryKey: ["estimates"] })} />
+      <EstimateFormModal
+        open={open || !!editing}
+        editing={editing}
+        onClose={() => { setOpen(false); setEditing(null); }}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["estimates"] })}
+      />
     </div>
   );
 }
