@@ -25,6 +25,9 @@ const avatarColors = [
 type ClientFull = Client & {
   address?: string | null; city?: string | null; state?: string | null; zip?: string | null;
   service_days?: string[] | null; notes?: string | null;
+  monthly_value?: number | null;
+  pool_photos?: string[] | null;
+  equipment_photos?: string[] | null;
 };
 
 function ClientesPage() {
