@@ -242,8 +242,25 @@ function ClientesPage() {
               <Row label="Zipcode" value={viewClient.zip || "—"} />
             </div>
             <Row label="Service days" value={(viewClient.service_days && viewClient.service_days.length) ? viewClient.service_days.join(", ") : "—"} />
+            <Row label="Valor mensal" value={fmt(Number(viewClient.monthly_value || 0))} />
             <Row label="Notes" value={viewClient.notes || "—"} />
             <Row label="Registered" value={fmtDate(viewClient.created_at)} />
+            {(viewClient.pool_photos && viewClient.pool_photos.length > 0) && (
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fotos da piscina</div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {viewClient.pool_photos.map((p) => <PhotoThumb key={p} path={p} />)}
+                </div>
+              </div>
+            )}
+            {(viewClient.equipment_photos && viewClient.equipment_photos.length > 0) && (
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fotos dos equipamentos</div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {viewClient.equipment_photos.map((p) => <PhotoThumb key={p} path={p} />)}
+                </div>
+              </div>
+            )}
             <div className="flex justify-end pt-2">
               <button onClick={() => setViewClient(null)} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Close</button>
             </div>
