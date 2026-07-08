@@ -180,15 +180,23 @@ function Row({ icon: Icon, label, value }: { icon: React.ComponentType<{ classNa
 function EstimateDetail({ estimate }: { estimate: Estimate }) {
   const items = (estimate.estimate_items ?? []).slice().sort((a, b) => a.position - b.position);
   const pdfRef = useRef<HTMLDivElement>(null);
+  const { share, modal: shareModal } = useShareLink();
+  const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/e/${estimate.public_token}`;
   return (
     <>
+      {shareModal}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-extrabold text-slate-900 sm:text-xl">Estimate #{estimate.number}</h2>
           {statusBadge(estimate.status)}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"><Mail className="h-4 w-4 text-[var(--brand-blue)]" /> Send</button>
+          <button
+            onClick={() => share(publicUrl, `Estimate ${estimate.number}`)}
+            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+          >
+            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> Send
+          </button>
           <button
             onClick={() => {
               if (!pdfRef.current) return;
