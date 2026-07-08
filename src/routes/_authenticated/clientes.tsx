@@ -7,11 +7,22 @@ import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users,
 } from "lucide-react";
-import { listClients, fmtDate, initials, fmt, type Client } from "@/lib/db";
+import { listClients, fmtDate, initials, fmt, type Client, type Invoice } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
+
+function formatPhone(input: string): string {
+  const digits = (input || "").replace(/\D/g, "").slice(0, 10);
+  const p1 = digits.slice(0, 3);
+  const p2 = digits.slice(3, 6);
+  const p3 = digits.slice(6, 10);
+  if (digits.length <= 3) return p1 ? `(${p1}` : "";
+  if (digits.length <= 6) return `(${p1}) ${p2}`;
+  return `(${p1}) ${p2}-${p3}`;
+}
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   component: ClientesPage,
@@ -159,7 +170,7 @@ function ClientesPage() {
                         </div>
                       </td>
                       <td className="py-4">
-                        <div className="text-slate-900">{c.phone || "—"}</div>
+                        <div className="text-slate-900">{c.phone ? formatPhone(c.phone) : "—"}</div>
                         <div className="text-xs text-[var(--brand-blue)]">{c.email || "—"}</div>
                       </td>
                       <td className="py-4">
@@ -234,7 +245,7 @@ function ClientesPage() {
             <Row label="Type" value={viewClient.client_type} />
             <Row label="Status" value={viewClient.status} />
             <Row label="Email" value={viewClient.email || "—"} />
-            <Row label="Phone" value={viewClient.phone || "—"} />
+            <Row label="Phone" value={viewClient.phone ? formatPhone(viewClient.phone) : "—"} />
             <Row label="Address" value={viewClient.address || "—"} />
             <div className="grid grid-cols-3 gap-3">
               <Row label="City" value={viewClient.city || "—"} />
@@ -261,6 +272,7 @@ function ClientesPage() {
                 </div>
               </div>
             )}
+            <ClientInvoicesHistory clientId={viewClient.id} />
             <div className="flex justify-end pt-2">
               <button onClick={() => setViewClient(null)} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Close</button>
             </div>
@@ -384,7 +396,7 @@ function ClientFormModal({
         <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
         <div className="grid grid-cols-2 gap-4">
           <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <Field label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+          <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} />
         </div>
         <AddressAutocomplete
           value={form.address}
@@ -431,12 +443,15 @@ function ClientFormModal({
         </div>
         <div>
           <label className="text-sm font-semibold text-slate-700">Valor mensal da piscina (USD)</label>
-          <input
-            type="number" min="0" step="0.01"
-            value={form.monthly_value}
-            onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
-            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-          />
+          <div className="relative mt-1">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">$</span>
+            <input
+              type="number" min="0" step="0.01"
+              value={form.monthly_value}
+              onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
+              className="w-full rounded-md border border-slate-200 py-2 pl-7 pr-3 text-sm"
+            />
+          </div>
         </div>
         <PhotoUploader
           label="Fotos da piscina"
@@ -466,6 +481,77 @@ function Field({ label, value, onChange, type = "text", required = false }: { la
     <div>
       <label className="text-sm font-semibold text-slate-700">{label}</label>
       <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+    </div>
+  );
+}
+
+function ClientInvoicesHistory({ clientId }: { clientId: string }) {
+  const { data: invoices = [], isLoading } = useQuery({
+    queryKey: ["client-invoices", clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("client_id", clientId)
+        .order("invoice_date", { ascending: false });
+      if (error) throw error;
+      return data as Invoice[];
+    },
+  });
+
+  const totalPaid = invoices.filter((i) => i.status === "PAID").reduce((s, i) => s + Number(i.total || 0), 0);
+  const totalOpen = invoices.filter((i) => i.status !== "PAID").reduce((s, i) => s + Number(i.total || 0), 0);
+
+  return (
+    <div className="mt-2 border-t pt-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-bold text-slate-900">Histórico de Invoices</h3>
+        <div className="text-xs text-slate-500">
+          {invoices.length} total • <span className="text-green-600 font-semibold">{fmt(totalPaid)} paid</span> • <span className="text-amber-600 font-semibold">{fmt(totalOpen)} open</span>
+        </div>
+      </div>
+      {isLoading ? (
+        <div className="py-4 text-center text-xs text-slate-500">Loading...</div>
+      ) : invoices.length === 0 ? (
+        <div className="rounded-md border border-dashed border-slate-200 py-6 text-center text-xs text-slate-500">
+          Nenhuma invoice ainda para este cliente.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 text-left text-slate-500">
+                <th className="py-2 font-medium">Number</th>
+                <th className="py-2 font-medium">Date</th>
+                <th className="py-2 font-medium">Due</th>
+                <th className="py-2 font-medium">Status</th>
+                <th className="py-2 text-right font-medium">Total</th>
+                <th className="py-2 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((inv) => (
+                <tr key={inv.id} className="border-b border-slate-100">
+                  <td className="py-2 font-semibold text-slate-900">{inv.number}</td>
+                  <td className="py-2 text-slate-700">{fmtDate(inv.invoice_date)}</td>
+                  <td className="py-2 text-slate-700">{fmtDate(inv.due_date)}</td>
+                  <td className="py-2">
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      inv.status === "PAID" ? "bg-green-100 text-green-700" :
+                      inv.status === "OVERDUE" ? "bg-red-100 text-red-700" :
+                      "bg-amber-100 text-amber-700"
+                    }`}>{inv.status}</span>
+                  </td>
+                  <td className="py-2 text-right font-semibold text-slate-900">{fmt(Number(inv.total || 0))}</td>
+                  <td className="py-2 text-right">
+                    <Link to="/invoice" className="text-[var(--brand-blue)] hover:underline">Open</Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
