@@ -7,8 +7,9 @@ import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users,
 } from "lucide-react";
-import { listClients, fmtDate, initials, type Client } from "@/lib/db";
+import { listClients, fmtDate, initials, fmt, type Client } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
