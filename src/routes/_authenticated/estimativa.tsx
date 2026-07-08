@@ -5,7 +5,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { Modal } from "@/components/Modal";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import {
-  Plus, Search, Filter, FileText, Mail, Download, MoreHorizontal, User, MapPin,
+  Plus, Search, Filter, FileText, Download, MoreHorizontal, User, MapPin,
   Wrench, ListChecks, CalendarDays, Clock, ShieldCheck, Phone, CheckCircle2, Trash2,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
