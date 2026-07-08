@@ -210,7 +210,7 @@ function EstimateDetail({ estimate }: { estimate: Estimate }) {
           <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
-      <div ref={pdfRef} className="rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm">
+      <div ref={pdfRef} className="pdf-print rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm">
         <DocCardHeader title="ESTIMATE" number={estimate.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-slate-700">
