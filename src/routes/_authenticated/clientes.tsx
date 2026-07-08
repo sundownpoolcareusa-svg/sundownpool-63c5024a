@@ -429,6 +429,27 @@ function ClientFormModal({
             })}
           </div>
         </div>
+        <div>
+          <label className="text-sm font-semibold text-slate-700">Valor mensal da piscina (USD)</label>
+          <input
+            type="number" min="0" step="0.01"
+            value={form.monthly_value}
+            onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
+            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+          />
+        </div>
+        <PhotoUploader
+          label="Fotos da piscina"
+          value={form.pool_photos}
+          onChange={(v) => setForm({ ...form, pool_photos: v })}
+          folder={`${userId}/pool`}
+        />
+        <PhotoUploader
+          label="Fotos dos equipamentos"
+          value={form.equipment_photos}
+          onChange={(v) => setForm({ ...form, equipment_photos: v })}
+          folder={`${userId}/equipment`}
+        />
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
           <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
