@@ -170,7 +170,7 @@ function ClientesPage() {
                         </div>
                       </td>
                       <td className="py-4">
-                        <div className="text-slate-900">{c.phone || "—"}</div>
+                        <div className="text-slate-900">{c.phone ? formatPhone(c.phone) : "—"}</div>
                         <div className="text-xs text-[var(--brand-blue)]">{c.email || "—"}</div>
                       </td>
                       <td className="py-4">
