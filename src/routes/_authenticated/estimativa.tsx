@@ -327,6 +327,17 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: listClients, enabled: open });
   const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates, enabled: open });
 
+function EstimateFormModal({
+  open, editing, onClose, onSaved,
+}: {
+  open: boolean;
+  editing: Estimate | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: listClients, enabled: open });
+  const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates, enabled: open });
+
   const [clientId, setClientId] = useState("");
   const [title, setTitle] = useState("Limpeza e Manutenção da Piscina");
   const [validUntil, setValidUntil] = useState("");
@@ -336,40 +347,76 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
     { name: "Limpeza da Piscina", description: "Aspiração e escovação", qty: 1, unit_price: 100 },
   ]);
 
+  // Load editing values when modal opens with an estimate
+  const editingId = editing?.id ?? null;
+  useMemo(() => {
+    if (editing) {
+      setClientId(editing.client_id);
+      setTitle(editing.title ?? "");
+      setValidUntil(editing.valid_until ?? "");
+      setDiscount(Number(editing.discount) || 0);
+      setNotes(editing.notes ?? "");
+      const sorted = (editing.estimate_items ?? []).slice().sort((a, b) => a.position - b.position);
+      setItems(sorted.length ? sorted.map((it) => ({
+        name: it.name, description: it.description ?? "", qty: Number(it.qty), unit_price: Number(it.unit_price),
+      })) : [{ name: "", description: "", qty: 1, unit_price: 0 }]);
+    }
+  }, [editingId]);
+
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.qty * i.unit_price, 0), [items]);
   const total = Math.max(0, subtotal - discount);
+
+  const resetForm = () => {
+    setClientId(""); setTitle("Limpeza e Manutenção da Piscina"); setValidUntil("");
+    setDiscount(0); setNotes("Prices may change after on-site inspection.");
+    setItems([{ name: "Limpeza da Piscina", description: "Aspiração e escovação", qty: 1, unit_price: 100 }]);
+  };
 
   const mut = useMutation({
     mutationFn: async () => {
       if (!clientId) throw new Error("Select a client");
       if (items.length === 0) throw new Error("Add at least one item");
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("Não autenticado");
-      const number = nextNumber("EST", estimates.map((e) => e.number));
-      const { data: est, error } = await supabase.from("estimates").insert({
-        user_id: u.user.id, client_id: clientId, number, title,
-        valid_until: validUntil || null, status: "PENDENTE",
-        subtotal, discount, total, notes,
-      }).select().single();
-      if (error) throw error;
-      const rows = items.map((it, idx) => ({
-        estimate_id: est.id, name: it.name, description: it.description,
-        qty: it.qty, unit_price: it.unit_price, total: it.qty * it.unit_price, position: idx,
-      }));
-      const { error: e2 } = await supabase.from("estimate_items").insert(rows);
-      if (e2) throw e2;
+      if (editing) {
+        const { error } = await supabase.from("estimates").update({
+          client_id: clientId, title, valid_until: validUntil || null,
+          subtotal, discount, total, notes,
+        }).eq("id", editing.id);
+        if (error) throw error;
+        await supabase.from("estimate_items").delete().eq("estimate_id", editing.id);
+        const rows = items.map((it, idx) => ({
+          estimate_id: editing.id, name: it.name, description: it.description,
+          qty: it.qty, unit_price: it.unit_price, total: it.qty * it.unit_price, position: idx,
+        }));
+        const { error: e2 } = await supabase.from("estimate_items").insert(rows);
+        if (e2) throw e2;
+      } else {
+        const { data: u } = await supabase.auth.getUser();
+        if (!u.user) throw new Error("Não autenticado");
+        const number = nextNumber("EST", estimates.map((e) => e.number));
+        const { data: est, error } = await supabase.from("estimates").insert({
+          user_id: u.user.id, client_id: clientId, number, title,
+          valid_until: validUntil || null, status: "PENDENTE",
+          subtotal, discount, total, notes,
+        }).select().single();
+        if (error) throw error;
+        const rows = items.map((it, idx) => ({
+          estimate_id: est.id, name: it.name, description: it.description,
+          qty: it.qty, unit_price: it.unit_price, total: it.qty * it.unit_price, position: idx,
+        }));
+        const { error: e2 } = await supabase.from("estimate_items").insert(rows);
+        if (e2) throw e2;
+      }
     },
     onSuccess: () => {
-      toast.success("Estimate created!");
-      setClientId(""); setItems([{ name: "Limpeza da Piscina", description: "Aspiração e escovação", qty: 1, unit_price: 100 }]);
-      setDiscount(0);
-      onCreated(); onClose();
+      toast.success(editing ? "Estimate updated!" : "Estimate created!");
+      if (!editing) resetForm();
+      onSaved(); onClose();
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
-    <Modal open={open} onClose={onClose} title="New Estimate" maxWidth="max-w-3xl" closeOnOverlayClick={false}>
+    <Modal open={open} onClose={onClose} title={editing ? `Edit Estimate ${editing.number}` : "New Estimate"} maxWidth="max-w-3xl" closeOnOverlayClick={false}>
       {clients.length === 0 ? (
         <div className="py-8 text-center">
           <p className="text-slate-600">Você precisa criar um cliente primeiro.</p>
@@ -429,7 +476,7 @@ function NewEstimateModal({ open, onClose, onCreated }: { open: boolean; onClose
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
             <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-              {mut.isPending ? "Saving..." : "Create Estimate"}
+              {mut.isPending ? "Saving..." : editing ? "Save Changes" : "Create Estimate"}
             </button>
           </div>
         </form>
