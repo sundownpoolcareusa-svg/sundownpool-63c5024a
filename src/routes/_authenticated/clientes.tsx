@@ -442,12 +442,15 @@ function ClientFormModal({
         </div>
         <div>
           <label className="text-sm font-semibold text-slate-700">Valor mensal da piscina (USD)</label>
-          <input
-            type="number" min="0" step="0.01"
-            value={form.monthly_value}
-            onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
-            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-          />
+          <div className="relative mt-1">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">$</span>
+            <input
+              type="number" min="0" step="0.01"
+              value={form.monthly_value}
+              onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
+              className="w-full rounded-md border border-slate-200 py-2 pl-7 pr-3 text-sm"
+            />
+          </div>
         </div>
         <PhotoUploader
           label="Fotos da piscina"
