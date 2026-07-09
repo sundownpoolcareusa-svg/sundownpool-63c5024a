@@ -39,12 +39,12 @@ function PublicEstimatePage() {
 
   const pdfRef = useRef<HTMLDivElement>(null);
 
-  if (isLoading) return <div className="grid min-h-screen place-items-center text-slate-500">Loading...</div>;
+  if (isLoading) return <div className="dash grid min-h-screen place-items-center text-[var(--dash-text-muted)]">Loading...</div>;
   if (error || !data) return (
-    <div className="grid min-h-screen place-items-center bg-slate-50 p-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
-        <h1 className="text-xl font-bold text-slate-900">Estimate not found</h1>
-        <p className="mt-2 text-sm text-slate-600">This link may be invalid or has been revoked.</p>
+    <div className="dash grid min-h-screen place-items-center bg-[var(--dash-bg)] p-6">
+      <div className="rounded-[18px] border border-[var(--dash-border)] bg-white p-10 text-center">
+        <h1 className="text-xl font-bold text-[var(--dash-text)]">Estimate not found</h1>
+        <p className="mt-2 text-sm text-[var(--dash-text-secondary)]">This link may be invalid or has been revoked.</p>
       </div>
     </div>
   );
@@ -54,37 +54,43 @@ function PublicEstimatePage() {
   const sortedItems = [...(items ?? [])].sort((a, b) => a.position - b.position);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 print:bg-white print:p-0">
+    <div className="dash min-h-screen bg-[var(--dash-bg)] p-6 print:bg-white print:p-0">
       <div className="mx-auto max-w-3xl">
         <div className="mb-4 flex items-center justify-between print:hidden">
-          <div className={`rounded px-3 py-1 text-xs font-bold ${isApproved ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+          <div
+            className="rounded-full px-3 py-1 text-xs font-bold uppercase"
+            style={{
+              background: isApproved ? "var(--dash-badge-paid-bg)" : "var(--dash-badge-unpaid-bg)",
+              color: isApproved ? "var(--dash-badge-paid-text)" : "var(--dash-badge-unpaid-text)",
+            }}
+          >
             {statusLabel(estimate.status)}
           </div>
           <button
             onClick={() => { if (pdfRef.current) downloadElementAsPdf(pdfRef.current, `${client?.name || "Client"} ${estimate.number}`); }}
-            className="flex items-center gap-2 rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white"
+            className="flex items-center gap-2 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white"
           >
             <Download className="h-4 w-4" /> Download PDF
           </button>
         </div>
-        <div ref={pdfRef} className="pdf-print rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
+        <div ref={pdfRef} className="pdf-print rounded-[20px] border border-[var(--dash-border)] bg-white px-[26px] pb-[26px] pt-1 print:border-0 print:shadow-none" style={{ boxShadow: "0 1px 2px rgba(20,36,60,.03)" }}>
           <DocCardHeader title="ESTIMATE" number={estimate.number} />
           <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
-            <div className="space-y-1 text-slate-700">
+            <div className="space-y-1 text-[var(--dash-text-secondary)]">
               <div>4008 Destination Dr</div>
               <div>Osprey, FL 34229</div>
               <div>(561) 376-2428</div>
             </div>
-            <div className="space-y-1 text-right text-slate-700">
-              <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(estimate.estimate_date)}</div>
-              <div><span className="font-semibold text-slate-900">Valid Until:</span> {fmtDate(estimate.valid_until)}</div>
-              <div><span className="font-semibold text-slate-900">Status:</span> <span className="font-bold">{statusLabel(estimate.status)}</span></div>
+            <div className="space-y-1 text-right text-[var(--dash-text-secondary)]">
+              <div><span className="font-semibold text-[var(--dash-text)]">Date:</span> {fmtDate(estimate.estimate_date)}</div>
+              <div><span className="font-semibold text-[var(--dash-text)]">Valid Until:</span> {fmtDate(estimate.valid_until)}</div>
+              <div><span className="font-semibold text-[var(--dash-text)]">Status:</span> <span className="font-bold" style={{ color: isApproved ? "var(--dash-green)" : "var(--dash-badge-unpaid-text)" }}>{statusLabel(estimate.status)}</span></div>
             </div>
           </div>
-          <hr className="my-4 border-slate-100" />
+          <hr className="my-4 border-[var(--dash-border)]" />
           <div className="text-sm">
-            <div className="font-bold text-slate-900">Prepared For:</div>
-            <div className="mt-1 space-y-0.5 text-slate-700">
+            <div className="font-bold text-[var(--dash-text)]">Prepared For:</div>
+            <div className="mt-1 space-y-0.5 text-[var(--dash-text-secondary)]">
               <div>{client.name}</div>
               {client.address && <div>{client.address}</div>}
               {client.city && <div>{client.city}{client.state ? `, ${client.state}` : ""} {client.zip || ""}</div>}
@@ -92,26 +98,26 @@ function PublicEstimatePage() {
               {client.email && <div>{client.email}</div>}
             </div>
           </div>
-          {estimate.title && <div className="mt-4 text-sm"><span className="font-semibold text-slate-900">Project:</span> {estimate.title}</div>}
-          <div className="mt-6 overflow-hidden rounded-lg border border-slate-200">
+          {estimate.title && <div className="mt-4 text-sm"><span className="font-semibold text-[var(--dash-text)]">Project:</span> {estimate.title}</div>}
+          <div className="mt-6 overflow-hidden rounded-[11px] border border-[var(--dash-border-table)]">
             <table className="w-full text-sm">
-              <thead className="bg-[var(--doc-blue)] text-white">
+              <thead style={{ background: "var(--dash-navy)" }} className="text-white">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">ITEM</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">DESCRIPTION</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">QTY</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold">PRICE</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold">TOTAL</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Item</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Description</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Qty</th>
+                  <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[.07em]">Price</th>
+                  <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[.07em]">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedItems.map((it, i) => (
-                  <tr key={i} className="border-t border-slate-100 align-top">
-                    <td className="px-4 py-2.5 font-bold text-slate-900"><div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--doc-blue)]" /> {it.name || "—"}</div></td>
-                    <td className="px-4 py-2.5 text-slate-700">{it.description}</td>
-                    <td className="px-4 py-2.5 text-slate-700">{it.qty}</td>
-                    <td className="px-4 py-2.5 text-right text-slate-700">{fmt(Number(it.unit_price))}</td>
-                    <td className="px-4 py-2.5 text-right text-slate-700">{fmt(Number(it.total))}</td>
+                  <tr key={i} className="border-t border-[var(--dash-border-table)] align-top">
+                    <td className="px-4 py-2.5 font-bold text-[var(--dash-text)]"><div className="flex items-center gap-2"><Wrench className="h-4 w-4" style={{ color: "var(--dash-water-icon)" }} /> {it.name || "—"}</div></td>
+                    <td className="px-4 py-2.5 text-[var(--dash-text-secondary)]">{it.description}</td>
+                    <td className="px-4 py-2.5 text-[var(--dash-text-secondary)]">{it.qty}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(Number(it.unit_price))}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(Number(it.total))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -119,14 +125,14 @@ function PublicEstimatePage() {
           </div>
           <div className="mt-4 flex justify-end">
             <div className="w-72 space-y-2 text-sm">
-              <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(Number(estimate.subtotal))}</span></div>
-              {Number(estimate.discount) > 0 && <div className="flex justify-between text-slate-700"><span>Discount</span><span>-{fmt(Number(estimate.discount))}</span></div>}
-              <div className="flex justify-between border-t pt-2 text-base"><span className="font-semibold">Total</span><span className="font-extrabold text-slate-900">{fmt(Number(estimate.total))}</span></div>
+              <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(Number(estimate.subtotal))}</span></div>
+              {Number(estimate.discount) > 0 && <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums">-{fmt(Number(estimate.discount))}</span></div>}
+              <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base"><span className="font-semibold">Total</span><span className="font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(estimate.total))}</span></div>
             </div>
           </div>
           {estimate.notes && (
-            <div className="mt-6 rounded-md bg-slate-50 p-4 text-sm text-slate-700">
-              <div className="font-semibold text-slate-900">Notes</div>
+            <div className="mt-6 rounded-[10px] bg-[var(--dash-surface-soft)] p-4 text-sm text-[var(--dash-text-secondary)]">
+              <div className="font-semibold text-[var(--dash-text)]">Notes</div>
               <p className="mt-1 whitespace-pre-line">{estimate.notes}</p>
             </div>
           )}

@@ -24,6 +24,46 @@
   --brand-ink: #26364d;
   --brand-mist: #eef6fc;
   --doc-blue: oklch(0.55 0.24 255);
+
+  /* Dashboard (Invoices/Clients/Estimates admin area) design tokens */
+  --dash-navy: #0C2A4D;
+  --dash-navy-2: #164574;
+  --dash-bg: #F4F6F9;
+  --dash-surface: #FFFFFF;
+  --dash-surface-soft: #F7F9FB;
+  --dash-surface-soft-2: #FBFCFD;
+  --dash-border: #E7EBF0;
+  --dash-border-input: #E4E9EF;
+  --dash-border-table: #EDF0F4;
+  --dash-text: #1B2432;
+  --dash-text-2: #28323F;
+  --dash-text-secondary: #3A465A;
+  --dash-text-secondary-2: #5A6675;
+  --dash-text-muted: #98A2B1;
+  --dash-text-muted-2: #8A94A3;
+  --dash-text-muted-3: #6A7686;
+  --dash-water-bg: #E7F3F7;
+  --dash-water-icon: #1487A6;
+  --dash-link: #1E5F9E;
+  --dash-link-hover: #154679;
+  --dash-orange: #E8813A;
+  --dash-green: #16A34A;
+  --dash-red: #D0483F;
+  --dash-red-border: #F3DADA;
+  --dash-badge-paid-bg: #E3F5EB;
+  --dash-badge-paid-text: #137A46;
+  --dash-badge-unpaid-bg: #FCEFD8;
+  --dash-badge-unpaid-text: #9A6412;
+  --dash-badge-sent-bg: #E6EEF9;
+  --dash-badge-sent-text: #26558F;
+  --dash-badge-expired-bg: #F1E7E7;
+  --dash-badge-expired-text: #9A3B3B;
+}
+
+.dash {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  background-color: var(--dash-bg);
+  color: var(--dash-text);
 }
 
 @custom-variant dark (&:is(.dark *));

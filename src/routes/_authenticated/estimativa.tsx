@@ -21,27 +21,34 @@ export const Route = createFileRoute("/_authenticated/estimativa")({
   component: EstimativaPage,
 });
 
+const cardShadow = { boxShadow: "0 1px 2px rgba(20,36,60,.03)" };
+
 const tabs = ["All", "Pending", "Sent", "Approved", "Expired"];
 const tabStatus: Record<string, string | null> = {
   All: null, Pending: "PENDENTE", Sent: "ENVIADA", Approved: "APROVADA", Expired: "EXPIRADA",
 };
 
 function statusBadge(s: string) {
-  const map: Record<string, string> = {
-    PENDENTE: "bg-amber-100 text-amber-700",
-    APROVADA: "bg-green-100 text-green-700",
-    ENVIADA: "bg-sky-100 text-sky-700",
-    EXPIRADA: "bg-slate-200 text-slate-600",
+  const map: Record<string, { bg: string; text: string }> = {
+    PENDENTE: { bg: "var(--dash-badge-unpaid-bg)", text: "var(--dash-badge-unpaid-text)" },
+    APROVADA: { bg: "var(--dash-badge-paid-bg)", text: "var(--dash-badge-paid-text)" },
+    ENVIADA: { bg: "var(--dash-badge-sent-bg)", text: "var(--dash-badge-sent-text)" },
+    EXPIRADA: { bg: "var(--dash-badge-expired-bg)", text: "var(--dash-badge-expired-text)" },
   };
-  const labels: Record<string, string> = { PENDENTE: "PENDING", APROVADA: "APPROVED", ENVIADA: "SENT", EXPIRADA: "EXPIRED" };
-  return <span className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wide ${map[s] ?? "bg-gray-100"}`}>{labels[s] ?? s}</span>;
+  const labels: Record<string, string> = { PENDENTE: "Pending", APROVADA: "Approved", ENVIADA: "Sent", EXPIRADA: "Expired" };
+  const c = map[s] ?? { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
+  return (
+    <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ background: c.bg, color: c.text }}>
+      {labels[s] ?? s}
+    </span>
+  );
 }
 
 function EstimativaPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Estimate | null>(null);
-  const [tab, setTab] = useState("Todas");
+  const [tab, setTab] = useState("All");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -78,48 +85,67 @@ function EstimativaPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="dash min-h-screen bg-[var(--dash-bg)]">
       <AppHeader />
       <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12">
         {/* LEFT */}
         <aside className="space-y-4 lg:col-span-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-extrabold text-slate-900">Estimates</h1>
-            <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow">
+            <h1 className="text-[20px] font-extrabold text-[var(--dash-text)]">Estimates</h1>
+            <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-3 py-2 text-sm font-semibold text-white">
               <Plus className="h-4 w-4" /> New Estimate
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto border-b text-sm">
+          <div className="flex gap-4 overflow-x-auto border-b border-[var(--dash-border)] text-sm">
             {tabs.map((t) => (
-              <button key={t} onClick={() => setTab(t)} className={`pb-2 ${tab === t ? "border-b-2 border-[var(--brand-blue)] text-[var(--brand-blue)] font-semibold" : "text-slate-500"}`}>{t}</button>
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className="pb-2 font-semibold"
+                style={{
+                  borderBottom: tab === t ? "2px solid var(--dash-navy)" : "2px solid transparent",
+                  color: tab === t ? "var(--dash-navy)" : "var(--dash-text-muted)",
+                }}
+              >
+                {t}
+              </button>
             ))}
           </div>
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar estimativas..." className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-[var(--dash-text-muted)]" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search estimates..." className="w-full rounded-[11px] border border-[var(--dash-border-input)] bg-white py-2 pl-9 pr-3 text-sm" />
             </div>
-            <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white text-[var(--brand-blue)]"><Filter className="h-4 w-4" /></button>
+            <button className="grid h-9 w-9 place-items-center rounded-[11px] border border-[var(--dash-border-input)] bg-white text-[var(--dash-navy)]"><Filter className="h-4 w-4" /></button>
           </div>
           {filtered.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-slate-200 py-10 text-center">
-              <FileText className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-2 text-sm text-slate-500">No estimates</p>
-              <p className="text-xs text-slate-400">Clique em "New Estimate".</p>
+            <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] py-10 text-center">
+              <FileText className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
+              <p className="mt-2 text-sm text-[var(--dash-text-muted-2)]">No estimates</p>
+              <p className="text-xs text-[var(--dash-text-muted)]">Click "New Estimate".</p>
             </div>
           ) : (
             <div className="space-y-3">
               {filtered.map((e) => (
-                <button key={e.id} onClick={() => setSelectedId(e.id)} className={`block w-full rounded-lg border p-4 text-left ${selected?.id === e.id ? "border-[var(--brand-blue)]/40 bg-sky-50/60" : "border-slate-200 bg-white"}`}>
+                <button
+                  key={e.id}
+                  onClick={() => setSelectedId(e.id)}
+                  className="block w-full rounded-[18px] border p-4 text-left"
+                  style={{
+                    borderColor: selected?.id === e.id ? "var(--dash-navy)" : "var(--dash-border)",
+                    background: selected?.id === e.id ? "var(--dash-water-bg)" : "#fff",
+                    ...cardShadow,
+                  }}
+                >
                   <div className="flex items-start justify-between">
-                    <div className="font-bold text-[var(--brand-blue)]">{e.number}</div>
+                    <div className="font-bold text-[var(--dash-navy)]">{e.number}</div>
                     {statusBadge(e.status)}
                   </div>
-                  <div className="mt-1 text-sm text-slate-700">{e.client?.name}</div>
-                  <div className="text-xs text-slate-500">{e.title || "—"}</div>
+                  <div className="mt-1 text-sm text-[var(--dash-text-secondary)]">{e.client?.name}</div>
+                  <div className="text-xs text-[var(--dash-text-muted)]">{e.title || "—"}</div>
                   <div className="mt-2 flex items-end justify-between">
-                    <div className="text-xs text-slate-500">{fmtDate(e.estimate_date)}</div>
-                    <div className="font-bold text-slate-900">{fmt(e.total)}</div>
+                    <div className="text-xs text-[var(--dash-text-muted)]">{fmtDate(e.estimate_date)}</div>
+                    <div className="font-bold tabular-nums text-[var(--dash-text)]">{fmt(e.total)}</div>
                   </div>
                 </button>
               ))}
@@ -139,10 +165,10 @@ function EstimativaPage() {
             />
 
           ) : (
-            <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-16 text-center">
-              <FileText className="mx-auto h-12 w-12 text-slate-300" />
-              <p className="mt-4 text-lg font-semibold text-slate-700">No estimates</p>
-              <p className="mt-1 text-sm text-slate-500">Create your first estimate.</p>
+            <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white p-16 text-center">
+              <FileText className="mx-auto h-12 w-12 text-[var(--dash-text-muted)]" />
+              <p className="mt-4 text-lg font-semibold text-[var(--dash-text-secondary)]">No estimates</p>
+              <p className="mt-1 text-sm text-[var(--dash-text-muted)]">Create your first estimate.</p>
             </div>
           )}
         </section>
@@ -151,33 +177,38 @@ function EstimativaPage() {
         <aside className="space-y-4 lg:col-span-3">
           {selected && (
             <>
-              <h3 className="text-lg font-extrabold text-slate-900">Estimate Summary</h3>
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                <img src={poolImg} alt="Piscina" className="h-44 w-full object-cover" width={1024} height={640} loading="lazy" />
-                <div className="space-y-3 p-4 text-sm">
+              <h3 className="text-lg font-extrabold text-[var(--dash-text)]">Estimate Summary</h3>
+              <div className="overflow-hidden rounded-[18px] border border-[var(--dash-border)] bg-white" style={cardShadow}>
+                <img src={poolImg} alt="Pool" className="h-44 w-full object-cover" width={1024} height={640} loading="lazy" />
+                <div className="space-y-3 p-[18px] text-sm">
                   <Row icon={ListChecks} label="Services" value={`${(selected.estimate_items ?? []).length} items`} />
                   <Row icon={CalendarDays} label="Valid until" value={fmtDate(selected.valid_until)} />
                   <Row icon={Clock} label="Estimated time" value="To be agreed" />
                   <Row icon={ShieldCheck} label="Warranty" value="30 days" />
                 </div>
               </div>
-              <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
-                <div className="font-bold text-[var(--brand-blue)]">Next Steps</div>
-                <p className="mt-1 text-sm text-slate-700">Approve the estimate to generate the invoice.</p>
-                <button disabled={selected.status === "APROVADA" || approve.isPending} onClick={() => approve.mutate(selected.id)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-green-500 py-2.5 text-sm font-semibold text-white hover:bg-green-600 disabled:opacity-50">
+              <div className="rounded-[18px] border p-[18px]" style={{ borderColor: "var(--dash-border)", background: "var(--dash-water-bg)" }}>
+                <div className="font-bold" style={{ color: "var(--dash-navy)" }}>Next Steps</div>
+                <p className="mt-1 text-sm text-[var(--dash-text-secondary)]">Approve the estimate to generate the invoice.</p>
+                <button
+                  disabled={selected.status === "APROVADA" || approve.isPending}
+                  onClick={() => approve.mutate(selected.id)}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-[11px] py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                  style={{ background: "var(--dash-green)" }}
+                >
                   <CheckCircle2 className="h-4 w-4" /> {selected.status === "APROVADA" ? "Approved" : "Approve Estimate"}
                 </button>
                 {selected.status === "APROVADA" && (
-                  <Link to="/invoice" className="mt-2 flex w-full items-center justify-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-semibold text-[var(--brand-blue)]">
+                  <Link to="/invoice" className="mt-2 flex w-full items-center justify-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white py-2.5 text-sm font-semibold" style={{ color: "var(--dash-navy)" }}>
                     Generate Invoice →
                   </Link>
                 )}
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <div className="font-bold text-slate-900">Questions?</div>
-                <p className="text-sm text-slate-600">We are here to help!</p>
+              <div className="rounded-[18px] border border-[var(--dash-border)] bg-white p-[18px]" style={cardShadow}>
+                <div className="font-bold text-[var(--dash-text)]">Questions?</div>
+                <p className="text-sm text-[var(--dash-text-secondary)]">We are here to help!</p>
                 <div className="mt-3 space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-slate-700"><Phone className="h-4 w-4 text-[var(--brand-blue)]" /> (561) 376-2428</div>
+                  <div className="flex items-center gap-2 text-[var(--dash-text-secondary)]"><Phone className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> (561) 376-2428</div>
                 </div>
               </div>
             </>
@@ -198,8 +229,8 @@ function EstimativaPage() {
 function Row({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-slate-700"><Icon className="h-4 w-4 text-[var(--brand-blue)]" /> {label}</div>
-      <span className="font-semibold text-slate-900">{value}</span>
+      <div className="flex items-center gap-2 text-[var(--dash-text-secondary)]"><Icon className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> {label}</div>
+      <span className="font-semibold text-[var(--dash-text)]">{value}</span>
     </div>
   );
 }
@@ -214,15 +245,15 @@ function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; on
       {shareModal}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-extrabold text-slate-900 sm:text-xl">Estimate #{estimate.number}</h2>
+          <h2 className="text-lg font-extrabold text-[var(--dash-text)] sm:text-xl">Estimate #{estimate.number}</h2>
           {statusBadge(estimate.status)}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => share(publicUrl, `Estimate ${estimate.number}`)}
-            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+            className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)]"
           >
-            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> Send
+            <Link2 className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Send
           </button>
           <button
             onClick={() => {
@@ -230,72 +261,72 @@ function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; on
               const fname = `${estimate.client?.name || "Client"} ${estimate.number}`;
               downloadElementAsPdf(pdfRef.current, fname);
             }}
-            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+            className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)]"
           >
-            <Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF
+            <Download className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> PDF
           </button>
-          <button onClick={onEdit} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium">
-            <Pencil className="h-4 w-4 text-[var(--brand-blue)]" /> Edit
+          <button onClick={onEdit} className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)]">
+            <Pencil className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Edit
           </button>
-          <button onClick={onDelete} className="flex items-center gap-2 rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600">
+          <button onClick={onDelete} className="flex items-center gap-2 rounded-[11px] border px-3 py-2 text-sm font-medium" style={{ borderColor: "var(--dash-red-border)", color: "var(--dash-red)" }}>
             <Trash2 className="h-4 w-4" /> Delete
           </button>
-          <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
+          <button className="grid h-9 w-9 place-items-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary)]"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
-      <div ref={pdfRef} className="pdf-print rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm">
+      <div ref={pdfRef} className="pdf-print rounded-[20px] border border-[var(--dash-border)] bg-white px-[26px] pb-[26px] pt-1" style={cardShadow}>
         <DocCardHeader title="ESTIMATE" number={estimate.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
-          <div className="space-y-1 text-slate-700">
+          <div className="space-y-1 text-[var(--dash-text-secondary)]">
             <div>4008 Destination Dr</div>
             <div>Osprey, FL 34229</div>
             <div>(561) 376-2428</div>
           </div>
-          <div className="space-y-1 text-slate-700 sm:text-right">
-            <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(estimate.estimate_date)}</div>
-            <div><span className="font-semibold text-slate-900">Valid until:</span> {fmtDate(estimate.valid_until)}</div>
+          <div className="space-y-1 text-[var(--dash-text-secondary)] sm:text-right">
+            <div><span className="font-semibold text-[var(--dash-text)]">Date:</span> {fmtDate(estimate.estimate_date)}</div>
+            <div><span className="font-semibold text-[var(--dash-text)]">Valid until:</span> {fmtDate(estimate.valid_until)}</div>
           </div>
         </div>
 
-        <hr className="my-4 border-slate-100" />
+        <hr className="my-4 border-[var(--dash-border)]" />
         <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div>
-            <div className="flex items-center gap-2 font-bold text-slate-900"><User className="h-4 w-4" /> Client</div>
-            <div className="mt-2 space-y-0.5 text-slate-700">
+            <div className="flex items-center gap-2 font-bold text-[var(--dash-text)]"><User className="h-4 w-4" /> Client</div>
+            <div className="mt-2 space-y-0.5 text-[var(--dash-text-secondary)]">
               <div>{estimate.client?.name}</div>
               {estimate.client?.phone && <div>{formatPhone(estimate.client.phone)}</div>}
               {estimate.client?.email && <div>{estimate.client.email}</div>}
             </div>
           </div>
           <div>
-            <div className="flex items-center gap-2 font-bold text-slate-900"><MapPin className="h-4 w-4" /> Service Address</div>
-            <div className="mt-2 space-y-0.5 text-slate-700">
+            <div className="flex items-center gap-2 font-bold text-[var(--dash-text)]"><MapPin className="h-4 w-4" /> Service Address</div>
+            <div className="mt-2 space-y-0.5 text-[var(--dash-text-secondary)]">
               <div>{estimate.client?.address || "—"}</div>
               <div>{estimate.client?.city || ""}</div>
             </div>
           </div>
         </div>
         <div className="mt-6">
-          <div className="mb-2 font-bold text-slate-900">Requested Services</div>
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className="mb-2 font-bold text-[var(--dash-text)]">Requested Services</div>
+          <div className="overflow-x-auto rounded-[11px] border border-[var(--dash-border-table)]">
             <table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-[var(--doc-blue)] text-white">
+              <thead style={{ background: "var(--dash-navy)" }} className="text-white">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">SERVICE</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">DESCRIPTION</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">QTD</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold">UNIT PRICE</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold">TOTAL</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Service</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Description</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Qty</th>
+                  <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[.07em]">Unit Price</th>
+                  <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[.07em]">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((s, i) => (
-                  <tr key={i} className="border-t border-slate-100 align-top">
-                    <td className="px-4 py-3 font-bold text-slate-900"><div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--doc-blue)]" /> {s.name}</div></td>
-                    <td className="px-4 py-3 text-slate-700">{s.description}</td>
-                    <td className="px-4 py-3 text-slate-700">{s.qty}</td>
-                    <td className="px-4 py-3 text-right text-slate-700">{fmt(Number(s.unit_price))}</td>
-                    <td className="px-4 py-3 text-right text-slate-700">{fmt(Number(s.total))}</td>
+                  <tr key={i} className="border-t border-[var(--dash-border-table)] align-top">
+                    <td className="px-4 py-3 font-bold text-[var(--dash-text)]"><div className="flex items-center gap-2"><Wrench className="h-4 w-4" style={{ color: "var(--dash-water-icon)" }} /> {s.name}</div></td>
+                    <td className="px-4 py-3 text-[var(--dash-text-secondary)]">{s.description}</td>
+                    <td className="px-4 py-3 text-[var(--dash-text-secondary)]">{s.qty}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(Number(s.unit_price))}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(Number(s.total))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -304,15 +335,15 @@ function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; on
         </div>
         <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
-            <div className="font-bold text-slate-900">Notes</div>
-            <p className="mt-2 text-sm text-slate-700 whitespace-pre-line">{estimate.notes || "—"}</p>
+            <div className="font-bold text-[var(--dash-text)]">Notes</div>
+            <p className="mt-2 text-sm text-[var(--dash-text-secondary)] whitespace-pre-line">{estimate.notes || "—"}</p>
           </div>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(estimate.subtotal)}</span></div>
-            <div className="flex justify-between text-slate-700"><span>Discount</span><span className="text-green-600">-{fmt(estimate.discount)}</span></div>
-            <div className="mt-2 flex items-center justify-between border-t pt-2">
-              <span className="text-base font-bold text-slate-900">Total</span>
-              <span className="text-2xl font-extrabold text-[var(--brand-blue)]">{fmt(estimate.total)}</span>
+            <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(estimate.subtotal)}</span></div>
+            <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums" style={{ color: "var(--dash-green)" }}>-{fmt(estimate.discount)}</span></div>
+            <div className="mt-2 flex items-center justify-between border-t border-[var(--dash-border)] pt-2">
+              <span className="text-base font-bold text-[var(--dash-text)]">Total</span>
+              <span className="text-2xl font-extrabold tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(estimate.total)}</span>
             </div>
           </div>
         </div>
@@ -336,12 +367,12 @@ function EstimateFormModal({
   const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates, enabled: open });
 
   const [clientId, setClientId] = useState("");
-  const [title, setTitle] = useState("Limpeza e Manutenção da Piscina");
+  const [title, setTitle] = useState("Pool Cleaning & Maintenance");
   const [validUntil, setValidUntil] = useState("");
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState("Prices may change after on-site inspection.");
   const [items, setItems] = useState<ItemRow[]>([
-    { name: "Limpeza da Piscina", description: "Aspiração e escovação", qty: 1, unit_price: 100 },
+    { name: "Pool Cleaning", description: "Vacuuming and brushing", qty: 1, unit_price: 100 },
   ]);
 
   // Load editing values when modal opens with an estimate
@@ -364,9 +395,9 @@ function EstimateFormModal({
   const total = Math.max(0, subtotal - discount);
 
   const resetForm = () => {
-    setClientId(""); setTitle("Limpeza e Manutenção da Piscina"); setValidUntil("");
+    setClientId(""); setTitle("Pool Cleaning & Maintenance"); setValidUntil("");
     setDiscount(0); setNotes("Prices may change after on-site inspection.");
-    setItems([{ name: "Limpeza da Piscina", description: "Aspiração e escovação", qty: 1, unit_price: 100 }]);
+    setItems([{ name: "Pool Cleaning", description: "Vacuuming and brushing", qty: 1, unit_price: 100 }]);
   };
 
   const mut = useMutation({
@@ -388,7 +419,7 @@ function EstimateFormModal({
         if (e2) throw e2;
       } else {
         const { data: u } = await supabase.auth.getUser();
-        if (!u.user) throw new Error("Não autenticado");
+        if (!u.user) throw new Error("Not authenticated");
         const number = nextNumber("EST", estimates.map((e) => e.number));
         const { data: est, error } = await supabase.from("estimates").insert({
           user_id: u.user.id, client_id: clientId, number, title,
@@ -416,63 +447,63 @@ function EstimateFormModal({
     <Modal open={open} onClose={onClose} title={editing ? `Edit Estimate ${editing.number}` : "New Estimate"} maxWidth="max-w-3xl" closeOnOverlayClick={false}>
       {clients.length === 0 ? (
         <div className="py-8 text-center">
-          <p className="text-slate-600">Você precisa criar um cliente primeiro.</p>
-          <Link to="/clientes" onClick={onClose} className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Go to Clients →</Link>
+          <p className="text-[var(--dash-text-secondary)]">You need to create a client first.</p>
+          <Link to="/clientes" onClick={onClose} className="mt-3 inline-block text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)] hover:underline">Go to Clients →</Link>
         </div>
       ) : (
         <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-semibold text-slate-700">Client *</label>
-              <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Client *</label>
+              <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
                 <option value="">Select...</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-sm font-semibold text-slate-700">Valid until</label>
-              <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Valid until</label>
+              <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
             </div>
           </div>
           <div>
-            <label className="text-sm font-semibold text-slate-700">Título</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Title</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
           </div>
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-700">Services</label>
-              <button type="button" onClick={() => setItems([...items, { name: "", description: "", qty: 1, unit_price: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Add item</button>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Services</label>
+              <button type="button" onClick={() => setItems([...items, { name: "", description: "", qty: 1, unit_price: 0 }])} className="text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)]">+ Add item</button>
             </div>
             <div className="space-y-2">
               {items.map((it, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2">
-                  <input className="col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Service" value={it.name} onChange={(e) => { const n = [...items]; n[idx].name = e.target.value; setItems(n); }} />
-                  <input className="col-span-5 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
-                  <input className="col-span-1 rounded-md border border-slate-200 px-2 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
-                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Price" value={it.unit_price} onChange={(e) => { const n = [...items]; n[idx].unit_price = Number(e.target.value); setItems(n); }} />
-                  <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-md border border-slate-200 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                  <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Service" value={it.name} onChange={(e) => { const n = [...items]; n[idx].name = e.target.value; setItems(n); }} />
+                  <input className="col-span-5 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                  <input className="col-span-1 rounded-[10px] border border-[var(--dash-border-input)] px-2 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
+                  <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Price" value={it.unit_price} onChange={(e) => { const n = [...items]; n[idx].unit_price = Number(e.target.value); setItems(n); }} />
+                  <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-[10px] border border-[var(--dash-border-input)] text-[var(--dash-text-muted)] hover:text-[var(--dash-red)]"><Trash2 className="h-4 w-4" /></button>
                 </div>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-slate-700">Notes</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Notes</label>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
           </div>
 
           <div className="flex justify-end">
             <div className="w-72 space-y-1.5 text-sm">
-              <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
-              <div className="flex items-center justify-between text-slate-700"><span>Discount</span><input type="number" step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-24 rounded-md border border-slate-200 px-2 py-1 text-right text-sm" /></div>
-              <div className="flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="text-[var(--brand-blue)]">{fmt(total)}</span></div>
+              <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
+              <div className="flex items-center justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><input type="number" step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-24 rounded-[10px] border border-[var(--dash-border-input)] px-2 py-1 text-right text-sm" /></div>
+              <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base font-bold"><span>Total</span><span className="tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(total)}</span></div>
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
-            <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            <button type="button" onClick={onClose} className="rounded-[10px] border border-[var(--dash-border)] px-4 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">Cancel</button>
+            <button disabled={mut.isPending} className="rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
               {mut.isPending ? "Saving..." : editing ? "Save Changes" : "Create Estimate"}
             </button>
           </div>

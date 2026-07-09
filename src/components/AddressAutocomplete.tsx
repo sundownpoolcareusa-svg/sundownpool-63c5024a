@@ -7,7 +7,7 @@ export function AddressAutocomplete({
   value,
   onChange,
   onSelectPlace,
-  label = "Endereço",
+  label = "Address",
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -88,22 +88,22 @@ export function AddressAutocomplete({
 
   return (
     <div className="relative">
-      <label className="text-sm font-semibold text-slate-700">{label}</label>
+      <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">{label}</label>
       <input
         value={value}
         onChange={(e) => handleInput(e.target.value)}
         onFocus={() => items.length && setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        placeholder="Comece a digitar o endereço..."
-        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+        placeholder="Start typing the address..."
+        className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
       />
       {open && (
-        <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
+        <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-[10px] border border-[var(--dash-border)] bg-white shadow-lg">
           {items.map((s) => (
             <li
               key={s.id}
               onMouseDown={(e) => { e.preventDefault(); pick(s); }}
-              className="cursor-pointer px-3 py-2 text-sm hover:bg-slate-50"
+              className="cursor-pointer px-3 py-2 text-sm hover:bg-[var(--dash-bg)]"
             >
               {s.text}
             </li>
