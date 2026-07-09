@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Calendar, Menu, X } from "lucide-react";
+import { Calendar, Lock, Menu, X } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/sundown-logo-new-black.png";
 
@@ -11,6 +11,8 @@ const NAV = [
   { label: "SERVICE AREAS", to: "/service-areas" },
   { label: "CONTACT", to: "/#quote" },
 ] as const;
+
+const LOGIN_URL = "https://sundownpool-63c5024a-4dnq.vercel.app/auth";
 
 export function SiteHeader({ active }: { active?: string }) {
   const [open, setOpen] = useState(false);
@@ -34,13 +36,23 @@ export function SiteHeader({ active }: { active?: string }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <a
             href="/#quote"
             className="hidden items-center gap-2 rounded-lg bg-brand-yellow px-4 py-2.5 font-display text-[13px] font-bold text-brand-navy-deep md:inline-flex"
           >
             <Calendar className="h-4 w-4" />
             GET A FREE QUOTE
+          </a>
+          <a
+            href={LOGIN_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Admin login"
+            title="Admin login"
+            className="hidden items-center justify-center rounded-lg border border-[#e2e8f0] p-2.5 text-brand-navy transition-colors hover:bg-[#f4f6f9] md:inline-flex"
+          >
+            <Lock className="h-4 w-4" />
           </a>
           <button
             onClick={() => setOpen((v) => !v)}
@@ -72,6 +84,16 @@ export function SiteHeader({ active }: { active?: string }) {
             >
               <Calendar className="h-4 w-4" />
               GET A FREE QUOTE
+            </a>
+            <a
+              href={LOGIN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg border border-[#e2e8f0] px-4 py-3 font-display text-[13px] font-bold text-brand-navy"
+            >
+              <Lock className="h-4 w-4" />
+              ADMIN LOGIN
             </a>
           </div>
         </div>
