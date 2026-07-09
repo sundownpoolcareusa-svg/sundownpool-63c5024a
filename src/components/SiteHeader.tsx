@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Calendar, Menu, X } from "lucide-react";
+import { Calendar, Lock, Menu, X } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/sundown-logo-new-black.png";
 
@@ -34,7 +34,7 @@ export function SiteHeader({ active }: { active?: string }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <a
             href="/#quote"
             className="hidden items-center gap-2 rounded-lg bg-brand-yellow px-4 py-2.5 font-display text-[13px] font-bold text-brand-navy-deep md:inline-flex"
@@ -42,6 +42,14 @@ export function SiteHeader({ active }: { active?: string }) {
             <Calendar className="h-4 w-4" />
             GET A FREE QUOTE
           </a>
+          <Link
+            to="/auth"
+            aria-label="Admin login"
+            title="Admin login"
+            className="hidden items-center justify-center rounded-lg border border-[#e2e8f0] p-2.5 text-brand-navy transition-colors hover:bg-[#f4f6f9] md:inline-flex"
+          >
+            <Lock className="h-4 w-4" />
+          </Link>
           <button
             onClick={() => setOpen((v) => !v)}
             className="rounded-md p-2 text-brand-navy lg:hidden"
@@ -73,6 +81,14 @@ export function SiteHeader({ active }: { active?: string }) {
               <Calendar className="h-4 w-4" />
               GET A FREE QUOTE
             </a>
+            <Link
+              to="/auth"
+              onClick={() => setOpen(false)}
+              className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg border border-[#e2e8f0] px-4 py-3 font-display text-[13px] font-bold text-brand-navy"
+            >
+              <Lock className="h-4 w-4" />
+              ADMIN LOGIN
+            </Link>
           </div>
         </div>
       )}
