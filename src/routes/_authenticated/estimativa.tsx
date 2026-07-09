@@ -226,7 +226,7 @@ function EstimativaPage() {
   );
 }
 
-function Row({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
+function Row({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2 text-[var(--dash-text-secondary)]"><Icon className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> {label}</div>
