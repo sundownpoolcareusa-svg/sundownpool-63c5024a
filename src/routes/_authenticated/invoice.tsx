@@ -30,11 +30,19 @@ const footerCats = [
   { icon: Calendar, title: "Scheduled Service", text: "Weekly, bi-weekly or monthly service" },
 ];
 
+const cardShadow = { boxShadow: "0 1px 2px rgba(20,36,60,.03)" };
+
 function statusBadge(s: string) {
   const isPaid = s === "PAID";
   return (
-    <span className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wide ${isPaid ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-      {isPaid ? "PAID" : "UNPAID"}
+    <span
+      className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+      style={{
+        background: isPaid ? "var(--dash-badge-paid-bg)" : "var(--dash-badge-unpaid-bg)",
+        color: isPaid ? "var(--dash-badge-paid-text)" : "var(--dash-badge-unpaid-text)",
+      }}
+    >
+      {isPaid ? "Paid" : "Unpaid"}
     </span>
   );
 }
@@ -60,47 +68,66 @@ function InvoicePage() {
   const pendingEstimate = estimates.find((e) => e.status === "PENDENTE" || e.status === "ENVIADA");
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="dash min-h-screen bg-[var(--dash-bg)]">
       <AppHeader />
       <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12 print:block print:p-0">
         {/* LEFT */}
         <aside className="space-y-4 lg:col-span-3 print:hidden">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-extrabold text-slate-900">Invoices</h1>
-            <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow hover:opacity-90">
+            <h1 className="text-[20px] font-extrabold text-[var(--dash-text)]">Invoices</h1>
+            <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-3 py-2 text-sm font-semibold text-white hover:opacity-90">
               <Plus className="h-4 w-4" /> New Invoice
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto border-b text-sm">
+          <div className="flex gap-4 overflow-x-auto border-b border-[var(--dash-border)] text-sm">
             {tabs.map((t) => (
-              <button key={t} onClick={() => setTab(t)} className={`pb-2 ${tab === t ? "border-b-2 border-[var(--brand-blue)] text-[var(--brand-blue)] font-semibold" : "text-slate-500"}`}>{t}</button>
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className="pb-2 font-semibold"
+                style={{
+                  borderBottom: tab === t ? "2px solid var(--dash-navy)" : "2px solid transparent",
+                  color: tab === t ? "var(--dash-navy)" : "var(--dash-text-muted)",
+                }}
+              >
+                {t}
+              </button>
             ))}
           </div>
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search invoices..." className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-[var(--dash-text-muted)]" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search invoices..." className="w-full rounded-[11px] border border-[var(--dash-border-input)] bg-white py-2 pl-9 pr-3 text-sm" />
             </div>
-            <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white text-[var(--brand-blue)]"><Filter className="h-4 w-4" /></button>
+            <button className="grid h-9 w-9 place-items-center rounded-[11px] border border-[var(--dash-border-input)] bg-white text-[var(--dash-navy)]"><Filter className="h-4 w-4" /></button>
           </div>
           {filtered.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-slate-200 py-10 text-center">
-              <FileText className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-2 text-sm text-slate-500">No invoices yet</p>
-              <p className="text-xs text-slate-400">Create an estimate first, or click New Invoice.</p>
+            <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] py-10 text-center">
+              <FileText className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
+              <p className="mt-2 text-sm text-[var(--dash-text-muted-2)]">No invoices yet</p>
+              <p className="text-xs text-[var(--dash-text-muted)]">Create an estimate first, or click New Invoice.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {filtered.map((inv) => (
-                <button key={inv.id} onClick={() => setSelectedId(inv.id)} className={`block w-full rounded-lg border p-4 text-left ${selected?.id === inv.id ? "border-[var(--brand-blue)]/40 bg-sky-50/60" : "border-slate-200 bg-white"}`}>
+                <button
+                  key={inv.id}
+                  onClick={() => setSelectedId(inv.id)}
+                  className="block w-full rounded-[18px] border p-4 text-left"
+                  style={{
+                    borderColor: selected?.id === inv.id ? "var(--dash-navy)" : "var(--dash-border)",
+                    background: selected?.id === inv.id ? "var(--dash-water-bg)" : "#fff",
+                    ...cardShadow,
+                  }}
+                >
                   <div className="flex items-start justify-between">
-                    <div className="font-bold text-[var(--brand-blue)]">{inv.number}</div>
-                    <div className={`font-bold ${inv.status === "PAID" ? "text-green-600" : "text-slate-900"}`}>{fmt(inv.total)}</div>
+                    <div className="font-bold text-[var(--dash-navy)]">{inv.number}</div>
+                    <div className="font-bold tabular-nums" style={{ color: inv.status === "PAID" ? "var(--dash-green)" : "var(--dash-text)" }}>{fmt(inv.total)}</div>
                   </div>
                   <div className="mt-1 flex items-end justify-between">
                     <div>
-                      <div className="text-sm text-slate-700">{inv.client?.name}</div>
-                      <div className="text-xs text-slate-500">{fmtDate(inv.invoice_date)}</div>
+                      <div className="text-sm text-[var(--dash-text-secondary)]">{inv.client?.name}</div>
+                      <div className="text-xs text-[var(--dash-text-muted)]">{fmtDate(inv.invoice_date)}</div>
                     </div>
                     {statusBadge(inv.status)}
                   </div>
@@ -115,10 +142,10 @@ function InvoicePage() {
           {selected ? (
             <InvoiceDetail invoice={selected} onChanged={() => qc.invalidateQueries({ queryKey: ["invoices"] })} />
           ) : (
-            <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-16 text-center">
-              <FileText className="mx-auto h-12 w-12 text-slate-300" />
-              <p className="mt-4 text-lg font-semibold text-slate-700">No invoice selected</p>
-              <p className="mt-1 text-sm text-slate-500">Click "New Invoice" to create your first invoice.</p>
+            <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white p-16 text-center">
+              <FileText className="mx-auto h-12 w-12 text-[var(--dash-text-muted)]" />
+              <p className="mt-4 text-lg font-semibold text-[var(--dash-text-secondary)]">No invoice selected</p>
+              <p className="mt-1 text-sm text-[var(--dash-text-muted)]">Click "New Invoice" to create your first invoice.</p>
             </div>
           )}
         </section>
@@ -127,44 +154,46 @@ function InvoicePage() {
         <aside className="space-y-4 lg:col-span-3 print:hidden">
           {pendingEstimate ? (
             <>
-              <h3 className="text-lg font-extrabold text-slate-900">Estimate #{pendingEstimate.number}</h3>
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <h3 className="text-lg font-extrabold text-[var(--dash-text)]">Estimate #{pendingEstimate.number}</h3>
+              <div className="overflow-hidden rounded-[18px] border border-[var(--dash-border)] bg-white" style={cardShadow}>
                 <img src={poolImg} alt="Pool" className="h-44 w-full object-cover" width={1024} height={640} loading="lazy" />
-                <div className="p-4">
-                  <div className="font-bold text-slate-900">{pendingEstimate.title || "Estimate"}</div>
-                  <p className="mt-1 text-sm text-slate-600">Client: {pendingEstimate.client?.name}</p>
-                  <hr className="my-4 border-slate-100" />
+                <div className="p-[18px]">
+                  <div className="font-bold text-[var(--dash-text)]">{pendingEstimate.title || "Estimate"}</div>
+                  <p className="mt-1 text-sm text-[var(--dash-text-secondary)]">Client: {pendingEstimate.client?.name}</p>
+                  <hr className="my-4 border-[var(--dash-border)]" />
                   <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(pendingEstimate.subtotal)}</span></div>
-                    <div className="flex justify-between text-slate-700"><span>Discount</span><span className="text-green-600">-{fmt(pendingEstimate.discount)}</span></div>
-                    <div className="mt-2 flex items-center justify-between border-t pt-2">
-                      <span className="font-bold text-slate-900">Total</span>
-                      <span className="text-xl font-extrabold text-[var(--brand-blue)]">{fmt(pendingEstimate.total)}</span>
+                    <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(pendingEstimate.subtotal)}</span></div>
+                    <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums" style={{ color: "var(--dash-green)" }}>-{fmt(pendingEstimate.discount)}</span></div>
+                    <div className="mt-2 flex items-center justify-between border-t border-[var(--dash-border)] pt-2">
+                      <span className="font-bold text-[var(--dash-text)]">Total</span>
+                      <span className="text-xl font-extrabold tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(pendingEstimate.total)}</span>
                     </div>
                   </div>
-                  <Link to="/estimativa" className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[var(--brand-blue)] py-2.5 text-sm font-semibold text-white">
+                  <Link to="/estimativa" className="mt-4 flex w-full items-center justify-center gap-2 rounded-[11px] bg-[var(--dash-navy)] py-2.5 text-sm font-semibold text-white">
                     View Estimate
                   </Link>
                 </div>
               </div>
             </>
           ) : (
-            <div className="rounded-xl border-2 border-dashed border-slate-200 bg-white p-6 text-center">
-              <p className="text-sm font-semibold text-slate-700">No pending estimate</p>
-              <Link to="/estimativa" className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Create estimate →</Link>
+            <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white p-6 text-center">
+              <p className="text-sm font-semibold text-[var(--dash-text-secondary)]">No pending estimate</p>
+              <Link to="/estimativa" className="mt-3 inline-block text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)] hover:underline">Create estimate →</Link>
             </div>
           )}
         </aside>
       </main>
 
-      <section className="mx-3 mb-6 rounded-xl border border-slate-200 bg-white px-4 py-5 sm:mx-5 sm:px-6 sm:py-6 print:hidden">
+      <section className="mx-3 mb-6 rounded-[18px] border border-[var(--dash-border)] bg-white px-4 py-5 sm:mx-5 sm:px-6 sm:py-6 print:hidden" style={cardShadow}>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {footerCats.map((c) => (
             <div key={c.title} className="flex items-start gap-3">
-              <c.icon className="mt-0.5 h-6 w-6 shrink-0 text-[var(--brand-blue)]" />
+              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[8px]" style={{ background: "var(--dash-water-bg)" }}>
+                <c.icon className="h-[18px] w-[18px]" style={{ color: "var(--dash-water-icon)" }} />
+              </span>
               <div>
-                <div className="font-bold text-slate-900">{c.title}</div>
-                <div className="text-sm text-slate-600">{c.text}</div>
+                <div className="font-bold text-[var(--dash-text)]">{c.title}</div>
+                <div className="text-sm text-[var(--dash-text-secondary)]">{c.text}</div>
               </div>
             </div>
           ))}
@@ -199,28 +228,29 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
       {shareModal}
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">Invoice</h2>
+          <h2 className="text-xl font-extrabold text-[var(--dash-text)] sm:text-2xl">Invoice</h2>
           {statusBadge(invoice.status)}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setEditOpen(true)}
-            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+            className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)]"
           >
-            <Pencil className="h-4 w-4 text-[var(--brand-blue)]" /> Edit
+            <Pencil className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Edit
           </button>
           <button
             onClick={() => toggle.mutate()}
             disabled={toggle.isPending}
-            className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-white ${isPaid ? "bg-amber-500 hover:bg-amber-600" : "bg-green-500 hover:bg-green-600"}`}
+            className="flex items-center gap-2 rounded-[11px] px-3 py-2 text-sm font-semibold text-white"
+            style={{ background: isPaid ? "var(--dash-orange)" : "var(--dash-green)" }}
           >
             {isPaid ? <><X className="h-4 w-4" /> Mark Unpaid</> : <><Check className="h-4 w-4" /> Mark Paid</>}
           </button>
           <button
             onClick={() => share(publicUrl, `Invoice ${invoice.number}`)}
-            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+            className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)]"
           >
-            <Link2 className="h-4 w-4 text-[var(--brand-blue)]" /> <span className="hidden sm:inline">Client </span>Link
+            <Link2 className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> <span className="hidden sm:inline">Client </span>Link
           </button>
           <button
             onClick={() => {
@@ -228,34 +258,34 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
               const fname = `${invoice.client?.name || "Client"} ${invoice.number}`;
               downloadElementAsPdf(pdfRef.current, fname);
             }}
-            className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium"
+            className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)]"
           >
-            <Download className="h-4 w-4 text-[var(--brand-blue)]" /> PDF
+            <Download className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> PDF
           </button>
-          <button className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 bg-white"><MoreHorizontal className="h-4 w-4" /></button>
+          <button className="grid h-9 w-9 place-items-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary)]"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
       <EditInvoiceModal invoice={invoice} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => { onChanged(); setEditOpen(false); }} />
-      <div ref={pdfRef} className="pdf-print rounded-xl border border-slate-200 bg-white pt-1 pb-5 px-5 shadow-sm print:border-0 print:shadow-none">
+      <div ref={pdfRef} className="pdf-print rounded-[20px] border border-[var(--dash-border)] bg-white px-[26px] pb-[26px] pt-1 print:border-0 print:shadow-none" style={cardShadow}>
         <DocCardHeader title="INVOICE" number={invoice.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
-          <div className="space-y-1 text-slate-700">
+          <div className="space-y-1 text-[var(--dash-text-secondary)]">
             <div>4008 Destination Dr</div>
             <div>Osprey, FL 34229</div>
             <div>(561) 376-2428</div>
           </div>
-          <div className="space-y-1 text-slate-700 sm:text-right">
-            <div><span className="font-semibold text-slate-900">Date:</span> {fmtDate(invoice.invoice_date)}</div>
-            <div><span className="font-semibold text-slate-900">Due Date:</span> {fmtDate(invoice.due_date)}</div>
-            <div><span className="font-semibold text-slate-900">Status:</span> <span className={isPaid ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>{isPaid ? "PAID" : "UNPAID"}</span></div>
+          <div className="space-y-1 text-[var(--dash-text-secondary)] sm:text-right">
+            <div><span className="font-semibold text-[var(--dash-text)]">Date:</span> {fmtDate(invoice.invoice_date)}</div>
+            <div><span className="font-semibold text-[var(--dash-text)]">Due Date:</span> {fmtDate(invoice.due_date)}</div>
+            <div><span className="font-semibold text-[var(--dash-text)]">Status:</span> <span className="font-bold" style={{ color: isPaid ? "var(--dash-green)" : "var(--dash-badge-unpaid-text)" }}>{isPaid ? "PAID" : "UNPAID"}</span></div>
           </div>
         </div>
 
-        <hr className="my-4 border-slate-100" />
+        <hr className="my-4 border-[var(--dash-border)]" />
         <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div>
-            <div className="font-bold text-slate-900">Bill To:</div>
-            <div className="mt-1 space-y-0.5 text-slate-700">
+            <div className="font-bold text-[var(--dash-text)]">Bill To:</div>
+            <div className="mt-1 space-y-0.5 text-[var(--dash-text-secondary)]">
               <div>{invoice.client?.name}</div>
               {invoice.client?.address && <div>{invoice.client.address}</div>}
               {invoice.client?.city && <div>{invoice.client.city}</div>}
@@ -264,36 +294,36 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             </div>
           </div>
           <div>
-            <div className="font-bold text-slate-900">Service Address:</div>
-            <div className="mt-1 space-y-0.5 text-slate-700">
+            <div className="font-bold text-[var(--dash-text)]">Service Address:</div>
+            <div className="mt-1 space-y-0.5 text-[var(--dash-text-secondary)]">
               <div>{invoice.client?.address || "—"}</div>
               <div>{invoice.client?.city || ""}</div>
             </div>
           </div>
         </div>
         <div className="mt-6">
-          <div className="mb-2 font-bold text-slate-900">Requested Services</div>
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className="mb-2 font-bold text-[var(--dash-text)]">Requested Services</div>
+          <div className="overflow-x-auto rounded-[11px] border border-[var(--dash-border-table)]">
             <table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-[var(--doc-blue)] text-white">
+              <thead style={{ background: "var(--dash-navy)" }} className="text-white">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">SERVICE</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">DESCRIPTION</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold">QTD</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold">UNIT PRICE</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold">TOTAL</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Service</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Description</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Qty</th>
+                  <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[.07em]">Unit Price</th>
+                  <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[.07em]">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((it, i) => (
-                  <tr key={i} className="border-t border-slate-100 align-top">
-                    <td className="px-4 py-3 font-bold text-slate-900">
-                      <div className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[var(--doc-blue)]" /> {it.service || "—"}</div>
+                  <tr key={i} className="border-t border-[var(--dash-border-table)] align-top">
+                    <td className="px-4 py-3 font-bold text-[var(--dash-text)]">
+                      <div className="flex items-center gap-2"><Wrench className="h-4 w-4" style={{ color: "var(--dash-water-icon)" }} /> {it.service || "—"}</div>
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{it.description}</td>
-                    <td className="px-4 py-3 text-slate-700">{it.qty}</td>
-                    <td className="px-4 py-3 text-right text-slate-700">{fmt(it.rate)}</td>
-                    <td className="px-4 py-3 text-right text-slate-700">{fmt(it.amount)}</td>
+                    <td className="px-4 py-3 text-[var(--dash-text-secondary)]">{it.description}</td>
+                    <td className="px-4 py-3 text-[var(--dash-text-secondary)]">{it.qty}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(it.rate)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(it.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -302,8 +332,8 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
         <div className="mt-4 flex justify-end">
           <div className="w-full max-w-xs space-y-2 text-sm sm:w-72">
-            <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(invoice.subtotal)}</span></div>
-            <div className="flex justify-between border-t pt-2 text-base"><span className="font-semibold">Total</span><span className={`font-extrabold ${isPaid ? "text-green-600" : "text-slate-900"}`}>{fmt(invoice.total)}</span></div>
+            <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(invoice.subtotal)}</span></div>
+            <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base"><span className="font-semibold">Total</span><span className="font-extrabold tabular-nums" style={{ color: isPaid ? "var(--dash-green)" : "var(--dash-text)" }}>{fmt(invoice.total)}</span></div>
           </div>
         </div>
       </div>
@@ -369,15 +399,15 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
     <Modal open={open} onClose={onClose} title="New Invoice" maxWidth="max-w-3xl">
       {clients.length === 0 ? (
         <div className="py-8 text-center">
-          <p className="text-slate-600">You need to create a client first.</p>
-          <Link to="/clientes" onClick={onClose} className="mt-3 inline-block text-sm font-semibold text-[var(--brand-blue)] hover:underline">Go to Clients →</Link>
+          <p className="text-[var(--dash-text-secondary)]">You need to create a client first.</p>
+          <Link to="/clientes" onClick={onClose} className="mt-3 inline-block text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)] hover:underline">Go to Clients →</Link>
         </div>
       ) : (
         <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4">
           {estimates.length > 0 && (
             <div>
-              <label className="text-sm font-semibold text-slate-700">Create from Estimate (optional)</label>
-              <select value={estimateId} onChange={(e) => applyEstimate(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Create from Estimate (optional)</label>
+              <select value={estimateId} onChange={(e) => applyEstimate(e.target.value)} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
                 <option value="">— None —</option>
                 {estimates.map((e) => <option key={e.id} value={e.id}>{e.number} — {e.client?.name} ({fmt(e.total)})</option>)}
               </select>
@@ -385,19 +415,19 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
           )}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-semibold text-slate-700">Client *</label>
-              <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Client *</label>
+              <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
                 <option value="">Select...</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-sm font-semibold text-slate-700">Due Date</label>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Due Date</label>
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="text-sm font-semibold text-slate-700">Status</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Status</label>
+              <select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
                 <option value="UNPAID">UNPAID</option>
                 <option value="PAID">PAID</option>
               </select>
@@ -406,17 +436,17 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-700">Items</label>
-              <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Add item</button>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Items</label>
+              <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)]">+ Add item</button>
             </div>
             <div className="space-y-2">
               {items.map((it, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2">
-                  <input className="col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
-                  <input className="col-span-4 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
-                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
-                  <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
-                  <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-md border border-slate-200 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                  <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
+                  <input className="col-span-4 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                  <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
+                  <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
+                  <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-[10px] border border-[var(--dash-border-input)] text-[var(--dash-text-muted)] hover:text-[var(--dash-red)]"><Trash2 className="h-4 w-4" /></button>
                 </div>
               ))}
             </div>
@@ -424,14 +454,14 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
 
           <div className="flex justify-end">
             <div className="w-72 space-y-1.5 text-sm">
-              <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
-              <div className="flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="text-[var(--brand-blue)]">{fmt(total)}</span></div>
+              <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
+              <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base font-bold"><span>Total</span><span className="tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(total)}</span></div>
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
-            <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            <button type="button" onClick={onClose} className="rounded-[10px] border border-[var(--dash-border)] px-4 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">Cancel</button>
+            <button disabled={mut.isPending} className="rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
               {mut.isPending ? "Saving..." : "Create Invoice"}
             </button>
           </div>
@@ -487,12 +517,12 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
       <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-semibold text-slate-700">Due Date</label>
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Due Date</label>
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-sm font-semibold text-slate-700">Status</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Status</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
               <option value="UNPAID">UNPAID</option>
               <option value="PAID">PAID</option>
             </select>
@@ -501,17 +531,17 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <label className="text-sm font-semibold text-slate-700">Items</label>
-            <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--brand-blue)]">+ Add item</button>
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Items</label>
+            <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)]">+ Add item</button>
           </div>
           <div className="space-y-2">
             {items.map((it, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2">
-                <input className="col-span-3 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
-                <input className="col-span-4 rounded-md border border-slate-200 px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
-                <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
-                <input className="col-span-2 rounded-md border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
-                <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-md border border-slate-200 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
+                <input className="col-span-4 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
+                <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
+                <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-[10px] border border-[var(--dash-border-input)] text-[var(--dash-text-muted)] hover:text-[var(--dash-red)]"><Trash2 className="h-4 w-4" /></button>
               </div>
             ))}
           </div>
@@ -519,14 +549,14 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
 
         <div className="flex justify-end">
           <div className="w-72 space-y-1.5 text-sm">
-            <div className="flex justify-between text-slate-700"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
-            <div className="flex justify-between border-t pt-2 text-base font-bold"><span>Total</span><span className="text-[var(--brand-blue)]">{fmt(total)}</span></div>
+            <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
+            <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base font-bold"><span>Total</span><span className="tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(total)}</span></div>
           </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
-          <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          <button type="button" onClick={onClose} className="rounded-[10px] border border-[var(--dash-border)] px-4 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">Cancel</button>
+          <button disabled={mut.isPending} className="rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
             {mut.isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>

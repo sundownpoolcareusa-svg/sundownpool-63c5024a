@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLogo } from "@/components/AppLogo";
 import { toast } from "sonner";
+import { Lock } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -35,22 +36,27 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--brand-navy)]">
+    <div className="dash min-h-screen" style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))" }}>
       <div className="grid min-h-screen place-items-center px-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
+        <div className="w-full max-w-md rounded-[22px] bg-white p-8" style={{ boxShadow: "0 30px 90px rgba(10,20,40,.4)" }}>
           <div className="flex justify-center p-4"><AppLogo className="h-36" /></div>
-          <h1 className="mt-6 text-center text-2xl font-extrabold text-slate-900">Sign in</h1>
-          <p className="mt-1 text-center text-sm text-slate-500">Sign in to manage your clients</p>
+          <div className="flex items-center justify-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-full" style={{ background: "var(--dash-water-bg)" }}>
+              <Lock className="h-4 w-4" style={{ color: "var(--dash-water-icon)" }} />
+            </span>
+            <h1 className="text-center text-2xl font-extrabold text-[var(--dash-text)]">Sign in</h1>
+          </div>
+          <p className="mt-1 text-center text-sm text-[var(--dash-text-muted)]">Sign in to manage your clients</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div>
-              <label className="text-sm font-semibold text-slate-700">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Email</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="text-sm font-semibold text-slate-700">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Password</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
             </div>
-            <button disabled={loading} className="w-full rounded-md bg-[var(--brand-blue)] py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+            <button disabled={loading} className="w-full rounded-[11px] bg-[var(--dash-navy)] py-2.5 text-sm font-semibold text-white disabled:opacity-50">
               {loading ? "Please wait..." : "Sign in"}
             </button>
           </form>

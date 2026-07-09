@@ -5,9 +5,9 @@ import { AppLogo } from "./AppLogo";
 import { supabase } from "@/integrations/supabase/client";
 
 const tabs = [
-  { to: "/invoice", label: "INVOICES", icon: FileText },
-  { to: "/clientes", label: "CLIENTS", icon: Users },
-  { to: "/estimativa", label: "ESTIMATES", icon: ClipboardList },
+  { to: "/invoice", label: "Invoices", icon: FileText },
+  { to: "/clientes", label: "Clients", icon: Users },
+  { to: "/estimativa", label: "Estimates", icon: ClipboardList },
 ] as const;
 
 export function AppHeader() {
@@ -39,20 +39,20 @@ export function AppHeader() {
   const init = (email[0] || "U").toUpperCase();
 
   return (
-    <header className="bg-[var(--brand-navy)] px-4 py-3 sm:px-6 print:hidden">
-      <div className="flex items-center justify-between gap-3 lg:gap-6">
+    <header className="dash sticky top-0 z-30 border-b border-[var(--dash-border)] bg-white/82 backdrop-blur-[14px] print:hidden">
+      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-4 px-4 py-2.5 sm:px-[22px]">
         <div className="flex min-w-0 items-center gap-2">
           <button
             aria-label="Menu"
             onClick={() => setMobileOpen((v) => !v)}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-white hover:bg-white/10 lg:hidden"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] lg:hidden"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
-          <AppLogo className="h-12 sm:h-14 lg:h-18" />
+          <AppLogo className="h-[42px]" />
         </div>
 
-        <nav className="hidden items-end gap-2 lg:flex">
+        <nav className="hidden items-center gap-[5px] rounded-[14px] bg-[#EEF2F7] p-[5px] lg:mx-auto lg:flex">
           {tabs.map((t) => {
             const active = pathname.startsWith(t.to);
             const Icon = t.icon;
@@ -60,34 +60,43 @@ export function AppHeader() {
               <Link
                 key={t.to}
                 to={t.to}
-                className={`flex items-center gap-3 rounded-t-lg px-6 py-4 text-sm font-bold tracking-wide transition-colors xl:px-8 ${
-                  active
-                    ? "bg-white text-[var(--brand-blue)] shadow"
-                    : "bg-white/5 text-white hover:bg-white/10"
-                }`}
+                className="flex items-center gap-2 rounded-[11px] px-[15px] py-[9px] text-sm font-semibold transition-all"
+                style={{
+                  color: active ? "var(--dash-navy)" : "var(--dash-text-secondary-2)",
+                  background: active ? "#fff" : "transparent",
+                  boxShadow: active ? "0 1px 4px rgba(12,42,77,.16)" : "none",
+                }}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-[17px] w-[17px]" />
                 {t.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-3 sm:gap-5">
-          <button className="hidden text-white/90 hover:text-white sm:block"><Search className="h-5 w-5" /></button>
-          <button className="hidden text-white/90 hover:text-white sm:block"><Bell className="h-5 w-5" /></button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button className="hidden h-[38px] w-[38px] items-center justify-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary-2)] sm:flex">
+            <Search className="h-[17px] w-[17px]" />
+          </button>
+          <button className="relative hidden h-[38px] w-[38px] items-center justify-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary-2)] sm:flex">
+            <Bell className="h-[17px] w-[17px]" />
+            <span className="absolute right-[9px] top-2 h-[7px] w-[7px] rounded-full border-[1.5px] border-white bg-[var(--dash-orange)]" />
+          </button>
           <div className="relative" ref={ref}>
-            <button onClick={() => setOpen((v) => !v)} className="flex items-center gap-2 text-white">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--brand-blue)] text-sm font-bold uppercase sm:h-10 sm:w-10">{init}</div>
-              <div className="hidden leading-tight text-left sm:block">
-                <div className="text-sm font-semibold capitalize">{display}</div>
-                <div className="text-xs text-white/70">Admin</div>
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="flex items-center gap-2 rounded-xl border border-[var(--dash-border)] bg-white py-1 pl-1 pr-2.5"
+            >
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-[var(--dash-navy)] text-sm font-bold uppercase text-white">{init}</div>
+              <div className="hidden text-left leading-tight sm:block">
+                <div className="text-[13px] font-bold capitalize text-[var(--dash-text)]">{display}</div>
+                <div className="text-[11px] font-medium text-[var(--dash-text-muted-2)]">Admin</div>
               </div>
-              <ChevronDown className="hidden h-4 w-4 text-white/70 sm:block" />
+              <ChevronDown className="hidden h-4 w-4 text-[var(--dash-text-muted-2)] sm:block" />
             </button>
             {open && (
-              <div className="absolute right-0 top-full z-30 mt-2 w-48 overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg">
-                <button onClick={logout} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50">
+              <div className="absolute right-0 top-full z-30 mt-2 w-48 overflow-hidden rounded-md border border-[var(--dash-border)] bg-white shadow-lg">
+                <button onClick={logout} className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
                   <LogOut className="h-4 w-4" /> Sign out
                 </button>
               </div>
@@ -97,7 +106,7 @@ export function AppHeader() {
       </div>
 
       {mobileOpen && (
-        <nav className="mt-3 flex flex-col gap-1 lg:hidden">
+        <nav className="flex flex-col gap-1 border-t border-[var(--dash-border)] p-3 lg:hidden">
           {tabs.map((t) => {
             const active = pathname.startsWith(t.to);
             const Icon = t.icon;
@@ -105,9 +114,11 @@ export function AppHeader() {
               <Link
                 key={t.to}
                 to={t.to}
-                className={`flex items-center gap-3 rounded-md px-4 py-3 text-sm font-bold tracking-wide ${
-                  active ? "bg-white text-[var(--brand-blue)]" : "bg-white/5 text-white hover:bg-white/10"
-                }`}
+                className="flex items-center gap-3 rounded-md px-4 py-3 text-sm font-semibold"
+                style={{
+                  color: active ? "var(--dash-navy)" : "var(--dash-text-secondary-2)",
+                  background: active ? "#EEF2F7" : "transparent",
+                }}
               >
                 <Icon className="h-5 w-5" />
                 {t.label}

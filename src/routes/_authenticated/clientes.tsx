@@ -28,6 +28,8 @@ export const Route = createFileRoute("/_authenticated/clientes")({
   component: ClientesPage,
 });
 
+const cardShadow = { boxShadow: "0 1px 2px rgba(20,36,60,.03)" };
+
 const avatarColors = [
   "bg-sky-200 text-sky-800", "bg-orange-200 text-orange-800", "bg-purple-200 text-purple-800",
   "bg-yellow-200 text-yellow-800", "bg-pink-200 text-pink-800", "bg-green-200 text-green-800",
@@ -77,68 +79,71 @@ function ClientesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="dash min-h-screen bg-[var(--dash-bg)]">
       <AppHeader />
       <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12">
         <aside className="space-y-4 lg:col-span-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-extrabold text-slate-900">Clients</h1>
-            <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-md bg-[var(--brand-blue)] px-3 py-2 text-sm font-semibold text-white shadow hover:opacity-90">
+            <h1 className="text-[20px] font-extrabold text-[var(--dash-text)]">Clients</h1>
+            <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-3 py-2 text-sm font-semibold text-white hover:opacity-90">
               <Plus className="h-4 w-4" /> New Client
             </button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clients..." className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-[var(--dash-text-muted)]" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clients..." className="w-full rounded-[11px] border border-[var(--dash-border-input)] bg-white py-2 pl-9 pr-3 text-sm" />
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="border-b pb-2 font-bold text-slate-900">Summary</div>
+          <div className="rounded-[18px] border border-[var(--dash-border)] bg-white p-[18px]" style={cardShadow}>
+            <div className="border-b border-[var(--dash-border)] pb-2 font-bold text-[var(--dash-text)]">Summary</div>
             <div className="mt-3 space-y-2.5 text-sm">
-              <div className="flex justify-between"><span className="text-slate-600">Total Clients</span><span className="font-bold text-slate-900">{total}</span></div>
-              <div className="flex justify-between"><span className="text-slate-600">Active Clients</span><span className="font-bold text-green-600">{ativos}</span></div>
-              <div className="flex justify-between"><span className="text-slate-600">New this month</span><span className="font-bold text-[var(--brand-blue)]">{novos}</span></div>
-              <div className="flex justify-between"><span className="text-slate-600">Services this month</span><span className="font-bold text-amber-600">0</span></div>
+              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Total Clients</span><span className="font-bold tabular-nums text-[var(--dash-text)]">{total}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Active Clients</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-green)" }}>{ativos}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">New this month</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-navy)" }}>{novos}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Services this month</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-orange)" }}>0</span></div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="font-bold text-slate-900">Upcoming Services</div>
-            <p className="mt-3 text-sm text-slate-500">No scheduled services.</p>
+          <div className="rounded-[18px] border border-[var(--dash-border)] bg-white p-[18px]" style={cardShadow}>
+            <div className="font-bold text-[var(--dash-text)]">Upcoming Services</div>
+            <p className="mt-3 text-sm text-[var(--dash-text-muted)]">No scheduled services.</p>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-sky-50 p-4">
+          <div
+            className="rounded-[18px] border border-[var(--dash-border)] p-[18px]"
+            style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))", ...cardShadow }}
+          >
             <div className="flex items-start gap-3">
-              <Smartphone className="h-5 w-5 text-[var(--brand-blue)]" />
+              <Smartphone className="h-5 w-5 text-white" />
               <div>
-                <div className="font-bold text-slate-900">Client Portal</div>
-                <p className="mt-1 text-xs text-slate-600">Your clients can schedule services, view history and receive invoices.</p>
+                <div className="font-bold text-white">Client Portal</div>
+                <p className="mt-1 text-xs text-white/80">Your clients can schedule services, view history and receive invoices.</p>
               </div>
             </div>
-            <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-md border border-[var(--brand-blue)]/30 bg-white py-2 text-sm font-semibold text-[var(--brand-blue)]">
+            <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-[11px] border border-white/30 bg-white/10 py-2 text-sm font-semibold text-white hover:bg-white/20">
               <Share2 className="h-4 w-4" /> Share Link
             </button>
           </div>
         </aside>
 
-        <section className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 lg:col-span-9">
+        <section className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4 sm:p-6 lg:col-span-9" style={cardShadow}>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">Client List</h2>
+            <h2 className="text-xl font-extrabold text-[var(--dash-text)] sm:text-2xl">Client List</h2>
             <div className="flex flex-wrap items-center gap-2">
-              <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">All statuses <ChevronDown className="h-4 w-4" /></button>
-              <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"><Filter className="h-4 w-4 text-[var(--brand-blue)]" /> Filter</button>
-              <button className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"><Upload className="h-4 w-4 text-[var(--brand-blue)]" /> Export</button>
+              <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]">All statuses <ChevronDown className="h-4 w-4" /></button>
+              <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Filter className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Filter</button>
+              <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Upload className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Export</button>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="py-12 text-center text-slate-500">Loading...</div>
+            <div className="py-12 text-center text-[var(--dash-text-muted)]">Loading...</div>
           ) : filtered.length === 0 ? (
-            <div className="mt-8 rounded-xl border-2 border-dashed border-slate-200 py-16 text-center">
-              <Users className="mx-auto h-10 w-10 text-slate-300" />
-              <p className="mt-3 font-semibold text-slate-700">No clients registered</p>
-              <p className="text-sm text-slate-500">Clique em "New Client" para começar.</p>
-              <button onClick={() => setOpen(true)} className="mt-4 inline-flex items-center gap-2 rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white">
+            <div className="mt-8 rounded-[18px] border-2 border-dashed border-[var(--dash-border)] py-16 text-center">
+              <Users className="mx-auto h-10 w-10 text-[var(--dash-text-muted)]" />
+              <p className="mt-3 font-semibold text-[var(--dash-text-secondary)]">No clients registered</p>
+              <p className="text-sm text-[var(--dash-text-muted)]">Clique em "New Client" para começar.</p>
+              <button onClick={() => setOpen(true)} className="mt-4 inline-flex items-center gap-2 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white">
                 <Plus className="h-4 w-4" /> Add first client
               </button>
             </div>
@@ -146,40 +151,48 @@ function ClientesPage() {
             <>
               <div className="-mx-4 mt-5 overflow-x-auto sm:mx-0"><table className="w-full min-w-[640px] text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left text-slate-500">
-                    <th className="py-3 font-medium">Client</th>
-                    <th className="py-3 font-medium">Contact</th>
-                    <th className="py-3 font-medium">Address</th>
-                    <th className="py-3 font-medium">Registered</th>
-                    <th className="py-3 font-medium">Status</th>
-                    <th className="py-3 font-medium">Actions</th>
+                  <tr className="border-b border-[var(--dash-border-table)] text-left text-[var(--dash-text-muted)]">
+                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Client</th>
+                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Contact</th>
+                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Address</th>
+                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Registered</th>
+                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Status</th>
+                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((c, idx) => (
-                    <tr key={c.id} className="border-b border-slate-100">
+                    <tr key={c.id} className="border-b border-[var(--dash-border-table)]">
                       <td className="py-4">
                         <div className="flex items-center gap-3">
                           <div className={`grid h-10 w-10 place-items-center rounded-full text-xs font-bold ${avatarColors[idx % avatarColors.length]}`}>
                             {initials(c.name)}
                           </div>
                           <div className="leading-tight">
-                            <div className="font-bold text-slate-900">{c.name}</div>
-                            <div className="text-xs text-slate-500">{c.client_type}</div>
+                            <div className="font-bold text-[var(--dash-text)]">{c.name}</div>
+                            <div className="text-xs text-[var(--dash-text-muted)]">{c.client_type}</div>
                           </div>
                         </div>
                       </td>
                       <td className="py-4">
-                        <div className="text-slate-900">{c.phone ? formatPhone(c.phone) : "—"}</div>
-                        <div className="text-xs text-[var(--brand-blue)]">{c.email || "—"}</div>
+                        <div className="text-[var(--dash-text)]">{c.phone ? formatPhone(c.phone) : "—"}</div>
+                        <div className="text-xs text-[var(--dash-link)]">{c.email || "—"}</div>
                       </td>
                       <td className="py-4">
-                        <div className="text-slate-900">{(c as ClientFull).address || "—"}</div>
-                        <div className="text-xs text-slate-500">{c.city || ""}</div>
+                        <div className="text-[var(--dash-text)]">{(c as ClientFull).address || "—"}</div>
+                        <div className="text-xs text-[var(--dash-text-muted)]">{c.city || ""}</div>
                       </td>
-                      <td className="py-4 text-slate-700">{fmtDate(c.created_at)}</td>
+                      <td className="py-4 text-[var(--dash-text-secondary)]">{fmtDate(c.created_at)}</td>
                       <td className="py-4">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${c.status === "Ativo" ? "bg-green-100 text-green-700" : "bg-slate-200 text-slate-600"}`}>{c.status}</span>
+                        <span
+                          className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                          style={{
+                            background: c.status === "Ativo" ? "var(--dash-badge-paid-bg)" : "var(--dash-border-table)",
+                            color: c.status === "Ativo" ? "var(--dash-badge-paid-text)" : "var(--dash-text-muted-2)",
+                          }}
+                        >
+                          {c.status}
+                        </span>
                       </td>
                       <td className="py-4">
                         <div className="flex items-center gap-3">
@@ -187,7 +200,8 @@ function ClientesPage() {
                             type="button"
                             onClick={() => setViewClient(c as ClientFull)}
                             title="View details"
-                            className="text-[var(--brand-blue)] hover:opacity-70"
+                            className="hover:opacity-70"
+                            style={{ color: "var(--dash-navy)" }}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -195,7 +209,8 @@ function ClientesPage() {
                             type="button"
                             onClick={() => setEditClient(c as ClientFull)}
                             title="Edit"
-                            className="text-[var(--brand-blue)] hover:opacity-70"
+                            className="hover:opacity-70"
+                            style={{ color: "var(--dash-navy)" }}
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -203,7 +218,8 @@ function ClientesPage() {
                             type="button"
                             onClick={() => setDeleteClient(c as ClientFull)}
                             title="Delete"
-                            className="text-red-500 hover:opacity-70"
+                            className="hover:opacity-70"
+                            style={{ color: "var(--dash-red)" }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -214,11 +230,11 @@ function ClientesPage() {
                 </tbody>
               </table></div>
               <div className="mt-5 flex items-center justify-between text-sm">
-                <div className="text-slate-500">Showing {filtered.length} of {total} clients</div>
+                <div className="text-[var(--dash-text-muted)]">Showing {filtered.length} of {total} clients</div>
                 <div className="flex items-center gap-1">
-                  <button className="grid h-8 w-8 place-items-center rounded border border-slate-200"><ChevronLeft className="h-4 w-4" /></button>
-                  <button className="grid h-8 min-w-8 place-items-center rounded border border-[var(--brand-blue)] bg-[var(--brand-blue)] px-2 text-white">1</button>
-                  <button className="grid h-8 w-8 place-items-center rounded border border-slate-200"><ChevronRight className="h-4 w-4" /></button>
+                  <button className="grid h-8 w-8 place-items-center rounded-[8px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"><ChevronLeft className="h-4 w-4" /></button>
+                  <button className="grid h-8 min-w-8 place-items-center rounded-[8px] px-2 text-white" style={{ background: "var(--dash-navy)", borderColor: "var(--dash-navy)" }}>1</button>
+                  <button className="grid h-8 w-8 place-items-center rounded-[8px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"><ChevronRight className="h-4 w-4" /></button>
                 </div>
               </div>
             </>
@@ -253,12 +269,12 @@ function ClientesPage() {
               <Row label="Zipcode" value={viewClient.zip || "—"} />
             </div>
             <Row label="Service days" value={(viewClient.service_days && viewClient.service_days.length) ? viewClient.service_days.join(", ") : "—"} />
-            <Row label="Valor mensal" value={fmt(Number(viewClient.monthly_value || 0))} />
+            <Row label="Monthly value" value={fmt(Number(viewClient.monthly_value || 0))} />
             <Row label="Notes" value={viewClient.notes || "—"} />
             <Row label="Registered" value={fmtDate(viewClient.created_at)} />
             {(viewClient.pool_photos && viewClient.pool_photos.length > 0) && (
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fotos da piscina</div>
+                <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted)]">Pool photos</div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {viewClient.pool_photos.map((p) => <PhotoThumb key={p} path={p} />)}
                 </div>
@@ -266,7 +282,7 @@ function ClientesPage() {
             )}
             {(viewClient.equipment_photos && viewClient.equipment_photos.length > 0) && (
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fotos dos equipamentos</div>
+                <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted)]">Equipment photos</div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {viewClient.equipment_photos.map((p) => <PhotoThumb key={p} path={p} />)}
                 </div>
@@ -274,7 +290,7 @@ function ClientesPage() {
             )}
             <ClientInvoicesHistory clientId={viewClient.id} />
             <div className="flex justify-end pt-2">
-              <button onClick={() => setViewClient(null)} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Close</button>
+              <button onClick={() => setViewClient(null)} className="rounded-[10px] border border-[var(--dash-border)] px-4 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">Close</button>
             </div>
           </div>
         )}
@@ -283,15 +299,16 @@ function ClientesPage() {
       <Modal open={!!deleteClient} onClose={() => setDeleteClient(null)} title="Delete client" maxWidth="max-w-md">
         {deleteClient && (
           <div className="space-y-4">
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-[var(--dash-text-secondary)]">
               Are you sure you want to delete <b>{deleteClient.name}</b>? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setDeleteClient(null)} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
+              <button onClick={() => setDeleteClient(null)} className="rounded-[10px] border border-[var(--dash-border)] px-4 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">Cancel</button>
               <button
                 disabled={delMut.isPending}
                 onClick={() => delMut.mutate(deleteClient.id)}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                className="rounded-[10px] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                style={{ background: "var(--dash-red)" }}
               >
                 {delMut.isPending ? "Deleting..." : "Delete"}
               </button>
@@ -306,8 +323,8 @@ function ClientesPage() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="text-slate-900">{value}</div>
+      <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted)]">{label}</div>
+      <div className="text-[var(--dash-text)]">{value}</div>
     </div>
   );
 }
@@ -410,21 +427,21 @@ function ClientFormModal({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-semibold text-slate-700">Type</label>
-            <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Type</label>
+            <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
               <option>Residential</option><option>Commercial</option>
             </select>
           </div>
           <div>
-            <label className="text-sm font-semibold text-slate-700">Status</label>
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm">
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Status</label>
+            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
               <option>Ativo</option><option>Inativo</option>
             </select>
           </div>
         </div>
         <div>
-          <label className="text-sm font-semibold text-slate-700">Recurring Service Days</label>
-          <p className="text-xs text-slate-500">Select one or more days of the week</p>
+          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Recurring Service Days</label>
+          <p className="text-xs text-[var(--dash-text-muted)]">Select one or more days of the week</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {WEEKDAYS.map((d) => {
               const active = form.service_days.includes(d.v);
@@ -433,7 +450,12 @@ function ClientFormModal({
                   type="button"
                   key={d.v}
                   onClick={() => toggleDay(d.v)}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${active ? "border-[var(--brand-blue)] bg-[var(--brand-blue)] text-white" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
+                  className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+                  style={{
+                    borderColor: active ? "var(--dash-navy)" : "var(--dash-border)",
+                    background: active ? "var(--dash-navy)" : "#fff",
+                    color: active ? "#fff" : "var(--dash-text-secondary)",
+                  }}
                 >
                   {d.label}
                 </button>
@@ -442,32 +464,32 @@ function ClientFormModal({
           </div>
         </div>
         <div>
-          <label className="text-sm font-semibold text-slate-700">Valor mensal da piscina (USD)</label>
+          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Monthly pool value (USD)</label>
           <div className="relative mt-1">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">$</span>
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[var(--dash-text-muted)]">$</span>
             <input
               type="number" min="0" step="0.01"
               value={form.monthly_value}
               onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
-              className="w-full rounded-md border border-slate-200 py-2 pl-7 pr-3 text-sm"
+              className="w-full rounded-[10px] border border-[var(--dash-border-input)] py-2 pl-7 pr-3 text-sm"
             />
           </div>
         </div>
         <PhotoUploader
-          label="Fotos da piscina"
+          label="Pool photos"
           value={form.pool_photos}
           onChange={(v) => setForm({ ...form, pool_photos: v })}
           folder={`${userId}/pool`}
         />
         <PhotoUploader
-          label="Fotos dos equipamentos"
+          label="Equipment photos"
           value={form.equipment_photos}
           onChange={(v) => setForm({ ...form, equipment_photos: v })}
           folder={`${userId}/equipment`}
         />
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold">Cancel</button>
-          <button disabled={mut.isPending} className="rounded-md bg-[var(--brand-blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          <button type="button" onClick={onClose} className="rounded-[10px] border border-[var(--dash-border)] px-4 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">Cancel</button>
+          <button disabled={mut.isPending} className="rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
             {mut.isPending ? "Saving..." : editing ? "Update Client" : "Save Client"}
           </button>
         </div>
@@ -479,8 +501,8 @@ function ClientFormModal({
 function Field({ label, value, onChange, type = "text", required = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean }) {
   return (
     <div>
-      <label className="text-sm font-semibold text-slate-700">{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm" />
+      <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">{label}</label>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
     </div>
   );
 }
@@ -503,24 +525,24 @@ function ClientInvoicesHistory({ clientId }: { clientId: string }) {
   const totalOpen = invoices.filter((i) => i.status !== "PAID").reduce((s, i) => s + Number(i.total || 0), 0);
 
   return (
-    <div className="mt-2 border-t pt-4">
+    <div className="mt-2 border-t border-[var(--dash-border)] pt-4">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-900">Histórico de Invoices</h3>
-        <div className="text-xs text-slate-500">
-          {invoices.length} total • <span className="text-green-600 font-semibold">{fmt(totalPaid)} paid</span> • <span className="text-amber-600 font-semibold">{fmt(totalOpen)} open</span>
+        <h3 className="text-sm font-bold text-[var(--dash-text)]">Invoice History</h3>
+        <div className="text-xs text-[var(--dash-text-muted)]">
+          {invoices.length} total • <span className="font-semibold tabular-nums" style={{ color: "var(--dash-green)" }}>{fmt(totalPaid)} paid</span> • <span className="font-semibold tabular-nums" style={{ color: "var(--dash-badge-unpaid-text)" }}>{fmt(totalOpen)} open</span>
         </div>
       </div>
       {isLoading ? (
-        <div className="py-4 text-center text-xs text-slate-500">Loading...</div>
+        <div className="py-4 text-center text-xs text-[var(--dash-text-muted)]">Loading...</div>
       ) : invoices.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-200 py-6 text-center text-xs text-slate-500">
-          Nenhuma invoice ainda para este cliente.
+        <div className="rounded-[10px] border border-dashed border-[var(--dash-border)] py-6 text-center text-xs text-[var(--dash-text-muted)]">
+          No invoices yet for this client.
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-[var(--dash-border-table)] text-left text-[var(--dash-text-muted)]">
                 <th className="py-2 font-medium">Number</th>
                 <th className="py-2 font-medium">Date</th>
                 <th className="py-2 font-medium">Due</th>
@@ -531,20 +553,24 @@ function ClientInvoicesHistory({ clientId }: { clientId: string }) {
             </thead>
             <tbody>
               {invoices.map((inv) => (
-                <tr key={inv.id} className="border-b border-slate-100">
-                  <td className="py-2 font-semibold text-slate-900">{inv.number}</td>
-                  <td className="py-2 text-slate-700">{fmtDate(inv.invoice_date)}</td>
-                  <td className="py-2 text-slate-700">{fmtDate(inv.due_date)}</td>
+                <tr key={inv.id} className="border-b border-[var(--dash-border-table)]">
+                  <td className="py-2 font-semibold text-[var(--dash-text)]">{inv.number}</td>
+                  <td className="py-2 text-[var(--dash-text-secondary)]">{fmtDate(inv.invoice_date)}</td>
+                  <td className="py-2 text-[var(--dash-text-secondary)]">{fmtDate(inv.due_date)}</td>
                   <td className="py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                      inv.status === "PAID" ? "bg-green-100 text-green-700" :
-                      inv.status === "OVERDUE" ? "bg-red-100 text-red-700" :
-                      "bg-amber-100 text-amber-700"
-                    }`}>{inv.status}</span>
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                      style={{
+                        background: inv.status === "PAID" ? "var(--dash-badge-paid-bg)" : inv.status === "OVERDUE" ? "var(--dash-badge-expired-bg)" : "var(--dash-badge-unpaid-bg)",
+                        color: inv.status === "PAID" ? "var(--dash-badge-paid-text)" : inv.status === "OVERDUE" ? "var(--dash-badge-expired-text)" : "var(--dash-badge-unpaid-text)",
+                      }}
+                    >
+                      {inv.status}
+                    </span>
                   </td>
-                  <td className="py-2 text-right font-semibold text-slate-900">{fmt(Number(inv.total || 0))}</td>
+                  <td className="py-2 text-right font-semibold tabular-nums text-[var(--dash-text)]">{fmt(Number(inv.total || 0))}</td>
                   <td className="py-2 text-right">
-                    <Link to="/invoice" className="text-[var(--brand-blue)] hover:underline">Open</Link>
+                    <Link to="/invoice" className="text-[var(--dash-link)] hover:text-[var(--dash-link-hover)] hover:underline">Open</Link>
                   </td>
                 </tr>
               ))}
