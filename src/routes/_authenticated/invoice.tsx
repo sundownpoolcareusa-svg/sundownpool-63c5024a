@@ -6,15 +6,17 @@ import { Modal } from "@/components/Modal";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, Link2, Check, X,
-  Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil,
+  Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, type Invoice } from "@/lib/db";
+import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, createService, type Invoice } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
 import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
 import { useShareLink } from "@/components/ShareLink";
+import { ServicePicker } from "@/components/ServicePicker";
+import { ServiceCatalogModal } from "@/components/ServiceCatalogModal";
 
 export const Route = createFileRoute("/_authenticated/invoice")({
   component: InvoicePage,
@@ -347,6 +349,8 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: listClients, enabled: open });
   const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates, enabled: open });
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices, enabled: open });
+  const qc = useQueryClient();
+  const [catalogOpen, setCatalogOpen] = useState(false);
 
   const [clientId, setClientId] = useState("");
   const [estimateId, setEstimateId] = useState("");
@@ -395,7 +399,14 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const saveAsServiceMut = useMutation({
+    mutationFn: (it: LineRow) => createService({ name: it.service, description: it.description, unit_price: it.rate }),
+    onSuccess: () => { toast.success("Serviço salvo!"); qc.invalidateQueries({ queryKey: ["services"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
+    <>
     <Modal open={open} onClose={onClose} title="New Invoice" maxWidth="max-w-3xl">
       {clients.length === 0 ? (
         <div className="py-8 text-center">
@@ -435,17 +446,22 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
           </div>
 
           <div>
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex items-center justify-between gap-2">
               <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Items</label>
-              <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)]">+ Add item</button>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setCatalogOpen(true)} className="text-xs font-semibold text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]">Manage saved services</button>
+                <ServicePicker onPick={(s) => setItems([...items, { service: s.name, description: s.description || "", qty: 1, rate: Number(s.unit_price) }])} />
+                <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)]">+ Add item</button>
+              </div>
             </div>
             <div className="space-y-2">
               {items.map((it, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2">
                   <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
-                  <input className="col-span-4 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                  <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
                   <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
                   <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
+                  <button type="button" title="Save as reusable service" onClick={() => it.service.trim() && saveAsServiceMut.mutate(it)} className="col-span-1 grid place-items-center rounded-[10px] border border-[var(--dash-border-input)] text-[var(--dash-text-muted)] hover:text-[var(--dash-navy)]"><Save className="h-4 w-4" /></button>
                   <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-[10px] border border-[var(--dash-border-input)] text-[var(--dash-text-muted)] hover:text-[var(--dash-red)]"><Trash2 className="h-4 w-4" /></button>
                 </div>
               ))}
@@ -468,10 +484,14 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
         </form>
       )}
     </Modal>
+    <ServiceCatalogModal open={catalogOpen} onClose={() => setCatalogOpen(false)} />
+    </>
   );
 }
 
 function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoice; open: boolean; onClose: () => void; onSaved: () => void }) {
+  const qc = useQueryClient();
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const [dueDate, setDueDate] = useState(invoice.due_date || "");
   const [status, setStatus] = useState(invoice.status);
   const [items, setItems] = useState<LineRow[]>(
@@ -512,7 +532,14 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const saveAsServiceMut = useMutation({
+    mutationFn: (it: LineRow) => createService({ name: it.service, description: it.description, unit_price: it.rate }),
+    onSuccess: () => { toast.success("Serviço salvo!"); qc.invalidateQueries({ queryKey: ["services"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
+    <>
     <Modal open={open} onClose={onClose} title={`Edit ${invoice.number}`} maxWidth="max-w-3xl">
       <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -530,17 +557,22 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
         </div>
 
         <div>
-          <div className="mb-2 flex items-center justify-between">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Items</label>
-            <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)]">+ Add item</button>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => setCatalogOpen(true)} className="text-xs font-semibold text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]">Manage saved services</button>
+              <ServicePicker onPick={(s) => setItems([...items, { service: s.name, description: s.description || "", qty: 1, rate: Number(s.unit_price) }])} />
+              <button type="button" onClick={() => setItems([...items, { service: "", description: "", qty: 1, rate: 0 }])} className="text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)]">+ Add item</button>
+            </div>
           </div>
           <div className="space-y-2">
             {items.map((it, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2">
                 <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
-                <input className="col-span-4 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
                 <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
                 <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
+                <button type="button" title="Save as reusable service" onClick={() => it.service.trim() && saveAsServiceMut.mutate(it)} className="col-span-1 grid place-items-center rounded-[10px] border border-[var(--dash-border-input)] text-[var(--dash-text-muted)] hover:text-[var(--dash-navy)]"><Save className="h-4 w-4" /></button>
                 <button type="button" onClick={() => setItems(items.filter((_, i) => i !== idx))} className="col-span-1 grid place-items-center rounded-[10px] border border-[var(--dash-border-input)] text-[var(--dash-text-muted)] hover:text-[var(--dash-red)]"><Trash2 className="h-4 w-4" /></button>
               </div>
             ))}
@@ -562,5 +594,7 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
         </div>
       </form>
     </Modal>
+    <ServiceCatalogModal open={catalogOpen} onClose={() => setCatalogOpen(false)} />
+    </>
   );
 }
