@@ -1,0 +1,55 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Lock } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+export function Auth() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      navigate("/", { replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao entrar");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))" }}>
+      <div className="grid min-h-screen place-items-center px-4">
+        <div className="w-full max-w-sm rounded-[22px] bg-white p-8" style={{ boxShadow: "0 30px 90px rgba(10,20,40,.4)" }}>
+          <div className="flex items-center justify-center gap-2">
+            <span className="grid h-9 w-9 place-items-center rounded-full" style={{ background: "var(--dash-water-bg)" }}>
+              <Lock className="h-4 w-4" style={{ color: "var(--dash-water-icon)" }} />
+            </span>
+            <h1 className="text-xl font-extrabold text-[var(--dash-text)]">Pool Route Manager</h1>
+          </div>
+          <p className="mt-1 text-center text-sm text-[var(--dash-text-muted)]">Entre para gerenciar as rotas</p>
+          <form onSubmit={submit} className="mt-6 space-y-4">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">E-mail</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Senha</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
+            </div>
+            <button disabled={loading} className="w-full rounded-[11px] bg-[var(--dash-navy)] py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+              {loading ? "Entrando..." : "Entrar"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}

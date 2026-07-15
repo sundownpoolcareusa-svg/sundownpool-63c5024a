@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --dash-navy: #0c2a4d;
+  --dash-navy-2: #164574;
+  --dash-bg: #f4f6f9;
+  --dash-surface: #ffffff;
+  --dash-surface-soft: #f7f9fb;
+  --dash-surface-soft-2: #fbfcfd;
+  --dash-border: #e7ebf0;
+  --dash-border-input: #e4e9ef;
+  --dash-border-table: #edf0f4;
+  --dash-text: #1b2432;
+  --dash-text-2: #28323f;
+  --dash-text-secondary: #3a465a;
+  --dash-text-secondary-2: #5a6675;
+  --dash-text-muted: #98a2b1;
+  --dash-text-muted-2: #8a94a3;
+  --dash-text-muted-3: #6a7686;
+  --dash-water-bg: #e7f3f7;
+  --dash-water-icon: #1487a6;
+  --dash-link: #1e5f9e;
+  --dash-link-hover: #154679;
+  --dash-orange: #e8813a;
+  --dash-green: #16a34a;
+  --dash-red: #d0483f;
+  --dash-red-border: #f3dada;
+  --dash-badge-paid-bg: #e3f5eb;
+  --dash-badge-paid-text: #137a46;
+  --dash-badge-unpaid-bg: #fcefd8;
+  --dash-badge-unpaid-text: #9a6412;
+  --dash-badge-sent-bg: #e6eef9;
+  --dash-badge-sent-text: #26558f;
+  --dash-badge-expired-bg: #f1e7e7;
+  --dash-badge-expired-text: #9a3b3b;
+}
+
+body {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  background-color: var(--dash-bg);
+  color: var(--dash-text);
+}
