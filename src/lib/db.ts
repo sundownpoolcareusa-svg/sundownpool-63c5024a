@@ -69,6 +69,14 @@ export type Invoice = {
 };
 
 
+export type Service = {
+  id: string;
+  name: string;
+  description: string | null;
+  unit_price: number;
+  created_at: string;
+};
+
 export async function listClients() {
   const { data, error } = await supabase.from("clients").select("*").order("created_at", { ascending: false });
   if (error) throw error;
@@ -91,6 +99,55 @@ export async function listInvoices() {
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data as Invoice[];
+}
+
+const DEFAULT_SERVICES: Array<{ name: string; description: string; unit_price: number }> = [
+  { name: "Pool Cleaning", description: "Vacuuming, brushing and skimming", unit_price: 100 },
+  { name: "Chemical Balance", description: "Water testing and chemical treatment", unit_price: 60 },
+  { name: "Filter Cleaning", description: "Filter inspection and cleaning", unit_price: 75 },
+  { name: "Green Pool Recovery", description: "Algae treatment and full recovery clean-up", unit_price: 250 },
+  { name: "Equipment Repair", description: "Pump, filter or heater repair", unit_price: 150 },
+  { name: "Tile Cleaning", description: "Waterline tile scrubbing", unit_price: 90 },
+  { name: "Salt System Service", description: "Salt cell cleaning and inspection", unit_price: 120 },
+  { name: "Pool Start-Up", description: "Seasonal opening: inspection, cleaning and balancing", unit_price: 200 },
+];
+
+export async function listServices() {
+  const { data, error } = await supabase.from("services").select("*").order("name");
+  if (error) throw error;
+  return data as Service[];
+}
+
+// Ensures every account has a starter catalog of common services, so estimate/invoice
+// line items can be added without retyping the same few services every time.
+export async function ensureDefaultServices() {
+  const existing = await listServices();
+  if (existing.length > 0) return existing;
+
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return existing;
+
+  const rows = DEFAULT_SERVICES.map((s) => ({ ...s, user_id: u.user!.id }));
+  const { data, error } = await supabase.from("services").insert(rows).select();
+  if (error) throw error;
+  return (data as Service[]).slice().sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function createService(values: { name: string; description?: string; unit_price: number }) {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) throw new Error("Not authenticated");
+  const { data, error } = await supabase
+    .from("services")
+    .insert({ ...values, user_id: u.user.id })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Service;
+}
+
+export async function deleteService(id: string) {
+  const { error } = await supabase.from("services").delete().eq("id", id);
+  if (error) throw error;
 }
 
 export function fmt(n: number) {

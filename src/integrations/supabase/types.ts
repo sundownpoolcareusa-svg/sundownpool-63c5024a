@@ -23,12 +23,18 @@ export type Database = {
           email: string | null
           equipment_photos: string[]
           id: string
+          last_service_date: string | null
+          lat: number | null
+          lng: number | null
           monthly_value: number
           name: string
           notes: string | null
           phone: string | null
+          pool_capacity_gallons: number | null
+          pool_filter_type: string | null
           pool_photos: string[]
           service_days: string[]
+          service_frequency: string | null
           state: string | null
           status: string
           updated_at: string
@@ -43,12 +49,18 @@ export type Database = {
           email?: string | null
           equipment_photos?: string[]
           id?: string
+          last_service_date?: string | null
+          lat?: number | null
+          lng?: number | null
           monthly_value?: number
           name: string
           notes?: string | null
           phone?: string | null
+          pool_capacity_gallons?: number | null
+          pool_filter_type?: string | null
           pool_photos?: string[]
           service_days?: string[]
+          service_frequency?: string | null
           state?: string | null
           status?: string
           updated_at?: string
@@ -63,12 +75,18 @@ export type Database = {
           email?: string | null
           equipment_photos?: string[]
           id?: string
+          last_service_date?: string | null
+          lat?: number | null
+          lng?: number | null
           monthly_value?: number
           name?: string
           notes?: string | null
           phone?: string | null
+          pool_capacity_gallons?: number | null
+          pool_filter_type?: string | null
           pool_photos?: string[]
           service_days?: string[]
+          service_frequency?: string | null
           state?: string | null
           status?: string
           updated_at?: string
@@ -295,6 +313,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          unit_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          unit_price?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          unit_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
