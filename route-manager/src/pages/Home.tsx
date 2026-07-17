@@ -6,6 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { getNextStop, getTechnicianProgressToday, getTodayStats } from "@/lib/db";
 import { TechnicianAvatar } from "@/components/TechnicianAvatar";
 import { BottomTabBar } from "@/components/BottomTabBar";
+import { Sidebar } from "@/components/Sidebar";
 
 export function Home() {
   const { data: stats } = useQuery({ queryKey: ["today-stats"], queryFn: getTodayStats });
@@ -16,8 +17,9 @@ export function Home() {
   const dateLabel = format(today, "EEEE, dd 'de' MMMM", { locale: ptBR });
 
   return (
-    <div className="min-h-screen pb-24">
-      <header className="px-4 pb-6 pt-4 text-white" style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))" }}>
+    <div className="min-h-screen pb-24 md:pb-0 md:pl-60">
+      <Sidebar />
+      <header className="px-4 pb-6 pt-4 text-white md:hidden" style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))" }}>
         <div className="flex items-center justify-between">
           <button aria-label="Menu"><Menu className="h-6 w-6" /></button>
           <div className="flex items-center gap-2 text-lg font-extrabold">
@@ -35,7 +37,12 @@ export function Home() {
         </div>
       </header>
 
-      <main className="-mt-3 space-y-4 px-4">
+      <div className="hidden px-8 pb-2 pt-8 md:block">
+        <div className="text-2xl font-extrabold text-[var(--dash-text)]">Olá, André!</div>
+        <div className="text-sm capitalize text-[var(--dash-text-muted)]">{dateLabel}</div>
+      </div>
+
+      <main className="-mt-3 space-y-4 px-4 md:mt-0 md:max-w-3xl md:px-8">
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-[16px] p-4 text-white" style={{ background: "var(--dash-navy)" }}>
             <div className="text-3xl font-extrabold">{stats?.total ?? "—"}</div>
