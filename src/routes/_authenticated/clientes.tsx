@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
+import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
@@ -79,7 +80,8 @@ function ClientesPage() {
   });
 
   return (
-    <div className="dash min-h-screen bg-[var(--dash-bg)]">
+    <div className="dash min-h-screen bg-[var(--dash-bg)] lg:pl-60">
+      <AppSidebar />
       <AppHeader />
       <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12">
         <aside className="space-y-4 lg:col-span-3">

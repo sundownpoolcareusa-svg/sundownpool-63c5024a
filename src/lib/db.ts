@@ -150,6 +150,150 @@ export async function deleteService(id: string) {
   if (error) throw error;
 }
 
+// ---- Routes (technicians / routes / route_stops) ----
+
+export type Technician = {
+  id: string;
+  name: string;
+  phone: string | null;
+  color: string;
+  active: boolean;
+  created_at: string;
+};
+
+export type StopStatus = "Pendente" | "Em serviço" | "Concluído";
+
+export type RouteStop = {
+  id: string;
+  route_id: string;
+  client_id: string;
+  position: number;
+  scheduled_time: string | null;
+  status: StopStatus;
+  started_at: string | null;
+  completed_at: string | null;
+  notes: string | null;
+  client?: Client;
+};
+
+export type RouteRow = {
+  id: string;
+  technician_id: string;
+  route_date: string;
+  status: string;
+  technician?: Technician;
+  route_stops?: RouteStop[];
+};
+
+export function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export async function listTechnicians() {
+  const { data, error } = await supabase.from("technicians").select("*").eq("active", true).order("name");
+  if (error) throw error;
+  return data as Technician[];
+}
+
+export async function createTechnician(values: { name: string; phone?: string; color?: string }) {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) throw new Error("Not authenticated");
+  const { data, error } = await supabase
+    .from("technicians")
+    .insert({ ...values, user_id: u.user.id })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Technician;
+}
+
+export async function listRoutesForDate(date: string) {
+  const { data, error } = await supabase
+    .from("routes")
+    .select("*, technician:technicians(*), route_stops(*, client:clients(*))")
+    .eq("route_date", date);
+  if (error) throw error;
+  return (data as RouteRow[]).map((r) => ({
+    ...r,
+    route_stops: (r.route_stops ?? []).slice().sort((a, b) => a.position - b.position),
+  }));
+}
+
+export async function getOrCreateRoute(technicianId: string, date: string) {
+  const { data: existing, error: findErr } = await supabase
+    .from("routes")
+    .select("*")
+    .eq("technician_id", technicianId)
+    .eq("route_date", date)
+    .maybeSingle();
+  if (findErr) throw findErr;
+  if (existing) return existing as RouteRow;
+
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) throw new Error("Not authenticated");
+  const { data, error } = await supabase
+    .from("routes")
+    .insert({ user_id: u.user.id, technician_id: technicianId, route_date: date })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as RouteRow;
+}
+
+export async function listRouteStops(routeId: string) {
+  const { data, error } = await supabase
+    .from("route_stops")
+    .select("*, client:clients(*)")
+    .eq("route_id", routeId)
+    .order("position");
+  if (error) throw error;
+  return data as RouteStop[];
+}
+
+export async function addStopToRoute(routeId: string, clientId: string, scheduledTime?: string) {
+  const { data: existing, error: countErr } = await supabase
+    .from("route_stops")
+    .select("position")
+    .eq("route_id", routeId)
+    .order("position", { ascending: false })
+    .limit(1);
+  if (countErr) throw countErr;
+  const nextPosition = existing && existing.length > 0 ? existing[0].position + 1 : 0;
+
+  const { error } = await supabase.from("route_stops").insert({
+    route_id: routeId,
+    client_id: clientId,
+    position: nextPosition,
+    scheduled_time: scheduledTime || null,
+  });
+  if (error) throw error;
+}
+
+export async function updateStopStatus(stopId: string, status: StopStatus, clientId?: string) {
+  const now = new Date().toISOString();
+  const patch: { status: StopStatus; started_at?: string; completed_at?: string } = { status };
+  if (status === "Em serviço") patch.started_at = now;
+  if (status === "Concluído") patch.completed_at = now;
+
+  const { error } = await supabase.from("route_stops").update(patch).eq("id", stopId);
+  if (error) throw error;
+
+  if (status === "Concluído" && clientId) {
+    await supabase.from("clients").update({ last_service_date: now.slice(0, 10) }).eq("id", clientId);
+  }
+}
+
+export async function reorderStops(orderedStopIds: string[]) {
+  await Promise.all(
+    orderedStopIds.map((id, idx) => supabase.from("route_stops").update({ position: idx }).eq("id", id)),
+  );
+}
+
+export async function deleteStop(stopId: string) {
+  const { error } = await supabase.from("route_stops").delete().eq("id", stopId);
+  if (error) throw error;
+}
+
 export function fmt(n: number) {
   return `$${(n ?? 0).toFixed(2)}`;
 }

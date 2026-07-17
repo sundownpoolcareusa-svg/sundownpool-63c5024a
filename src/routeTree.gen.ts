@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ITokenRouteImport } from './routes/i.$token'
 import { Route as ETokenRouteImport } from './routes/e.$token'
+import { Route as AuthenticatedRotasRouteImport } from './routes/_authenticated/rotas'
 import { Route as AuthenticatedInvoiceRouteImport } from './routes/_authenticated/invoice'
 import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authenticated/estimativa'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
@@ -66,6 +67,11 @@ const ETokenRoute = ETokenRouteImport.update({
   path: '/e/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRotasRoute = AuthenticatedRotasRouteImport.update({
+  id: '/rotas',
+  path: '/rotas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInvoiceRoute = AuthenticatedInvoiceRouteImport.update({
   id: '/invoice',
   path: '/invoice',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/clientes': typeof AuthenticatedClientesRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
+  '/rotas': typeof AuthenticatedRotasRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
 }
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/clientes': typeof AuthenticatedClientesRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
+  '/rotas': typeof AuthenticatedRotasRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
 }
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/estimativa': typeof AuthenticatedEstimativaRoute
   '/_authenticated/invoice': typeof AuthenticatedInvoiceRoute
+  '/_authenticated/rotas': typeof AuthenticatedRotasRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
 }
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/estimativa'
     | '/invoice'
+    | '/rotas'
     | '/e/$token'
     | '/i/$token'
   fileRoutesByTo: FileRoutesByTo
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/estimativa'
     | '/invoice'
+    | '/rotas'
     | '/e/$token'
     | '/i/$token'
   id:
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clientes'
     | '/_authenticated/estimativa'
     | '/_authenticated/invoice'
+    | '/_authenticated/rotas'
     | '/e/$token'
     | '/i/$token'
   fileRoutesById: FileRoutesById
@@ -243,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ETokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/rotas': {
+      id: '/_authenticated/rotas'
+      path: '/rotas'
+      fullPath: '/rotas'
+      preLoaderRoute: typeof AuthenticatedRotasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/invoice': {
       id: '/_authenticated/invoice'
       path: '/invoice'
@@ -271,12 +290,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedEstimativaRoute: typeof AuthenticatedEstimativaRoute
   AuthenticatedInvoiceRoute: typeof AuthenticatedInvoiceRoute
+  AuthenticatedRotasRoute: typeof AuthenticatedRotasRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedEstimativaRoute: AuthenticatedEstimativaRoute,
   AuthenticatedInvoiceRoute: AuthenticatedInvoiceRoute,
+  AuthenticatedRotasRoute: AuthenticatedRotasRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
