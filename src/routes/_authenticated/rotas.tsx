@@ -5,12 +5,12 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
-  Plus, Phone, ChevronUp, ChevronDown, Check, Play, Trash2, MapPin,
+  Plus, Phone, ChevronUp, ChevronDown, Check, Play, Trash2, MapPin, CalendarDays,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
   addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, initials,
-  type RouteStop, type StopStatus, type Technician,
+  type RouteStop, type StopStatus, type Technician, type Client,
 } from "@/lib/db";
 import { toast } from "sonner";
 
@@ -55,6 +55,9 @@ function weekDays(center: Date) {
   });
 }
 
+// Weekday abbreviations matching the clients form's "Recurring Service Days" values
+const WEEKDAY_ABBR = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
+
 function RotasPage() {
   const qc = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -67,6 +70,7 @@ function RotasPage() {
 
   const { data: technicians = [] } = useQuery({ queryKey: ["technicians"], queryFn: listTechnicians });
   const { data: routes = [] } = useQuery({ queryKey: ["routes-for-date", dateStr], queryFn: () => listRoutesForDate(dateStr) });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: listClients });
 
   const filteredRoutes = technicianId === "all" ? routes : routes.filter((r) => r.technician_id === technicianId);
   const activeRoute = routes.find((r) => r.id === selectedRouteId) ?? filteredRoutes[0] ?? null;
@@ -75,6 +79,15 @@ function RotasPage() {
     () => filteredRoutes.flatMap((r) => (r.route_stops ?? []).map((s) => ({ ...s, technicianName: r.technician?.name }))),
     [filteredRoutes],
   );
+
+  // Clients with this weekday in their recurring service days, not yet scheduled on any route today
+  const recurringClients = useMemo(() => {
+    const abbr = WEEKDAY_ABBR[selectedDate.getDay()];
+    const scheduled = new Set(routes.flatMap((r) => (r.route_stops ?? []).map((s) => s.client_id)));
+    return clients.filter(
+      (c) => (c.service_days ?? []).includes(abbr) && c.status !== "Inativo" && !scheduled.has(c.id),
+    );
+  }, [clients, routes, selectedDate]);
 
   return (
     <div className="dash min-h-screen bg-[var(--dash-bg)] lg:pl-60">
@@ -143,6 +156,16 @@ function RotasPage() {
               ))}
             </div>
           )}
+
+          {recurringClients.length > 0 && (
+            <RecurringSuggestions
+              clients={recurringClients}
+              technicianId={technicianId}
+              technicians={technicians}
+              date={dateStr}
+              onAdded={(routeId) => { setSelectedRouteId(routeId); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); }}
+            />
+          )}
         </aside>
 
         {/* CENTER */}
@@ -171,6 +194,60 @@ function RotasPage() {
         technicians={technicians}
         onCreated={(routeId) => { setSelectedRouteId(routeId); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); }}
       />
+    </div>
+  );
+}
+
+function RecurringSuggestions({
+  clients, technicianId, technicians, date, onAdded,
+}: { clients: Client[]; technicianId: string; technicians: Technician[]; date: string; onAdded: (routeId: string) => void }) {
+  const addMut = useMutation({
+    mutationFn: async ({ client, techId }: { client: Client; techId: string }) => {
+      const route = await getOrCreateRoute(techId, date);
+      await addStopToRoute(route.id, client.id);
+      return route.id;
+    },
+    onSuccess: (routeId, { client }) => {
+      toast.success(`${client.name} added to today's route`);
+      onAdded(routeId);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function add(client: Client) {
+    if (technicianId === "all") {
+      if (technicians.length === 1) {
+        addMut.mutate({ client, techId: technicians[0].id });
+      } else {
+        toast.error("Select a technician above first");
+      }
+      return;
+    }
+    addMut.mutate({ client, techId: technicianId });
+  }
+
+  return (
+    <div className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4" style={cardShadow}>
+      <div className="mb-2 flex items-center gap-2 text-sm font-bold text-[var(--dash-text)]">
+        <CalendarDays className="h-4 w-4" style={{ color: "var(--dash-water-icon)" }} />
+        Recurring today
+      </div>
+      <p className="mb-2 text-xs text-[var(--dash-text-muted)]">
+        Clients scheduled for this weekday who aren't on a route yet.
+      </p>
+      <div className="space-y-1.5">
+        {clients.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => add(c)}
+            disabled={addMut.isPending}
+            className="flex w-full items-center justify-between rounded-[10px] px-2 py-2 text-left text-sm hover:bg-[var(--dash-bg)] disabled:opacity-50"
+          >
+            <span className="truncate font-medium text-[var(--dash-text)]">{c.name}</span>
+            <Plus className="h-4 w-4 shrink-0" style={{ color: "var(--dash-link)" }} />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
