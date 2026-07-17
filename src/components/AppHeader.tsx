@@ -1,13 +1,14 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Bell, Search, FileText, Users, ClipboardList, ChevronDown, LogOut, Menu, X } from "lucide-react";
+import { Bell, Search, FileText, Users, ClipboardList, Map, ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { AppLogo } from "./AppLogo";
 import { supabase } from "@/integrations/supabase/client";
 
 const tabs = [
-  { to: "/invoice", label: "Invoices", icon: FileText },
   { to: "/clientes", label: "Clients", icon: Users },
+  { to: "/rotas", label: "Routes", icon: Map },
   { to: "/estimativa", label: "Estimates", icon: ClipboardList },
+  { to: "/invoice", label: "Invoices", icon: FileText },
 ] as const;
 
 export function AppHeader() {
@@ -39,7 +40,7 @@ export function AppHeader() {
   const init = (email[0] || "U").toUpperCase();
 
   return (
-    <header className="dash sticky top-0 z-30 border-b border-[var(--dash-border)] bg-white/82 backdrop-blur-[14px] print:hidden">
+    <header className="dash sticky top-0 z-30 border-b border-[var(--dash-border)] bg-white/82 backdrop-blur-[14px] lg:hidden print:hidden">
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-4 px-4 py-2.5 sm:px-[22px]">
         <div className="flex min-w-0 items-center gap-2">
           <button

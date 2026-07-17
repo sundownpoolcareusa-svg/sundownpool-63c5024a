@@ -344,6 +344,134 @@ export type Database = {
         }
         Relationships: []
       }
+      technicians: {
+        Row: {
+          active: boolean
+          color: string
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      routes: {
+        Row: {
+          created_at: string
+          id: string
+          route_date: string
+          status: string
+          technician_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          route_date: string
+          status?: string
+          technician_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          route_date?: string
+          status?: string
+          technician_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "routes_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      route_stops: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          position: number
+          route_id: string
+          scheduled_time: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          position?: number
+          route_id: string
+          scheduled_time?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          position?: number
+          route_id?: string
+          scheduled_time?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_stops_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_stops_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

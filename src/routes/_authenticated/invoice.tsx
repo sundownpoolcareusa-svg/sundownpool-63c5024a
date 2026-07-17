@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
+import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import {
@@ -70,7 +71,8 @@ function InvoicePage() {
   const pendingEstimate = estimates.find((e) => e.status === "PENDENTE" || e.status === "ENVIADA");
 
   return (
-    <div className="dash min-h-screen bg-[var(--dash-bg)]">
+    <div className="dash min-h-screen bg-[var(--dash-bg)] lg:pl-60">
+      <AppSidebar />
       <AppHeader />
       <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12 print:block print:p-0">
         {/* LEFT */}
