@@ -1,18 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Map, Users, Menu } from "lucide-react";
-
-const TABS = [
-  { to: "/", label: "Início", icon: Home },
-  { to: "/rotas", label: "Rotas", icon: Map },
-  { to: "/clientes", label: "Clientes", icon: Users },
-  { to: "/mais", label: "Mais", icon: Menu },
-] as const;
+import { TABS } from "./navTabs";
 
 export function BottomTabBar() {
   const { pathname } = useLocation();
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-[var(--dash-border)] bg-white pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-[var(--dash-border)] bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
       style={{ boxShadow: "0 -1px 8px rgba(20,36,60,.05)" }}
     >
       {TABS.map((t) => {

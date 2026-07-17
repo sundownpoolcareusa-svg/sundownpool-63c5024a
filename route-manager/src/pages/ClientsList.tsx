@@ -5,6 +5,7 @@ import { Plus, Search } from "lucide-react";
 import { listClients } from "@/lib/db";
 import { TechnicianAvatar } from "@/components/TechnicianAvatar";
 import { BottomTabBar } from "@/components/BottomTabBar";
+import { Sidebar } from "@/components/Sidebar";
 
 export function ClientsList() {
   const [search, setSearch] = useState("");
@@ -13,15 +14,16 @@ export function ClientsList() {
   const filtered = clients.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="min-h-screen pb-24">
-      <header className="px-4 pb-4 pt-5 text-white" style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))" }}>
+    <div className="min-h-screen pb-24 md:pb-0 md:pl-60">
+      <Sidebar />
+      <header className="px-4 pb-4 pt-5 text-white md:px-8" style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))" }}>
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-extrabold">Clientes</h1>
           <Link to="/clientes/novo" aria-label="Novo cliente"><Plus className="h-5 w-5" /></Link>
         </div>
       </header>
 
-      <div className="px-4 py-3">
+      <div className="px-4 py-3 md:max-w-2xl md:px-8">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-[var(--dash-text-muted)]" />
           <input

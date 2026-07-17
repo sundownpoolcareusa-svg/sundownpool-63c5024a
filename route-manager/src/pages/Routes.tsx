@@ -7,6 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { listRoutesForDate, listTechnicians, todayStr } from "@/lib/db";
 import { StopTimelineItem } from "@/components/StopTimelineItem";
 import { BottomTabBar } from "@/components/BottomTabBar";
+import { Sidebar } from "@/components/Sidebar";
 
 function toDateStr(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -39,15 +40,16 @@ export function RoutesPage() {
   const singleRoute = technicianId !== "all" ? filteredRoutes[0] : null;
 
   return (
-    <div className="min-h-screen pb-24">
-      <header className="px-4 pb-4 pt-5 text-white" style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))" }}>
+    <div className="min-h-screen pb-24 md:pb-0 md:pl-60">
+      <Sidebar />
+      <header className="px-4 pb-4 pt-5 text-white md:px-8" style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))" }}>
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-extrabold">Rotas</h1>
           <button aria-label="Nova rota"><Plus className="h-5 w-5" /></button>
         </div>
       </header>
 
-      <div className="flex gap-2 overflow-x-auto px-4 py-3">
+      <div className="flex gap-2 overflow-x-auto px-4 py-3 md:px-8">
         {days.map((d) => {
           const active = isSameDay(d, selectedDate);
           return (
@@ -67,7 +69,7 @@ export function RoutesPage() {
         })}
       </div>
 
-      <div className="px-4">
+      <div className="px-4 md:max-w-2xl md:px-8">
         <div className="relative">
           <select
             value={technicianId}
