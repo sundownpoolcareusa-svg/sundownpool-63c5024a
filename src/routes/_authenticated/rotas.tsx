@@ -6,7 +6,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
-  Plus, Phone, ChevronUp, ChevronDown, Check, Play, Trash2, MapPin, CalendarDays,
+  Plus, Phone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Play, Trash2, MapPin, CalendarDays,
   CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical,
 } from "lucide-react";
 import {
@@ -671,22 +671,58 @@ function RotasPage() {
 }
 
 function DaySelector({ days, dateStr, onSelect, compact }: { days: Date[]; dateStr: string; onSelect: (d: Date) => void; compact?: boolean }) {
+  const today = toDateStr(new Date());
+  const showingToday = days.some((d) => toDateStr(d) === today);
+
+  function shiftWeek(delta: -1 | 1) {
+    const next = new Date(days[0]);
+    next.setDate(next.getDate() + delta * 7);
+    onSelect(next);
+  }
+
   return (
-    <div className={`flex gap-1.5 overflow-x-auto ${compact ? "" : ""}`}>
-      {days.map((d) => {
-        const active = toDateStr(d) === dateStr;
-        return (
-          <button
-            key={d.toISOString()}
-            onClick={() => onSelect(d)}
-            className="flex shrink-0 flex-col items-center gap-0.5 rounded-[11px] px-3 py-2 text-xs font-semibold"
-            style={{ background: active ? "var(--dash-navy)" : "var(--dash-surface-soft)", color: active ? "#fff" : "var(--dash-text-secondary)" }}
-          >
-            <span>{WEEKDAY_LONG[d.getDay()]}</span>
-            <span className="text-sm">{d.getDate()}</span>
-          </button>
-        );
-      })}
+    <div className={`flex items-center gap-1.5 ${compact ? "" : ""}`}>
+      <button
+        onClick={() => shiftWeek(-1)}
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]"
+        title="Previous week"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+
+      <div className="flex gap-1.5 overflow-x-auto">
+        {days.map((d) => {
+          const active = toDateStr(d) === dateStr;
+          return (
+            <button
+              key={d.toISOString()}
+              onClick={() => onSelect(d)}
+              className="flex shrink-0 flex-col items-center gap-0.5 rounded-[11px] px-3 py-2 text-xs font-semibold"
+              style={{ background: active ? "var(--dash-navy)" : "var(--dash-surface-soft)", color: active ? "#fff" : "var(--dash-text-secondary)" }}
+            >
+              <span>{WEEKDAY_LONG[d.getDay()]}</span>
+              <span className="text-sm">{d.getDate()}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        onClick={() => shiftWeek(1)}
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]"
+        title="Next week"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+
+      {!showingToday && (
+        <button
+          onClick={() => onSelect(new Date())}
+          className="ml-1 shrink-0 rounded-[10px] border border-[var(--dash-border)] px-2.5 py-2 text-xs font-semibold text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]"
+        >
+          Today
+        </button>
+      )}
     </div>
   );
 }
