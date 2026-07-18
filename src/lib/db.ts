@@ -9,6 +9,7 @@ export type Client = {
   city: string | null;
   client_type: string;
   status: string;
+  service_days?: string[];
   created_at: string;
 };
 
