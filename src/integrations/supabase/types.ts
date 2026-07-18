@@ -37,6 +37,7 @@ export type Database = {
           service_frequency: string | null
           state: string | null
           status: string
+          technician_id: string | null
           updated_at: string
           user_id: string
           zip: string | null
@@ -63,6 +64,7 @@ export type Database = {
           service_frequency?: string | null
           state?: string | null
           status?: string
+          technician_id?: string | null
           updated_at?: string
           user_id: string
           zip?: string | null
@@ -89,11 +91,20 @@ export type Database = {
           service_frequency?: string | null
           state?: string | null
           status?: string
+          technician_id?: string | null
           updated_at?: string
           user_id?: string
           zip?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       estimate_items: {
         Row: {

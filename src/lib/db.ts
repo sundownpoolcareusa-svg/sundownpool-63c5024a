@@ -13,6 +13,7 @@ export type Client = {
   status: string;
   service_days?: string[];
   service_frequency?: string | null;
+  technician_id?: string | null;
   lat?: number | null;
   lng?: number | null;
   created_at: string;
@@ -205,6 +206,11 @@ export async function listTechnicians() {
   const { data, error } = await supabase.from("technicians").select("*").eq("active", true).order("name");
   if (error) throw error;
   return data as Technician[];
+}
+
+export async function setClientTechnician(clientId: string, technicianId: string) {
+  const { error } = await supabase.from("clients").update({ technician_id: technicianId }).eq("id", clientId);
+  if (error) throw error;
 }
 
 export async function createTechnician(values: { name: string; phone?: string; color?: string }) {
