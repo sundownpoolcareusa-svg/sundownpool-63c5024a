@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
   Plus, Phone, ChevronUp, ChevronDown, Check, Play, Trash2, MapPin, CalendarDays,
-  ListChecks, CheckCircle2, Clock, Flag, Home, LocateFixed, Navigation,
+  ListChecks, CheckCircle2, Clock, Flag, Home, LocateFixed, Navigation, FlaskConical,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
@@ -348,6 +348,7 @@ function RotasPage() {
               onRemove={(id) => removeMut.mutate(id)}
               onAddStop={() => setAddOpen(true)}
               pending={statusMut.isPending}
+              showDelete={false}
             />
           </>
         ) : (
@@ -510,7 +511,7 @@ function EmptyState({ onNewRoute }: { onNewRoute: () => void }) {
 }
 
 function StopsList({
-  route, stops, onMove, onStatus, onRemove, onAddStop, pending, hideAddCta,
+  route, stops, onMove, onStatus, onRemove, onAddStop, pending, hideAddCta, showDelete = true,
 }: {
   route: RouteRow;
   stops: RouteStop[];
@@ -520,6 +521,7 @@ function StopsList({
   onAddStop: () => void;
   pending: boolean;
   hideAddCta?: boolean;
+  showDelete?: boolean;
 }) {
   const completed = stops.filter((s) => s.status === "Concluído").length;
   return (
@@ -586,6 +588,14 @@ function StopsList({
                     <Navigation className="h-4 w-4" />
                   </a>
                 )}
+                <Link
+                  to="/chemicals/$stopId"
+                  params={{ stopId: stop.id }}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] py-2 text-sm font-semibold"
+                  style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
+                >
+                  <FlaskConical className="h-4 w-4" /> Chemicals
+                </Link>
                 {next && (
                   <button
                     onClick={() => onStatus(stop, next)}
@@ -597,9 +607,11 @@ function StopsList({
                     {next === "Concluído" ? "Complete" : "Start"}
                   </button>
                 )}
-                <button onClick={() => onRemove(stop.id)} className="grid h-9 w-9 place-items-center rounded-[10px] border" style={{ borderColor: "var(--dash-red-border)", color: "var(--dash-red)" }}>
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {showDelete && (
+                  <button onClick={() => onRemove(stop.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border" style={{ borderColor: "var(--dash-red-border)", color: "var(--dash-red)" }}>
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
           );

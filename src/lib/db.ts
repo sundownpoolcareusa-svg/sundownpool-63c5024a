@@ -251,6 +251,12 @@ export async function listRouteStops(routeId: string) {
   return data as RouteStop[];
 }
 
+export async function getRouteStop(stopId: string) {
+  const { data, error } = await supabase.from("route_stops").select("*, client:clients(*)").eq("id", stopId).single();
+  if (error) throw error;
+  return data as RouteStop;
+}
+
 export async function addStopToRoute(routeId: string, clientId: string, scheduledTime?: string) {
   const { data: existing, error: countErr } = await supabase
     .from("route_stops")
@@ -292,6 +298,83 @@ export async function reorderStops(orderedStopIds: string[]) {
 
 export async function deleteStop(stopId: string) {
   const { error } = await supabase.from("route_stops").delete().eq("id", stopId);
+  if (error) throw error;
+}
+
+// ---- Pool chemicals (readings + products logged per stop) ----
+
+export type ChemicalReadingKey = "free_chlorine" | "ph" | "total_alkalinity" | "calcium_hardness" | "stabilizer";
+
+export type ChemicalReadings = Record<ChemicalReadingKey, number>;
+
+export type Product = { name: string; unit: string; qty: number };
+
+export type StopChemicals = {
+  id: string;
+  route_stop_id: string;
+  free_chlorine: number | null;
+  ph: number | null;
+  total_alkalinity: number | null;
+  calcium_hardness: number | null;
+  stabilizer: number | null;
+  products: Product[];
+  notes: string | null;
+};
+
+export const CHEMICAL_READING_META: Record<ChemicalReadingKey, { label: string; unit: string; min: number; max: number; step: number }> = {
+  free_chlorine: { label: "Free Chlorine", unit: "ppm", min: 2, max: 4, step: 0.1 },
+  ph: { label: "pH", unit: "", min: 7.2, max: 7.6, step: 0.1 },
+  total_alkalinity: { label: "Total Alkalinity", unit: "ppm", min: 80, max: 120, step: 1 },
+  calcium_hardness: { label: "Calcium Hardness", unit: "ppm", min: 200, max: 400, step: 1 },
+  stabilizer: { label: "Stabilizer (CYA)", unit: "ppm", min: 30, max: 60, step: 1 },
+};
+
+export const DEFAULT_READINGS: ChemicalReadings = {
+  free_chlorine: 3.0,
+  ph: 7.4,
+  total_alkalinity: 90,
+  calcium_hardness: 275,
+  stabilizer: 50,
+};
+
+export const DEFAULT_PRODUCTS: Product[] = [
+  { name: "Liquid Chlorine", unit: "gal", qty: 0 },
+  { name: "Chlorine Tabs", unit: "tabs", qty: 0 },
+  { name: "Muriatic Acid", unit: "gal", qty: 0 },
+  { name: "Baking Soda", unit: "lb", qty: 0 },
+  { name: "Calcium", unit: "lb", qty: 0 },
+  { name: "Stabilizer", unit: "lb", qty: 0 },
+];
+
+export function isReadingInRange(key: ChemicalReadingKey, value: number) {
+  const meta = CHEMICAL_READING_META[key];
+  return value >= meta.min && value <= meta.max;
+}
+
+export async function getStopChemicals(stopId: string) {
+  const { data, error } = await supabase.from("stop_chemicals").select("*").eq("route_stop_id", stopId).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return { ...data, products: (data.products as unknown as Product[]) ?? [] } as StopChemicals;
+}
+
+export async function saveStopChemicals(
+  stopId: string,
+  values: { readings: ChemicalReadings; products: Product[]; notes: string },
+) {
+  const { error } = await supabase.from("stop_chemicals").upsert(
+    {
+      route_stop_id: stopId,
+      free_chlorine: values.readings.free_chlorine,
+      ph: values.readings.ph,
+      total_alkalinity: values.readings.total_alkalinity,
+      calcium_hardness: values.readings.calcium_hardness,
+      stabilizer: values.readings.stabilizer,
+      products: values.products,
+      notes: values.notes || null,
+    },
+    { onConflict: "route_stop_id" },
+  );
   if (error) throw error;
 }
 
