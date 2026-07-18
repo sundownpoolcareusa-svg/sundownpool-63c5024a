@@ -7,6 +7,8 @@ export type Client = {
   phone: string | null;
   address: string | null;
   city: string | null;
+  state?: string | null;
+  zip?: string | null;
   client_type: string;
   status: string;
   service_days?: string[];
@@ -14,6 +16,12 @@ export type Client = {
   lng?: number | null;
   created_at: string;
 };
+
+// Street address alone is often ambiguous for geocoding/navigation (e.g. a
+// street name that also exists in another state) — always include city/state/zip.
+export function clientFullAddress(c: Pick<Client, "address" | "city" | "state" | "zip">) {
+  return [c.address, c.city, c.state, c.zip].filter(Boolean).join(", ");
+}
 
 export type EstimateItem = {
   id?: string;
