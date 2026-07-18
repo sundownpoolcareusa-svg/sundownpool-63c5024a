@@ -1,4 +1,4 @@
-const WEEKDAY = ["D", "S", "T", "Q", "Q", "S", "S"];
+const WEEKDAY = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 function buildWeek(anchor: Date) {
   const start = new Date(anchor);
