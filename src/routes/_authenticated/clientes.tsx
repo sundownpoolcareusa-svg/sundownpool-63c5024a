@@ -350,6 +350,8 @@ function ClientFormModal({
     monthly_value: 0 as number,
     pool_photos: [] as string[],
     equipment_photos: [] as string[],
+    lat: null as number | null,
+    lng: null as number | null,
   };
   const [form, setForm] = useState(empty);
   const [userId, setUserId] = useState<string>("anon");
@@ -374,6 +376,8 @@ function ClientFormModal({
         monthly_value: Number(editing.monthly_value || 0),
         pool_photos: editing.pool_photos || [],
         equipment_photos: editing.equipment_photos || [],
+        lat: editing.lat ?? null,
+        lng: editing.lng ?? null,
       });
     } else {
       setForm(empty);
@@ -420,7 +424,15 @@ function ClientFormModal({
         <AddressAutocomplete
           value={form.address}
           onChange={(v) => setForm((f) => ({ ...f, address: v }))}
-          onSelectPlace={(p) => setForm((f) => ({ ...f, address: p.address, city: p.city || f.city, state: p.state || f.state, zip: p.zip || f.zip }))}
+          onSelectPlace={(p) => setForm((f) => ({
+            ...f,
+            address: p.address,
+            city: p.city || f.city,
+            state: p.state || f.state,
+            zip: p.zip || f.zip,
+            lat: p.lat ?? f.lat,
+            lng: p.lng ?? f.lng,
+          }))}
         />
         <div className="grid grid-cols-3 gap-4">
           <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />

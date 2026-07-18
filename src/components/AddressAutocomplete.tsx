@@ -11,7 +11,7 @@ export function AddressAutocomplete({
 }: {
   value: string;
   onChange: (v: string) => void;
-  onSelectPlace?: (p: { address: string; city: string; state: string; zip: string }) => void;
+  onSelectPlace?: (p: { address: string; city: string; state: string; zip: string; lat?: number; lng?: number }) => void;
   label?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -65,7 +65,7 @@ export function AddressAutocomplete({
     setOpen(false);
     try {
       const place = new placesRef.current.Place({ id: s.placeId });
-      await place.fetchFields({ fields: ["formattedAddress", "addressComponents"] });
+      await place.fetchFields({ fields: ["formattedAddress", "addressComponents", "location"] });
       const comps = place.addressComponents || [];
       const get = (type: string, short = false) => {
         const c = comps.find((c: any) => c.types?.includes(type));
@@ -78,8 +78,10 @@ export function AddressAutocomplete({
       const state = get("administrative_area_level_1", true);
       const zip = get("postal_code");
       const address = street || (place.formattedAddress || s.text).split(",")[0];
+      const lat = typeof place.location?.lat === "function" ? place.location.lat() : place.location?.lat;
+      const lng = typeof place.location?.lng === "function" ? place.location.lng() : place.location?.lng;
       onChange(address);
-      onSelectPlace?.({ address, city, state, zip });
+      onSelectPlace?.({ address, city, state, zip, lat, lng });
       sessionRef.current = new placesRef.current.AutocompleteSessionToken();
     } catch {
       onChange(s.text);
