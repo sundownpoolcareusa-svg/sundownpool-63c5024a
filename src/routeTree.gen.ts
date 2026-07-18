@@ -22,6 +22,7 @@ import { Route as AuthenticatedRotasRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedInvoiceRouteImport } from './routes/_authenticated/invoice'
 import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authenticated/estimativa'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedChemicalsStopIdRouteImport } from './routes/_authenticated/chemicals.$stopId'
 
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
@@ -87,6 +88,12 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedChemicalsStopIdRoute =
+  AuthenticatedChemicalsStopIdRouteImport.update({
+    id: '/chemicals/$stopId',
+    path: '/chemicals/$stopId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/rotas': typeof AuthenticatedRotasRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
+  '/chemicals/$stopId': typeof AuthenticatedChemicalsStopIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -115,6 +123,7 @@ export interface FileRoutesByTo {
   '/rotas': typeof AuthenticatedRotasRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
+  '/chemicals/$stopId': typeof AuthenticatedChemicalsStopIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/_authenticated/rotas': typeof AuthenticatedRotasRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
+  '/_authenticated/chemicals/$stopId': typeof AuthenticatedChemicalsStopIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/rotas'
     | '/e/$token'
     | '/i/$token'
+    | '/chemicals/$stopId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/rotas'
     | '/e/$token'
     | '/i/$token'
+    | '/chemicals/$stopId'
   id:
     | '__root__'
     | '/'
@@ -176,6 +188,7 @@ export interface FileRouteTypes {
     | '/_authenticated/rotas'
     | '/e/$token'
     | '/i/$token'
+    | '/_authenticated/chemicals/$stopId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -283,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/chemicals/$stopId': {
+      id: '/_authenticated/chemicals/$stopId'
+      path: '/chemicals/$stopId'
+      fullPath: '/chemicals/$stopId'
+      preLoaderRoute: typeof AuthenticatedChemicalsStopIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -291,6 +311,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEstimativaRoute: typeof AuthenticatedEstimativaRoute
   AuthenticatedInvoiceRoute: typeof AuthenticatedInvoiceRoute
   AuthenticatedRotasRoute: typeof AuthenticatedRotasRoute
+  AuthenticatedChemicalsStopIdRoute: typeof AuthenticatedChemicalsStopIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -298,6 +319,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEstimativaRoute: AuthenticatedEstimativaRoute,
   AuthenticatedInvoiceRoute: AuthenticatedInvoiceRoute,
   AuthenticatedRotasRoute: AuthenticatedRotasRoute,
+  AuthenticatedChemicalsStopIdRoute: AuthenticatedChemicalsStopIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
