@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
-  ChevronLeft, ChevronRight, Pencil, Trash2, Users,
+  ChevronLeft, ChevronRight, Pencil, Trash2, Users, Map,
 } from "lucide-react";
 import { listClients, listTechnicians, fmtDate, initials, fmt, type Client, type Invoice } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -49,17 +49,23 @@ function ClientesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [onRouteOnly, setOnRouteOnly] = useState(false);
   const [viewClient, setViewClient] = useState<ClientFull | null>(null);
   const [editClient, setEditClient] = useState<ClientFull | null>(null);
   const [deleteClient, setDeleteClient] = useState<ClientFull | null>(null);
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: listClients });
 
-  const filtered = clients.filter((c) =>
-    !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const isOnRoute = (c: Client) => (c.service_days ?? []).length > 0;
+
+  const filtered = clients.filter((c) => {
+    const matchesSearch = !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase());
+    const matchesRoute = !onRouteOnly || isOnRoute(c);
+    return matchesSearch && matchesRoute;
+  });
 
   const total = clients.length;
   const ativos = clients.filter((c) => c.status === "Ativo").length;
+  const onRouteCount = clients.filter(isOnRoute).length;
   const now = new Date();
   const novos = clients.filter((c) => {
     const d = new Date(c.created_at);
@@ -101,6 +107,7 @@ function ClientesPage() {
             <div className="mt-3 space-y-2.5 text-sm">
               <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Total Clients</span><span className="font-bold tabular-nums text-[var(--dash-text)]">{total}</span></div>
               <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Active Clients</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-green)" }}>{ativos}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">On Route</span><span className="font-bold tabular-nums" style={{ color: "#7C3AED" }}>{onRouteCount}</span></div>
               <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">New this month</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-navy)" }}>{novos}</span></div>
               <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Services this month</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-orange)" }}>0</span></div>
             </div>
@@ -133,6 +140,17 @@ function ClientesPage() {
             <h2 className="text-xl font-extrabold text-[var(--dash-text)] sm:text-2xl">Client List</h2>
             <div className="flex flex-wrap items-center gap-2">
               <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]">All statuses <ChevronDown className="h-4 w-4" /></button>
+              <button
+                onClick={() => setOnRouteOnly((v) => !v)}
+                className="flex items-center gap-2 rounded-[11px] border px-3 py-2 text-sm font-semibold"
+                style={{
+                  borderColor: onRouteOnly ? "#7C3AED" : "var(--dash-border)",
+                  background: onRouteOnly ? "#EDE4FB" : "#fff",
+                  color: onRouteOnly ? "#7C3AED" : "var(--dash-text-secondary)",
+                }}
+              >
+                <Map className="h-4 w-4" /> On Route
+              </button>
               <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Filter className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Filter</button>
               <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Upload className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Export</button>
             </div>
@@ -186,15 +204,25 @@ function ClientesPage() {
                       </td>
                       <td className="py-4 text-[var(--dash-text-secondary)]">{fmtDate(c.created_at)}</td>
                       <td className="py-4">
-                        <span
-                          className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                          style={{
-                            background: c.status === "Ativo" ? "var(--dash-badge-paid-bg)" : "var(--dash-border-table)",
-                            color: c.status === "Ativo" ? "var(--dash-badge-paid-text)" : "var(--dash-text-muted-2)",
-                          }}
-                        >
-                          {c.status}
-                        </span>
+                        {isOnRoute(c) ? (
+                          <span
+                            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                            style={{ background: "#EDE4FB", color: "#7C3AED" }}
+                            title="Has recurring service days scheduled on a route"
+                          >
+                            Route
+                          </span>
+                        ) : (
+                          <span
+                            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                            style={{
+                              background: c.status === "Ativo" ? "var(--dash-badge-paid-bg)" : "var(--dash-border-table)",
+                              color: c.status === "Ativo" ? "var(--dash-badge-paid-text)" : "var(--dash-text-muted-2)",
+                            }}
+                          >
+                            {c.status}
+                          </span>
+                        )}
                       </td>
                       <td className="py-4">
                         <div className="flex items-center gap-3">
