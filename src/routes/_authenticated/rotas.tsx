@@ -62,6 +62,13 @@ const WEEKDAY_LONG = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const
 // Weekday abbreviations matching the clients form's "Recurring Service Days" values
 const WEEKDAY_ABBR = WEEKDAY_LONG;
 
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia";
+  if (h < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
 function statusMarkerColor(status: StopStatus) {
   if (status === "Concluído") return "#16A34A";
   if (status === "Em serviço") return "#2563EB";
@@ -74,11 +81,13 @@ const mapContainerStyle = { width: "100%", height: "100%" };
 
 type LatLng = { lat: number; lng: number };
 
-function RouteMap({ stops }: { stops: RouteStop[] }) {
+// Resolves real map coordinates for a route's stops (from the client record,
+// or geocoded on the fly), shared between the map and the summary stats so
+// "Distância total" reflects the same positions shown on the map.
+function useStopCoords(stops: RouteStop[]) {
   const { isLoaded, loadError } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY });
   const [coords, setCoords] = useState<Record<string, LatLng>>({});
   const attempted = useRef<Set<string>>(new Set());
-  const mapRef = useRef<google.maps.Map | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -100,6 +109,22 @@ function RouteMap({ stops }: { stops: RouteStop[] }) {
     return () => { cancelled = true; };
   }, [isLoaded, stops]);
 
+  return { coords, isLoaded, loadError };
+}
+
+function haversineMiles(a: LatLng, b: LatLng) {
+  const R = 3958.8;
+  const toRad = (n: number) => (n * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.asin(Math.sqrt(h));
+}
+
+function RouteMap({
+  stops, coords, isLoaded, loadError,
+}: { stops: RouteStop[]; coords: Record<string, LatLng>; isLoaded: boolean; loadError?: Error }) {
+  const mapRef = useRef<google.maps.Map | null>(null);
   const points = stops.map((s) => ({ s, pos: coords[s.id] })).filter((p): p is { s: RouteStop; pos: LatLng } => !!p.pos);
 
   useEffect(() => {
@@ -194,18 +219,25 @@ function StatCard({ icon: Icon, tint, value, label }: { icon: typeof ListChecks;
   );
 }
 
-function routeStats(stops: RouteStop[]) {
+const AVG_MINUTES_PER_STOP = 30;
+
+function routeStats(stops: RouteStop[], coords: Record<string, LatLng>) {
   const completed = stops.filter((s) => s.status === "Concluído").length;
+  const remaining = stops.length - completed;
   const timed = stops.filter((s) => s.scheduled_time);
   const finish = timed.length
     ? timed.reduce((max, s) => (s.scheduled_time! > max ? s.scheduled_time! : max), timed[0].scheduled_time!).slice(0, 5)
     : "—";
-  return {
-    total: stops.length,
-    completed,
-    remaining: stops.length - completed,
-    finish,
-  };
+
+  const positioned = stops.map((s) => coords[s.id]).filter((p): p is LatLng => !!p);
+  let miles = 0;
+  for (let i = 1; i < positioned.length; i++) miles += haversineMiles(positioned[i - 1], positioned[i]);
+  const distanceLabel = positioned.length > 1 ? `${miles.toFixed(1)} mi` : "—";
+
+  const etaMinutes = remaining * AVG_MINUTES_PER_STOP;
+  const etaLabel = etaMinutes === 0 ? "0m" : etaMinutes >= 60 ? `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60 || ""}${etaMinutes % 60 ? "m" : ""}`.trim() : `${etaMinutes}m`;
+
+  return { total: stops.length, completed, remaining, finish, distanceLabel, etaLabel };
 }
 
 function TechnicianChips({
@@ -277,6 +309,9 @@ function RotasPage() {
   const [newRouteOpen, setNewRouteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [addTechOpen, setAddTechOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [showAllStops, setShowAllStops] = useState(false);
+  const [detailStopId, setDetailStopId] = useState<string | null>(null);
 
   const dateStr = toDateStr(selectedDate);
   const days = weekDays(selectedDate);
@@ -303,9 +338,15 @@ function RotasPage() {
     return map;
   }, [routes]);
 
+  const { coords, isLoaded: mapIsLoaded, loadError: mapLoadError } = useStopCoords(stops);
+
   // Cards always mirror the route shown below (not an all-technicians total),
   // so the numbers on screen never disagree with the list/map underneath them.
-  const summary = routeStats(stops);
+  const summary = routeStats(stops, coords);
+
+  const currentStop = stops.find((s) => s.status === "Em serviço") ?? stops.find((s) => s.status === "Pendente") ?? null;
+  const nextStop = stops.find((s) => s.status === "Pendente" && s.id !== currentStop?.id) ?? null;
+  const detailStop = stops.find((s) => s.id === detailStopId) ?? currentStop ?? stops[0] ?? null;
 
   const recurringClients = useMemo(() => {
     const abbr = WEEKDAY_ABBR[selectedDate.getDay()];
@@ -342,11 +383,17 @@ function RotasPage() {
     setSelectedRouteId(null);
   }
 
-  const cards = [
-    { icon: ListChecks, tint: "#2563EB", value: summary.total, label: "Total stops" },
+  const mobileCards = [
+    { icon: ListChecks, tint: "#2563EB", value: summary.total, label: "Paradas no total" },
+    { icon: CheckCircle2, tint: "#16A34A", value: summary.completed, label: "Concluídas" },
+    { icon: Clock, tint: "#E8813A", value: summary.etaLabel, label: "Tempo estimado restante" },
+    { icon: Flag, tint: "#7C3AED", value: summary.distanceLabel, label: "Distância total" },
+  ];
+  const desktopCards = [
+    { icon: ListChecks, tint: "#2563EB", value: summary.total, label: "Total Stops" },
     { icon: CheckCircle2, tint: "#16A34A", value: summary.completed, label: "Completed" },
-    { icon: Clock, tint: "#E8813A", value: summary.remaining, label: "Remaining" },
-    { icon: Flag, tint: "#7C3AED", value: summary.finish, label: "Predicted finish" },
+    { icon: Clock, tint: "#E8813A", value: summary.etaLabel, label: "Est. Time Left" },
+    { icon: Flag, tint: "#7C3AED", value: summary.distanceLabel, label: "Total Distance" },
   ];
 
   return (
@@ -356,33 +403,96 @@ function RotasPage() {
 
       {/* MOBILE */}
       <div className="space-y-4 p-3 lg:hidden">
-        <div className="flex items-center justify-between">
-          <h1 className="text-[20px] font-extrabold text-[var(--dash-text)]">Routes</h1>
-          <button onClick={() => setNewRouteOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-3 py-2 text-sm font-semibold text-white hover:opacity-90">
-            <Plus className="h-4 w-4" /> New
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-extrabold text-[var(--dash-text)]">
+              {greeting()}, {(activeRoute?.technician?.name ?? "there").split(" ")[0]} 👋
+            </h1>
+            <p className="text-[13px] text-[var(--dash-text-muted-2)]">
+              {selectedDate.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+            </p>
+          </div>
+          <button
+            onClick={() => setSelectedDate(new Date())}
+            className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--dash-water-bg)] px-3 py-1.5 text-[12px] font-bold text-[var(--dash-water-icon)]"
+          >
+            <CalendarDays className="h-3.5 w-3.5" /> Hoje <ChevronDown className="h-3.5 w-3.5" />
           </button>
         </div>
 
-        <DaySelector days={days} dateStr={dateStr} onSelect={setSelectedDate} />
-        <TechnicianChips technicians={technicians} techStats={techStats} selectedId={technicianId} focusedId={activeRoute?.technician_id} onSelect={selectTechnician} onAddClick={() => setAddTechOpen(true)} />
+        <MobileDaySelector selected={selectedDate} onSelect={setSelectedDate} />
 
         <div className="grid grid-cols-2 gap-3">
-          {cards.map((c) => <StatCard key={c.label} {...c} />)}
+          {mobileCards.map((c) => <StatCard key={c.label} {...c} />)}
+        </div>
+
+        <div className="relative">
+          <TechnicianProgressCard
+            technician={activeRoute?.technician ?? technicians[0]}
+            stats={activeRoute ? techStats.get(activeRoute.technician_id) : undefined}
+            onClick={() => setSwitcherOpen((v) => !v)}
+          />
+          {switcherOpen && (
+            <div className="absolute left-0 right-0 top-full z-20 mt-1.5 rounded-2xl border border-[var(--dash-border)] bg-white p-2 shadow-lg">
+              <button
+                onClick={() => { selectTechnician("all"); setSwitcherOpen(false); }}
+                className="block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+              >
+                All technicians
+              </button>
+              {technicians.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => { selectTechnician(t.id); setSwitcherOpen(false); }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-[var(--dash-bg)]"
+                >
+                  <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white" style={{ background: t.color }}>
+                    {initials(t.name)}
+                  </div>
+                  <span className="text-sm font-semibold text-[var(--dash-text)]">{t.name}</span>
+                </button>
+              ))}
+              <button
+                onClick={() => { setSwitcherOpen(false); setNewRouteOpen(true); }}
+                className="mt-1 flex w-full items-center gap-2 rounded-xl border-t border-[var(--dash-border)] px-3 pt-2.5 pb-1 text-left text-sm font-semibold"
+                style={{ color: "var(--dash-link)" }}
+              >
+                <Plus className="h-4 w-4" /> New Route
+              </button>
+            </div>
+          )}
         </div>
 
         {activeRoute ? (
           <>
-            <RouteMap stops={stops} />
-            <StopsList
-              route={activeRoute}
-              stops={stops}
-              onMove={move}
-              onStatus={(stop, status) => statusMut.mutate({ stop, status })}
-              onRemove={(id) => removeMut.mutate(id)}
-              onAddStop={() => setAddOpen(true)}
-              pending={statusMut.isPending}
-              showDelete={false}
-            />
+            <RouteMap stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[13px] font-bold text-[var(--dash-text)]">Próxima parada</h2>
+                <button onClick={() => setShowAllStops((v) => !v)} className="text-[12px] font-semibold text-[var(--dash-link)]">
+                  {showAllStops ? "Ocultar" : "Ver todas"}
+                </button>
+              </div>
+              {currentStop && <NextStopRow stop={currentStop} highlighted />}
+              {nextStop && <NextStopRow stop={nextStop} />}
+              {!currentStop && !nextStop && (
+                <p className="text-sm text-[var(--dash-text-muted)]">All stops completed for this route.</p>
+              )}
+            </div>
+
+            {showAllStops && (
+              <StopsList
+                route={activeRoute}
+                stops={stops}
+                onMove={move}
+                onStatus={(stop, status) => statusMut.mutate({ stop, status })}
+                onRemove={(id) => removeMut.mutate(id)}
+                onAddStop={() => setAddOpen(true)}
+                pending={statusMut.isPending}
+                showDelete={false}
+              />
+            )}
           </>
         ) : (
           <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
@@ -423,7 +533,7 @@ function RotasPage() {
           </div>
           <div className="hidden w-px self-stretch bg-[var(--dash-border)] lg:block" />
           <div className="flex flex-wrap items-center gap-6 lg:gap-8">
-            {cards.map((c) => {
+            {desktopCards.map((c) => {
               const Icon = c.icon;
               return (
                 <div key={c.label} className="flex items-center gap-2.5">
@@ -461,6 +571,9 @@ function RotasPage() {
                 onAddStop={() => setAddOpen(true)}
                 pending={statusMut.isPending}
                 hideAddCta
+                compact
+                activeStopId={detailStopId}
+                onSelectStop={setDetailStopId}
               />
 
               <div className="flex flex-wrap items-center gap-3 border-t border-[var(--dash-border)] pt-3 text-[11px] font-medium text-[var(--dash-text-muted-2)]">
@@ -472,12 +585,15 @@ function RotasPage() {
 
             <div className="space-y-3">
               <h2 className="text-[14px] font-bold text-[var(--dash-text)]">Route Map</h2>
-              <RouteMap stops={stops} />
+              <RouteMap stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
+              <CurrentStopPanel stop={detailStop} onViewDetails={() => setDetailStopId(detailStop?.id ?? null)} />
             </div>
           </div>
         ) : (
           <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
         )}
+
+        {activeRoute && <RouteNotesQuickActions stops={stops} onAddStop={() => setAddOpen(true)} />}
 
         <div className="grid gap-4 lg:grid-cols-2">
           {recurringClients.length > 0 && (
@@ -531,6 +647,153 @@ function DaySelector({ days, dateStr, onSelect, compact }: { days: Date[]; dateS
   );
 }
 
+// Wide, horizontally swipeable multi-week strip (mobile). Native touch
+// scrolling handles the swipe gesture; no gesture library needed.
+const SWIPE_WEEKS_BEFORE = 4;
+const SWIPE_WEEKS_AFTER = 4;
+
+function swipeDays(anchor: Date) {
+  const start = new Date(anchor);
+  start.setDate(start.getDate() - start.getDay() - SWIPE_WEEKS_BEFORE * 7);
+  const total = (SWIPE_WEEKS_BEFORE + SWIPE_WEEKS_AFTER + 1) * 7;
+  return Array.from({ length: total }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return d;
+  });
+}
+
+function MobileDaySelector({ selected, onSelect }: { selected: Date; onSelect: (d: Date) => void }) {
+  const days = useMemo(() => swipeDays(selected), [selected]);
+  const dateStr = toDateStr(selected);
+  const today = toDateStr(new Date());
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [dateStr]);
+
+  return (
+    <div ref={scrollerRef} className="-mx-3 flex snap-x snap-mandatory gap-1.5 overflow-x-auto px-3 pb-1">
+      {days.map((d) => {
+        const ds = toDateStr(d);
+        const active = ds === dateStr;
+        const isToday = ds === today;
+        return (
+          <button
+            key={ds}
+            ref={active ? activeRef : undefined}
+            onClick={() => onSelect(d)}
+            className="flex w-11 shrink-0 snap-center flex-col items-center gap-1 rounded-xl py-2"
+            style={{ background: active ? "var(--dash-navy)" : "transparent", color: active ? "#fff" : "var(--dash-text-secondary-2)" }}
+          >
+            <span className="text-[11px] font-semibold opacity-80">{WEEKDAY_LONG[d.getDay()]}</span>
+            <span className="relative text-[13px] font-bold">
+              {d.getDate()}
+              {isToday && !active && (
+                <span className="absolute -bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[var(--dash-navy)]" />
+              )}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function TechnicianProgressCard({
+  technician, stats, onClick,
+}: { technician?: Technician; stats?: { total: number; completed: number }; onClick: () => void }) {
+  if (!technician) {
+    return (
+      <button onClick={onClick} className="w-full rounded-2xl border border-dashed border-[var(--dash-border)] bg-white p-4 text-center text-sm text-[var(--dash-text-muted)]">
+        No technicians yet — tap to add one
+      </button>
+    );
+  }
+  const total = stats?.total ?? 0;
+  const completed = stats?.completed ?? 0;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  return (
+    <button onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl border border-[var(--dash-border)] bg-white p-4 text-left">
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[12px] font-bold text-white" style={{ background: technician.color }}>
+        {initials(technician.name)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] font-bold text-[var(--dash-text)]">{technician.name}</span>
+          <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
+            Em Rota
+          </span>
+        </div>
+        <div className="mt-0.5 text-[12px] text-[var(--dash-text-muted-2)]">{total} paradas · {completed} concluídas</div>
+        <div className="mt-2 flex items-center gap-2">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--dash-bg)]">
+            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
+          </div>
+          <span className="shrink-0 text-[11px] font-semibold text-[var(--dash-text-muted-2)]">{pct}%</span>
+        </div>
+      </div>
+      <ChevronDown className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
+    </button>
+  );
+}
+
+function stopStatusLabel(status: StopStatus) {
+  return status === "Em serviço" ? "Em andamento" : status === "Concluído" ? "Concluído" : "Próxima";
+}
+
+function NextStopRow({ stop, highlighted }: { stop: RouteStop; highlighted?: boolean }) {
+  const badgeStyle = STATUS_STYLES[stop.status] ?? STATUS_STYLES["Pendente"];
+  return (
+    <div
+      className="flex items-center gap-3 rounded-xl border p-3"
+      style={{
+        borderColor: highlighted ? "var(--dash-navy-2)" : "var(--dash-border)",
+        background: highlighted ? "var(--dash-water-bg)" : "#fff",
+      }}
+    >
+      <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white" style={{ background: statusMarkerColor(stop.status) }}>
+        {stop.position + 1}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[12px] font-bold text-[var(--dash-text)]">{stop.scheduled_time ? stop.scheduled_time.slice(0, 5) : "—"}</span>
+          <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badgeStyle.bg, color: badgeStyle.text }}>
+            {stopStatusLabel(stop.status)}
+          </span>
+        </div>
+        <div className="truncate text-[13px] font-bold text-[var(--dash-text)]">{stop.client?.name}</div>
+        <div className="flex items-center gap-1.5">
+          <Link to="/chemicals/$stopId" params={{ stopId: stop.id }} className="shrink-0" title="Pool Chemicals">
+            <FlaskConical className="h-3.5 w-3.5" style={{ color: "var(--dash-green)" }} />
+          </Link>
+          <span className="truncate text-[12px] text-[var(--dash-text-muted-2)]">{stop.client?.address}</span>
+        </div>
+      </div>
+      <div className="flex shrink-0 gap-1.5">
+        {stop.client?.phone && (
+          <a href={`tel:${stop.client.phone}`} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+            <Phone className="h-4 w-4" />
+          </a>
+        )}
+        {stop.client?.address && (
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(clientFullAddress(stop.client))}`}
+            target="_blank"
+            rel="noreferrer"
+            className="grid h-9 w-9 place-items-center rounded-full text-white"
+            style={{ background: "var(--dash-navy)" }}
+          >
+            <Navigation className="h-4 w-4" />
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function EmptyState({ onNewRoute }: { onNewRoute: () => void }) {
   return (
     <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white py-16 text-center">
@@ -545,6 +808,7 @@ function EmptyState({ onNewRoute }: { onNewRoute: () => void }) {
 
 function StopsList({
   route, stops, onMove, onStatus, onRemove, onAddStop, pending, hideAddCta, showDelete = true,
+  compact = false, activeStopId, onSelectStop,
 }: {
   route: RouteRow;
   stops: RouteStop[];
@@ -555,8 +819,26 @@ function StopsList({
   pending: boolean;
   hideAddCta?: boolean;
   showDelete?: boolean;
+  compact?: boolean;
+  activeStopId?: string | null;
+  onSelectStop?: (id: string) => void;
 }) {
   const completed = stops.filter((s) => s.status === "Concluído").length;
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (!compact || !activeStopId) return;
+    setExpandedId(activeStopId);
+    rowRefs.current[activeStopId]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [compact, activeStopId]);
+
+  function toggle(stop: RouteStop) {
+    const next = expandedId === stop.id ? null : stop.id;
+    setExpandedId(next);
+    if (next) onSelectStop?.(stop.id);
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -581,9 +863,18 @@ function StopsList({
       <div className="space-y-2.5">
         {stops.map((stop, i) => {
           const next = nextStatus(stop.status);
+          const isExpanded = !compact || expandedId === stop.id;
           return (
-            <div key={stop.id} className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4" style={cardShadow}>
-              <div className="flex items-start gap-3">
+            <div
+              key={stop.id}
+              ref={(el) => { rowRefs.current[stop.id] = el; }}
+              className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4"
+              style={cardShadow}
+            >
+              <div
+                className={`flex items-start gap-3 ${compact ? "cursor-pointer" : ""}`}
+                onClick={compact ? () => toggle(stop) : undefined}
+              >
                 <div className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white" style={{ background: statusMarkerColor(stop.status) }}>
                   {i + 1}
                 </div>
@@ -592,60 +883,85 @@ function StopsList({
                     <div className="text-sm font-bold text-[var(--dash-text)]">{stop.scheduled_time ? stop.scheduled_time.slice(0, 5) : "—"}</div>
                     <StatusBadge status={stop.status} />
                   </div>
-                  <Link to="/clientes" className="mt-1 block truncate font-semibold text-[var(--dash-text)] hover:underline">{stop.client?.name}</Link>
-                  <div className="truncate text-xs text-[var(--dash-text-muted)]">{stop.client?.address}</div>
+                  <Link to="/clientes" onClick={(e) => e.stopPropagation()} className="mt-1 block truncate font-semibold text-[var(--dash-text)] hover:underline">
+                    {stop.client?.name}
+                  </Link>
+                  <div className="flex items-center gap-1.5">
+                    {compact && (
+                      <Link to="/chemicals/$stopId" params={{ stopId: stop.id }} onClick={(e) => e.stopPropagation()} className="shrink-0" title="Pool Chemicals">
+                        <FlaskConical className="h-3.5 w-3.5" style={{ color: "var(--dash-green)" }} />
+                      </Link>
+                    )}
+                    <div className="truncate text-xs text-[var(--dash-text-muted)]">{stop.client?.address}</div>
+                  </div>
                 </div>
-                <div className="flex shrink-0 flex-col gap-1">
-                  <button onClick={() => onMove(i, -1)} disabled={i === 0} className="grid h-6 w-6 place-items-center rounded border border-[var(--dash-border)] text-[var(--dash-text-muted)] disabled:opacity-30">
-                    <ChevronUp className="h-3.5 w-3.5" />
-                  </button>
-                  <button onClick={() => onMove(i, 1)} disabled={i === stops.length - 1} className="grid h-6 w-6 place-items-center rounded border border-[var(--dash-border)] text-[var(--dash-text-muted)] disabled:opacity-30">
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center gap-2">
-                {stop.client?.phone && (
-                  <a href={`tel:${stop.client.phone}`} className="grid h-9 w-9 place-items-center rounded-[10px] border border-[var(--dash-border)]" style={{ color: "var(--dash-navy)" }}>
-                    <Phone className="h-4 w-4" />
-                  </a>
-                )}
-                {stop.client?.address && (
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(clientFullAddress(stop.client))}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="grid h-9 w-9 place-items-center rounded-[10px] border border-[var(--dash-border)]"
-                    style={{ color: "var(--dash-navy)" }}
-                  >
-                    <Navigation className="h-4 w-4" />
-                  </a>
-                )}
-                <Link
-                  to="/chemicals/$stopId"
-                  params={{ stopId: stop.id }}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] py-2 text-sm font-semibold"
-                  style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
-                >
-                  <FlaskConical className="h-4 w-4" /> Chemicals
-                </Link>
-                {next && (
-                  <button
-                    onClick={() => onStatus(stop, next)}
-                    disabled={pending}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-2 text-sm font-semibold text-white disabled:opacity-50"
-                    style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
-                  >
-                    {next === "Concluído" ? <Check className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    {next === "Concluído" ? "Complete" : "Start"}
-                  </button>
-                )}
-                {showDelete && (
-                  <button onClick={() => onRemove(stop.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border" style={{ borderColor: "var(--dash-red-border)", color: "var(--dash-red)" }}>
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                {compact ? (
+                  <ChevronDown className={`mt-1 h-4 w-4 shrink-0 text-[var(--dash-text-muted)] transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                ) : (
+                  <div className="flex shrink-0 flex-col gap-1">
+                    <button onClick={() => onMove(i, -1)} disabled={i === 0} className="grid h-6 w-6 place-items-center rounded border border-[var(--dash-border)] text-[var(--dash-text-muted)] disabled:opacity-30">
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => onMove(i, 1)} disabled={i === stops.length - 1} className="grid h-6 w-6 place-items-center rounded border border-[var(--dash-border)] text-[var(--dash-text-muted)] disabled:opacity-30">
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 )}
               </div>
+              {isExpanded && (
+                <div className="mt-3 flex items-center gap-2">
+                  {compact && (
+                    <div className="flex shrink-0 flex-col gap-1">
+                      <button onClick={() => onMove(i, -1)} disabled={i === 0} className="grid h-6 w-6 place-items-center rounded border border-[var(--dash-border)] text-[var(--dash-text-muted)] disabled:opacity-30">
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => onMove(i, 1)} disabled={i === stops.length - 1} className="grid h-6 w-6 place-items-center rounded border border-[var(--dash-border)] text-[var(--dash-text-muted)] disabled:opacity-30">
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                  {stop.client?.phone && (
+                    <a href={`tel:${stop.client.phone}`} className="grid h-9 w-9 place-items-center rounded-[10px] border border-[var(--dash-border)]" style={{ color: "var(--dash-navy)" }}>
+                      <Phone className="h-4 w-4" />
+                    </a>
+                  )}
+                  {stop.client?.address && (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(clientFullAddress(stop.client))}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="grid h-9 w-9 place-items-center rounded-[10px] border border-[var(--dash-border)]"
+                      style={{ color: "var(--dash-navy)" }}
+                    >
+                      <Navigation className="h-4 w-4" />
+                    </a>
+                  )}
+                  <Link
+                    to="/chemicals/$stopId"
+                    params={{ stopId: stop.id }}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] py-2 text-sm font-semibold"
+                    style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
+                  >
+                    <FlaskConical className="h-4 w-4" /> Chemicals
+                  </Link>
+                  {next && (
+                    <button
+                      onClick={() => onStatus(stop, next)}
+                      disabled={pending}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-[10px] py-2 text-sm font-semibold text-white disabled:opacity-50"
+                      style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
+                    >
+                      {next === "Concluído" ? <Check className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      {next === "Concluído" ? "Complete" : "Start"}
+                    </button>
+                  )}
+                  {showDelete && (
+                    <button onClick={() => onRemove(stop.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border" style={{ borderColor: "var(--dash-red-border)", color: "var(--dash-red)" }}>
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
@@ -654,6 +970,88 @@ function StopsList({
             <p className="text-sm text-[var(--dash-text-muted)]">No stops yet. Click "Add Stop" to schedule a client visit.</p>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function CurrentStopPanel({ stop, onViewDetails }: { stop: RouteStop | null; onViewDetails: () => void }) {
+  if (!stop) {
+    return (
+      <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4 text-center text-sm text-[var(--dash-text-muted)]">
+        No stop selected.
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold text-white" style={{ background: statusMarkerColor(stop.status) }}>
+          {stop.position + 1}
+        </span>
+        <span className="text-[12px] font-bold uppercase tracking-wide text-[var(--dash-text-muted-2)]">Current Stop</span>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="text-[16px] font-extrabold text-[var(--dash-text)]">{stop.client?.name}</div>
+          <div className="text-[13px] text-[var(--dash-text-secondary-2)]">{stop.client?.address}</div>
+        </div>
+        <div className="flex flex-wrap items-center gap-6">
+          <div>
+            <div className="text-[11px] font-semibold text-[var(--dash-text-muted-2)]">Service Type</div>
+            <div className="text-[13px] font-bold text-[var(--dash-text)]">{stop.client?.service_frequency || "Standard Service"}</div>
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold text-[var(--dash-text-muted-2)]">Est. Duration</div>
+            <div className="text-[13px] font-bold text-[var(--dash-text)]">~{AVG_MINUTES_PER_STOP} min</div>
+          </div>
+          <button onClick={onViewDetails} className="rounded-xl px-4 py-2.5 text-[13px] font-bold text-white" style={{ background: "var(--dash-navy)" }}>
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RouteNotesQuickActions({ stops, onAddStop }: { stops: RouteStop[]; onAddStop: () => void }) {
+  const notes = stops.filter((s) => s.notes).map((s) => s.notes as string);
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+        <h3 className="mb-2 text-[13px] font-bold text-[var(--dash-text)]">Route Notes</h3>
+        {notes.length > 0 ? (
+          <ul className="space-y-1.5">
+            {notes.map((n, i) => (
+              <li key={i} className="flex items-start gap-2 text-[13px] text-[var(--dash-text-secondary)]">
+                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--dash-text-muted)]" />
+                {n}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-[13px] text-[var(--dash-text-muted)]">No notes on this route's stops yet.</p>
+        )}
+      </div>
+      <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+        <h3 className="mb-2 text-[13px] font-bold text-[var(--dash-text)]">Quick Actions</h3>
+        <div className="grid grid-cols-3 gap-2">
+          <button onClick={onAddStop} className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--dash-border)] px-2 py-3 text-center text-[11px] font-semibold text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
+            <Plus className="h-4 w-4" /> Add Stop
+          </button>
+          <button
+            onClick={() => toast.info("Expand a stop below to move it up or down")}
+            className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--dash-border)] px-2 py-3 text-center text-[11px] font-semibold text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]"
+          >
+            <ChevronUp className="h-4 w-4" /> Reorder Stops
+          </button>
+          <button
+            onClick={() => toast.info("Send to Technician — coming soon")}
+            className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--dash-border)] px-2 py-3 text-center text-[11px] font-semibold text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]"
+          >
+            <Navigation className="h-4 w-4" /> Send to Technician
+          </button>
+        </div>
       </div>
     </div>
   );
