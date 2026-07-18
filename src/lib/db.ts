@@ -290,7 +290,10 @@ export async function addStopToRoute(routeId: string, clientId: string, schedule
     position: nextPosition,
     scheduled_time: scheduledTime || null,
   });
-  if (error) throw error;
+  if (error) {
+    if (error.code === "23505") throw new Error("This client is already on this route.");
+    throw error;
+  }
 }
 
 export async function updateStopStatus(stopId: string, status: StopStatus, clientId?: string) {
