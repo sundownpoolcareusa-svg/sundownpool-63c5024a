@@ -1,10 +1,9 @@
-import { summaryFor } from "@/mock-data";
-
 export type Technician = {
   id: string;
   name: string;
   color: string;
   van: string;
+  stats: { total: number; completed: number; timeLeft: string; distance: string };
 };
 
 export function TechnicianSelector({
@@ -19,9 +18,8 @@ export function TechnicianSelector({
   return (
     <div className="flex gap-3 overflow-x-auto pb-1">
       {technicians.map((t) => {
-        const summary = summaryFor(t.id);
         const active = t.id === selectedId;
-        const pct = summary.total > 0 ? Math.round((summary.completed / summary.total) * 100) : 0;
+        const pct = t.stats.total > 0 ? Math.round((t.stats.completed / t.stats.total) * 100) : 0;
         return (
           <button
             key={t.id}
@@ -38,7 +36,7 @@ export function TechnicianSelector({
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-bold text-[var(--dash-text)]">{t.name}</div>
               <div className="text-[11px] text-[var(--dash-text-muted-2)]">
-                {t.van} · {summary.completed}/{summary.total} paradas
+                {t.stats.total} stops · {t.stats.completed} done
               </div>
               <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/70">
                 <div className="h-full rounded-full" style={{ width: `${pct}%`, background: t.color }} />
