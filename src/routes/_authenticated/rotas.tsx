@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
-  addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, initials, clientFullAddress,
+  addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, initials, clientFullAddress, setClientTechnician,
   type RouteStop, type StopStatus, type Technician, type Client, type RouteRow,
 } from "@/lib/db";
 import { geocodeAndSaveClient } from "@/lib/geocode";
@@ -357,11 +357,48 @@ function RotasPage() {
   const nextStop = stops.find((s) => s.status === "Pendente" && s.id !== currentStop?.id) ?? null;
   const detailStop = stops.find((s) => s.id === detailStopId) ?? currentStop ?? stops[0] ?? null;
 
+  // Clients with an assigned technician are auto-scheduled every matching
+  // weekday (see the effect below) — only clients without one still need a
+  // manual "who should take this?" suggestion.
   const recurringClients = useMemo(() => {
     const abbr = WEEKDAY_ABBR[selectedDate.getDay()];
     const scheduled = new Set(routes.flatMap((r) => (r.route_stops ?? []).map((s) => s.client_id)));
-    return clients.filter((c) => (c.service_days ?? []).includes(abbr) && c.status !== "Inativo" && !scheduled.has(c.id));
+    return clients.filter((c) => (c.service_days ?? []).includes(abbr) && c.status !== "Inativo" && !c.technician_id && !scheduled.has(c.id));
   }, [clients, routes, selectedDate]);
+
+  // Clients with service_days + a default technician automatically get a
+  // stop on that technician's route for every matching weekday, so a
+  // recurring Wednesday client shows up every Wednesday without the owner
+  // re-adding them by hand each week.
+  const autoAttempted = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (clients.length === 0) return;
+    const abbr = WEEKDAY_ABBR[selectedDate.getDay()];
+    const scheduled = new Set(routes.flatMap((r) => (r.route_stops ?? []).map((s) => s.client_id)));
+    const toSchedule = clients.filter((c) => {
+      const key = `${dateStr}:${c.id}`;
+      return (
+        c.status !== "Inativo" &&
+        c.technician_id &&
+        (c.service_days ?? []).includes(abbr) &&
+        !scheduled.has(c.id) &&
+        !autoAttempted.current.has(key)
+      );
+    });
+    if (toSchedule.length === 0) return;
+    toSchedule.forEach((c) => autoAttempted.current.add(`${dateStr}:${c.id}`));
+    (async () => {
+      for (const c of toSchedule) {
+        try {
+          const route = await getOrCreateRoute(c.technician_id!, dateStr);
+          await addStopToRoute(route.id, c.id);
+        } catch {
+          // best-effort — a failed auto-add just falls back to the manual suggestion next render
+        }
+      }
+      qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] });
+    })();
+  }, [clients, routes, dateStr, qc]);
 
   const statusMut = useMutation({
     mutationFn: ({ stop, status }: { stop: RouteStop; status: StopStatus }) => updateStopStatus(stop.id, status, stop.client_id),
@@ -511,7 +548,7 @@ function RotasPage() {
             technicianId={technicianId}
             technicians={technicians}
             date={dateStr}
-            onAdded={(routeId) => { setSelectedRouteId(routeId); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); }}
+            onAdded={(routeId) => { setSelectedRouteId(routeId); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); qc.invalidateQueries({ queryKey: ["clients"] }); }}
           />
         )}
 
@@ -609,7 +646,7 @@ function RotasPage() {
               technicianId={technicianId}
               technicians={technicians}
               date={dateStr}
-              onAdded={(routeId) => { setSelectedRouteId(routeId); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); }}
+              onAdded={(routeId) => { setSelectedRouteId(routeId); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); qc.invalidateQueries({ queryKey: ["clients"] }); }}
             />
           )}
           <TechniciansCard technicians={technicians} open={addTechOpen} onOpenChange={setAddTechOpen} />
@@ -1071,10 +1108,11 @@ function RecurringSuggestions({
     mutationFn: async ({ client, techId }: { client: Client; techId: string }) => {
       const route = await getOrCreateRoute(techId, date);
       await addStopToRoute(route.id, client.id);
+      await setClientTechnician(client.id, techId);
       return route.id;
     },
     onSuccess: (routeId, { client }) => {
-      toast.success(`${client.name} added to today's route`);
+      toast.success(`${client.name} added — they'll now auto-schedule every matching weekday`);
       onAdded(routeId);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -1099,7 +1137,7 @@ function RecurringSuggestions({
         Recurring today
       </div>
       <p className="mb-2 text-xs text-[var(--dash-text-muted)]">
-        Clients scheduled for this weekday who aren't on a route yet.
+        Scheduled for this weekday but have no assigned technician yet — set one on the client's profile to auto-schedule them every week.
       </p>
       <div className="space-y-1.5">
         {clients.map((c) => (

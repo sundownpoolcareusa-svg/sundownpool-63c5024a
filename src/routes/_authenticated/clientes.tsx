@@ -8,7 +8,7 @@ import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users,
 } from "lucide-react";
-import { listClients, fmtDate, initials, fmt, type Client, type Invoice } from "@/lib/db";
+import { listClients, listTechnicians, fmtDate, initials, fmt, type Client, type Invoice } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -352,10 +352,12 @@ function ClientFormModal({
     equipment_photos: [] as string[],
     lat: null as number | null,
     lng: null as number | null,
+    technician_id: null as string | null,
   };
   const [form, setForm] = useState(empty);
   const [userId, setUserId] = useState<string>("anon");
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUserId(data.user.id); }); }, []);
+  const { data: technicians = [] } = useQuery({ queryKey: ["technicians"], queryFn: listTechnicians, enabled: open });
 
   // reset when editing changes
   const editingId = editing?.id ?? null;
@@ -378,6 +380,7 @@ function ClientFormModal({
         equipment_photos: editing.equipment_photos || [],
         lat: editing.lat ?? null,
         lng: editing.lng ?? null,
+        technician_id: editing.technician_id ?? null,
       });
     } else {
       setForm(empty);
@@ -471,11 +474,23 @@ function ClientFormModal({
                     color: active ? "#fff" : "var(--dash-text-secondary)",
                   }}
                 >
-                  {d.label}
+                  {d.v}
                 </button>
               );
             })}
           </div>
+        </div>
+        <div>
+          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Assigned Technician</label>
+          <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring days to auto-schedule</p>
+          <select
+            value={form.technician_id ?? ""}
+            onChange={(e) => setForm({ ...form, technician_id: e.target.value || null })}
+            className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+          >
+            <option value="">None</option>
+            {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Monthly pool value (USD)</label>
