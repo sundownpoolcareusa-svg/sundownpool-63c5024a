@@ -7,7 +7,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
   Plus, Phone, ChevronUp, ChevronDown, Check, Play, Trash2, MapPin, CalendarDays,
-  ListChecks, CheckCircle2, Clock, Flag, LocateFixed, Navigation, FlaskConical,
+  CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
@@ -207,14 +207,23 @@ function RouteMap({
   );
 }
 
-function StatCard({ icon: Icon, tint, value, label }: { icon: typeof ListChecks; tint: string; value: string | number; label: string }) {
+type StatItem = { icon: typeof MapPin; tint: string; value: string | number; label: string };
+
+function StatRow({ items }: { items: StatItem[] }) {
   return (
-    <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
-      <div className="mb-2 grid h-9 w-9 place-items-center rounded-[10px]" style={{ background: `${tint}1A`, color: tint }}>
-        <Icon className="h-[18px] w-[18px]" />
-      </div>
-      <div className="text-2xl font-extrabold text-[var(--dash-text)]">{value}</div>
-      <div className="text-[12px] font-medium text-[var(--dash-text-muted-2)]">{label}</div>
+    <div className="flex items-stretch rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+      {items.map((it, i) => {
+        const Icon = it.icon;
+        return (
+          <div key={it.label} className={`min-w-0 flex-1 ${i > 0 ? "ml-3 border-l border-[var(--dash-border)] pl-3" : ""}`}>
+            <div className="flex items-center gap-1.5">
+              <Icon className="h-5 w-5 shrink-0" style={{ color: it.tint }} />
+              <span className="text-lg font-extrabold text-[var(--dash-text)]">{it.value}</span>
+            </div>
+            <div className="mt-1 text-[11px] font-medium leading-tight text-[var(--dash-text-muted-2)]">{it.label}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -384,16 +393,16 @@ function RotasPage() {
   }
 
   const mobileCards = [
-    { icon: ListChecks, tint: "#2563EB", value: summary.total, label: "Paradas no total" },
+    { icon: MapPin, tint: "#2563EB", value: summary.total, label: "Paradas no total" },
     { icon: CheckCircle2, tint: "#16A34A", value: summary.completed, label: "Concluídas" },
     { icon: Clock, tint: "#E8813A", value: summary.etaLabel, label: "Tempo estimado restante" },
-    { icon: Flag, tint: "#7C3AED", value: summary.distanceLabel, label: "Distância total" },
+    { icon: Share2, tint: "#7C3AED", value: summary.distanceLabel, label: "Distância total" },
   ];
   const desktopCards = [
-    { icon: ListChecks, tint: "#2563EB", value: summary.total, label: "Total Stops" },
+    { icon: MapPin, tint: "#2563EB", value: summary.total, label: "Total Stops" },
     { icon: CheckCircle2, tint: "#16A34A", value: summary.completed, label: "Completed" },
     { icon: Clock, tint: "#E8813A", value: summary.etaLabel, label: "Est. Time Left" },
-    { icon: Flag, tint: "#7C3AED", value: summary.distanceLabel, label: "Total Distance" },
+    { icon: Share2, tint: "#7C3AED", value: summary.distanceLabel, label: "Total Distance" },
   ];
 
   return (
@@ -422,9 +431,7 @@ function RotasPage() {
 
         <MobileDaySelector selected={selectedDate} onSelect={setSelectedDate} />
 
-        <div className="grid grid-cols-2 gap-3">
-          {mobileCards.map((c) => <StatCard key={c.label} {...c} />)}
-        </div>
+        <StatRow items={mobileCards} />
 
         <div className="relative">
           <TechnicianProgressCard
