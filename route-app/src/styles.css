@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --dash-navy: #0c2a4d;
+  --dash-navy-2: #164574;
+  --dash-bg: #f4f6f9;
+  --dash-surface: #ffffff;
+  --dash-surface-soft: #f7f9fb;
+  --dash-border: #e7ebf0;
+  --dash-text: #1b2432;
+  --dash-text-secondary: #3a465a;
+  --dash-text-secondary-2: #5a6675;
+  --dash-text-muted: #98a2b1;
+  --dash-text-muted-2: #8a94a3;
+  --dash-water-bg: #e7f3f7;
+  --dash-water-icon: #1487a6;
+  --dash-orange: #e8813a;
+  --dash-green: #16a34a;
+  --dash-blue: #2563eb;
+  --dash-red: #d0483f;
+}
+
+body {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  background-color: var(--dash-bg);
+  color: var(--dash-text);
+}
