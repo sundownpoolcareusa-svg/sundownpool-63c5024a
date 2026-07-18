@@ -12,6 +12,7 @@ export type Client = {
   client_type: string;
   status: string;
   service_days?: string[];
+  service_frequency?: string | null;
   lat?: number | null;
   lng?: number | null;
   created_at: string;
