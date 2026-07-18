@@ -10,6 +10,8 @@ export type Client = {
   client_type: string;
   status: string;
   service_days?: string[];
+  lat?: number | null;
+  lng?: number | null;
   created_at: string;
 };
 

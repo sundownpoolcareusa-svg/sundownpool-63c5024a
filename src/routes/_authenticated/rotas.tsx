@@ -1,18 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { GoogleMap, Marker, Polyline, useJsApiLoader } from "@react-google-maps/api";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
   Plus, Phone, ChevronUp, ChevronDown, Check, Play, Trash2, MapPin, CalendarDays,
-  ListChecks, CheckCircle2, Clock, Flag, Home, LocateFixed, Navigation, FlaskConical,
+  ListChecks, CheckCircle2, Clock, Flag, LocateFixed, Navigation, FlaskConical,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
   addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, initials,
   type RouteStop, type StopStatus, type Technician, type Client, type RouteRow,
 } from "@/lib/db";
+import { geocodeAndSaveClient } from "@/lib/geocode";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/rotas")({
@@ -60,89 +62,119 @@ const WEEKDAY_LONG = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const
 // Weekday abbreviations matching the clients form's "Recurring Service Days" values
 const WEEKDAY_ABBR = WEEKDAY_LONG;
 
-// Deterministic, cycling positions for the decorative placeholder map — not
-// tied to real geography, just spreads stops out visually.
-const MAP_POSITIONS = [
-  { x: 16, y: 74 }, { x: 24, y: 62 }, { x: 33, y: 50 }, { x: 44, y: 40 }, { x: 55, y: 30 },
-  { x: 66, y: 20 }, { x: 77, y: 12 }, { x: 20, y: 20 }, { x: 40, y: 66 }, { x: 60, y: 56 },
-  { x: 70, y: 70 }, { x: 30, y: 34 }, { x: 50, y: 80 }, { x: 80, y: 40 },
-];
-const MAP_LABELS = [
-  { text: "Longboat Key", x: 10, y: 10 },
-  { text: "Sarasota", x: 30, y: 40 },
-  { text: "Fruitville", x: 62, y: 34 },
-  { text: "Bee Ridge", x: 58, y: 58 },
-  { text: "Siesta Key", x: 14, y: 78 },
-  { text: "Osprey", x: 36, y: 76 },
-  { text: "Venice", x: 56, y: 92 },
-];
-
 function statusMarkerColor(status: StopStatus) {
   if (status === "Concluído") return "#16A34A";
   if (status === "Em serviço") return "#2563EB";
   return "#94A3B8";
 }
 
+const GOOGLE_MAPS_KEY = (import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined) ?? "";
+const SARASOTA_CENTER = { lat: 27.3364, lng: -82.5307 };
+const mapContainerStyle = { width: "100%", height: "100%" };
+
+type LatLng = { lat: number; lng: number };
+
 function RouteMap({ stops }: { stops: RouteStop[] }) {
-  const points = stops.map((s, i) => ({ ...MAP_POSITIONS[i % MAP_POSITIONS.length], s }));
-  const current = points.find((p) => p.s.status === "Em serviço") ?? points.find((p) => p.s.status === "Pendente");
-  const line = points.map((p) => `${p.x},${p.y}`).join(" ");
+  const { isLoaded, loadError } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY });
+  const [coords, setCoords] = useState<Record<string, LatLng>>({});
+  const attempted = useRef<Set<string>>(new Set());
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    let cancelled = false;
+    (async () => {
+      for (const s of stops) {
+        if (!s.client || attempted.current.has(s.id)) continue;
+        attempted.current.add(s.id);
+        if (s.client.lat != null && s.client.lng != null) {
+          setCoords((c) => ({ ...c, [s.id]: { lat: s.client!.lat as number, lng: s.client!.lng as number } }));
+          continue;
+        }
+        if (!s.client.address) continue;
+        const result = await geocodeAndSaveClient(s.client.id, s.client.address);
+        if (!cancelled && result) setCoords((c) => ({ ...c, [s.id]: result }));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isLoaded, stops]);
+
+  const points = stops.map((s) => ({ s, pos: coords[s.id] })).filter((p): p is { s: RouteStop; pos: LatLng } => !!p.pos);
+
+  useEffect(() => {
+    if (!mapRef.current || points.length === 0) return;
+    if (points.length === 1) {
+      mapRef.current.panTo(points[0].pos);
+      mapRef.current.setZoom(14);
+      return;
+    }
+    const bounds = new google.maps.LatLngBounds();
+    points.forEach((p) => bounds.extend(p.pos));
+    mapRef.current.fitBounds(bounds, 48);
+  }, [points]);
+
+  function locateMe() {
+    if (!navigator.geolocation || !mapRef.current) { toast.error("Location not available"); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => mapRef.current?.panTo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => toast.error("Couldn't get your location"),
+    );
+  }
+
+  const wrapperClass = "relative h-56 w-full overflow-hidden rounded-2xl border border-[var(--dash-border)] lg:h-[360px]";
+
+  if (!GOOGLE_MAPS_KEY || loadError) {
+    return (
+      <div className={`${wrapperClass} grid place-items-center bg-[var(--dash-surface-soft)] text-center`}>
+        <div>
+          <MapPin className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
+          <p className="mt-2 text-sm text-[var(--dash-text-muted)]">Map unavailable — check the Google Maps API key.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return <div className={`${wrapperClass} animate-pulse bg-[var(--dash-surface-soft)]`} />;
+  }
 
   return (
-    <div
-      className="relative h-56 w-full overflow-hidden rounded-2xl border border-[var(--dash-border)] lg:h-[360px]"
-      style={{ background: "linear-gradient(160deg, #EAF3E8 0%, #E4F0F5 55%, #DCEAF4 100%)" }}
-    >
-      <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
-        <defs>
-          <pattern id="rotasMapGrid" width="7%" height="9%" patternUnits="userSpaceOnUse">
-            <path d="M 0 0 L 0 100 M 0 0 L 100 0" stroke="#D3E2DC" strokeWidth="1" fill="none" opacity="0.7" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#rotasMapGrid)" />
-        <path d="M 0 8 C 12 20, 8 55, 22 100" stroke="#BEDDEE" strokeWidth="7" fill="none" opacity="0.8" />
-        <path d="M 5 0 C 35 25, 30 50, 60 60 S 80 90, 100 95" stroke="#F2E7C4" strokeWidth="3.5" fill="none" opacity="0.7" />
-      </svg>
-
-      {MAP_LABELS.map((l) => (
-        <span
-          key={l.text}
-          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-[var(--dash-text-muted-2)]"
-          style={{ left: `${l.x}%`, top: `${l.y}%` }}
-        >
-          {l.text}
-        </span>
-      ))}
-
-      {points.length > 1 && (
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <polyline points={line} fill="none" stroke="#2563EB" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
-        </svg>
-      )}
-
-      {points.map((p, i) => (
-        <div
-          key={p.s.id}
-          className="absolute grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white text-[11px] font-bold text-white shadow-md"
-          style={{ left: `${p.x}%`, top: `${p.y}%`, background: statusMarkerColor(p.s.status) }}
-          title={p.s.client?.name}
-        >
-          {i + 1}
-        </div>
-      ))}
-
-      {current && (
-        <div className="absolute -translate-x-1/2 -translate-y-full" style={{ left: `${current.x}%`, top: `${current.y}%` }}>
-          <svg width="34" height="42" viewBox="0 0 34 42" fill="none" className="absolute inset-0">
-            <path d="M17 0C7.6 0 0 7.6 0 17c0 12 17 25 17 25s17-13 17-25C34 7.6 26.4 0 17 0Z" fill="var(--dash-navy)" stroke="white" strokeWidth="2" />
-          </svg>
-          <div className="relative grid h-[34px] w-[34px] place-items-center">
-            <Home className="h-[16px] w-[16px] text-white" />
-          </div>
-        </div>
-      )}
-
-      <button className="absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full bg-white text-[var(--dash-navy)] shadow-md" title="Minha localização">
+    <div className={wrapperClass}>
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={SARASOTA_CENTER}
+        zoom={11}
+        onLoad={(map) => { mapRef.current = map; }}
+        options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false }}
+      >
+        {points.length > 1 && (
+          <Polyline
+            path={points.map((p) => p.pos)}
+            options={{ strokeColor: "#2563EB", strokeOpacity: 0.8, strokeWeight: 3 }}
+          />
+        )}
+        {points.map((p, i) => (
+          <Marker
+            key={p.s.id}
+            position={p.pos}
+            title={p.s.client?.name}
+            label={{ text: String(i + 1), color: "#fff", fontWeight: "bold", fontSize: "12px" }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 14,
+              fillColor: statusMarkerColor(p.s.status),
+              fillOpacity: 1,
+              strokeColor: "#fff",
+              strokeWeight: 2,
+            }}
+          />
+        ))}
+      </GoogleMap>
+      <button
+        onClick={locateMe}
+        className="absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full bg-white text-[var(--dash-navy)] shadow-md"
+        title="My location"
+      >
         <LocateFixed className="h-4 w-4" />
       </button>
     </div>
