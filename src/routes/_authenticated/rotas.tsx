@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
-  addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, initials,
+  addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, initials, clientFullAddress,
   type RouteStop, type StopStatus, type Technician, type Client, type RouteRow,
 } from "@/lib/db";
 import { geocodeAndSaveClient } from "@/lib/geocode";
@@ -91,8 +91,9 @@ function RouteMap({ stops }: { stops: RouteStop[] }) {
           setCoords((c) => ({ ...c, [s.id]: { lat: s.client!.lat as number, lng: s.client!.lng as number } }));
           continue;
         }
-        if (!s.client.address) continue;
-        const result = await geocodeAndSaveClient(s.client.id, s.client.address);
+        const fullAddress = clientFullAddress(s.client);
+        if (!fullAddress) continue;
+        const result = await geocodeAndSaveClient(s.client.id, fullAddress);
         if (!cancelled && result) setCoords((c) => ({ ...c, [s.id]: result }));
       }
     })();
@@ -611,7 +612,7 @@ function StopsList({
                 )}
                 {stop.client?.address && (
                   <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(stop.client.address)}`}
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(clientFullAddress(stop.client))}`}
                     target="_blank"
                     rel="noreferrer"
                     className="grid h-9 w-9 place-items-center rounded-[10px] border border-[var(--dash-border)]"
