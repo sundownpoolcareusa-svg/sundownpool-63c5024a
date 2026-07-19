@@ -343,12 +343,20 @@ export type TechnicianStop = {
 
 // Returns the technician record linked to the currently logged-in user, or
 // null if this login isn't a technician (e.g. it's the owner's account).
+// Never throws — this must not be able to block the owner's own sign-in
+// (e.g. if the technician-login migration hasn't been applied yet, the
+// auth_user_id column simply won't exist, which we treat the same as "not
+// a technician" rather than a fatal error).
 export async function getMyTechnician() {
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) return null;
-  const { data, error } = await supabase.from("technicians").select("*").eq("auth_user_id", u.user.id).maybeSingle();
-  if (error) throw error;
-  return data as Technician | null;
+  try {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return null;
+    const { data, error } = await supabase.from("technicians").select("*").eq("auth_user_id", u.user.id).maybeSingle();
+    if (error) return null;
+    return data as Technician | null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getMyTechnicianStops(date: string) {
