@@ -3,7 +3,12 @@
 -- stops only — needed so the "Chemicals" flow works from the restricted
 -- technician login, not just the owner's full admin dashboard.
 
-CREATE OR REPLACE FUNCTION public.get_my_technician_stops(p_date date)
+-- Postgres won't let CREATE OR REPLACE change a function's column set
+-- (only the body) — since client_type is a new output column here, the
+-- old signature has to be dropped first.
+DROP FUNCTION IF EXISTS public.get_my_technician_stops(date);
+
+CREATE FUNCTION public.get_my_technician_stops(p_date date)
 RETURNS TABLE (
   stop_id uuid,
   route_id uuid,
