@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { GoogleMap, Marker, Polyline, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
@@ -133,7 +133,9 @@ function RouteMap({
   stops, coords, isLoaded, loadError,
 }: { stops: RouteStop[]; coords: Record<string, LatLng>; isLoaded: boolean; loadError?: Error }) {
   const mapRef = useRef<google.maps.Map | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
   const points = stops.map((s) => ({ s, pos: coords[s.id] })).filter((p): p is { s: RouteStop; pos: LatLng } => !!p.pos);
+  const pathKey = points.map((p) => `${p.pos.lat},${p.pos.lng}`).join("|");
 
   useEffect(() => {
     if (!mapRef.current || points.length === 0) return;
@@ -146,6 +148,24 @@ function RouteMap({
     points.forEach((p) => bounds.extend(p.pos));
     mapRef.current.fitBounds(bounds, 48);
   }, [points]);
+
+  // Drawn via the raw Maps SDK rather than @react-google-maps/api's
+  // <Polyline> — that wrapper has a known crash ("this.get('latLngs')
+  // .setAt' — undefined is not an object") when it imperatively patches an
+  // existing instance's path on update. Creating/destroying our own
+  // instance whenever the path changes avoids that update path entirely.
+  useEffect(() => {
+    if (!map || points.length < 2) return;
+    const polyline = new google.maps.Polyline({
+      path: points.map((p) => p.pos),
+      strokeColor: "#2563EB",
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
+      map,
+    });
+    return () => polyline.setMap(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, pathKey]);
 
   function locateMe() {
     if (!navigator.geolocation || !mapRef.current) { toast.error("Location not available"); return; }
@@ -179,16 +199,9 @@ function RouteMap({
         mapContainerStyle={mapContainerStyle}
         center={SARASOTA_CENTER}
         zoom={11}
-        onLoad={(map) => { mapRef.current = map; }}
+        onLoad={(m) => { mapRef.current = m; setMap(m); }}
         options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false }}
       >
-        {points.length > 1 && (
-          <Polyline
-            key={points.length}
-            path={points.map((p) => p.pos)}
-            options={{ strokeColor: "#2563EB", strokeOpacity: 0.8, strokeWeight: 3 }}
-          />
-        )}
         {points.map((p, i) => (
           <Marker
             key={p.s.id}
