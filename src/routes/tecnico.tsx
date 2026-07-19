@@ -9,7 +9,7 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin,
   CheckCircle2, Timer, Route as RouteIcon, Car, Waves, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
 } from "lucide-react";
-import { getMyTechnician, getMyTechnicianStops, updateMyStopStatus, initials, type StopStatus, type TechnicianStop } from "@/lib/db";
+import { getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, initials, type StopStatus, type TechnicianStop } from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
 import { toast } from "sonner";
 
@@ -112,6 +112,7 @@ function TecnicoRouteMap({ stops }: { stops: TechnicianStop[] }) {
         {showTraffic && <TrafficLayer />}
         {points.length > 1 && (
           <Polyline
+            key={points.length}
             path={points.map((p) => p.pos)}
             options={{ strokeColor: "#2563EB", strokeOpacity: 0.8, strokeWeight: 3 }}
           />
@@ -176,7 +177,10 @@ function TecnicoPage() {
   const { data: technician } = useQuery({ queryKey: ["my-technician"], queryFn: getMyTechnician, enabled: checkedSession });
   const { data: stops = [], isLoading } = useQuery({
     queryKey: ["my-technician-stops", dateStr],
-    queryFn: () => getMyTechnicianStops(dateStr),
+    queryFn: async () => {
+      await ensureMyTechnicianStops(dateStr);
+      return getMyTechnicianStops(dateStr);
+    },
     enabled: checkedSession,
   });
 
@@ -275,8 +279,8 @@ function TecnicoPage() {
           })}
         </div>
 
-        <MapErrorBoundary>
-          <TecnicoRouteMap stops={sorted} />
+        <MapErrorBoundary key={dateStr}>
+          <TecnicoRouteMap key={dateStr} stops={sorted} />
         </MapErrorBoundary>
 
         <div className="space-y-0">

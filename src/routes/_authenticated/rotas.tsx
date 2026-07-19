@@ -184,6 +184,7 @@ function RouteMap({
       >
         {points.length > 1 && (
           <Polyline
+            key={points.length}
             path={points.map((p) => p.pos)}
             options={{ strokeColor: "#2563EB", strokeOpacity: 0.8, strokeWeight: 3 }}
           />
@@ -519,8 +520,8 @@ function RotasPage() {
 
         {activeRoute ? (
           <>
-            <MapErrorBoundary>
-              <RouteMap stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
+            <MapErrorBoundary key={`${activeRoute.id}:${dateStr}`}>
+              <RouteMap key={`${activeRoute.id}:${dateStr}`} stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
             </MapErrorBoundary>
 
             <div className="space-y-2">
@@ -652,8 +653,8 @@ function RotasPage() {
 
             <div className="space-y-3">
               <h2 className="text-[14px] font-bold text-[var(--dash-text)]">Route Map</h2>
-              <MapErrorBoundary>
-                <RouteMap stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
+              <MapErrorBoundary key={`${activeRoute.id}:${dateStr}`}>
+                <RouteMap key={`${activeRoute.id}:${dateStr}`} stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
               </MapErrorBoundary>
               <CurrentStopPanel stop={detailStop} onViewDetails={() => setDetailStopId(detailStop?.id ?? null)} />
             </div>

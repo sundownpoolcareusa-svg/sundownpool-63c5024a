@@ -607,6 +607,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      ensure_my_technician_stops: {
+        Args: { p_date: string }
+        Returns: undefined
+      }
       update_my_stop_status: {
         Args: { p_status: string; p_stop_id: string }
         Returns: undefined
