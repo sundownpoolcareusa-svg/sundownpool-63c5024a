@@ -340,13 +340,13 @@ function TecnicoPage() {
                       </div>
                     </div>
 
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       <span
                         className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold"
                         style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
                       >
                         {commercial ? <Building2 className="h-3 w-3" /> : <Waves className="h-3 w-3" />}
-                        {commercial ? "Comercial" : "Piscina Residencial"}
+                        {commercial ? "Comercial" : "Residencial"}
                       </span>
                       <Link
                         to="/tecnico/chemicals/$stopId"
@@ -358,12 +358,9 @@ function TecnicoPage() {
                         <FlaskConical className="h-3 w-3" />
                         Chemical
                       </Link>
-                    </div>
-
-                    <div className="mt-2.5 flex gap-1.5">
                       {stop.client_phone && (
-                        <a href={`tel:${stop.client_phone}`} className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[var(--dash-border)] py-2 text-[12px] font-semibold text-[var(--dash-text-secondary)]">
-                          <Phone className="h-3.5 w-3.5" /> {formatPhone(stop.client_phone)}
+                        <a href={`tel:${stop.client_phone}`} title={formatPhone(stop.client_phone)} className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                          <Phone className="h-3.5 w-3.5" />
                         </a>
                       )}
                       {address && (
@@ -371,7 +368,8 @@ function TecnicoPage() {
                           href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center justify-center gap-1.5 rounded-[10px] border border-[var(--dash-border)] px-3 py-2 text-[12px] font-semibold text-[var(--dash-text-secondary)]"
+                          title="Navigate"
+                          className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
                         >
                           <Navigation className="h-3.5 w-3.5" />
                         </a>
@@ -380,7 +378,7 @@ function TecnicoPage() {
                         <button
                           onClick={() => statusMut.mutate({ stopId: stop.stop_id, status: next })}
                           disabled={statusMut.isPending}
-                          className="flex items-center justify-center gap-1.5 rounded-[10px] px-3 py-2 text-[12px] font-semibold text-white disabled:opacity-50"
+                          className="flex items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-50"
                           style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
                         >
                           {next === "Concluído" ? <Check className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
