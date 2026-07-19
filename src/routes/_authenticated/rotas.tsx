@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GoogleMap, Marker, Polyline, useJsApiLoader } from "@react-google-maps/api";
 import { AppHeader } from "@/components/AppHeader";
@@ -205,6 +206,33 @@ function RouteMap({
       </button>
     </div>
   );
+}
+
+// Google Maps' loader/renderer is the most fragile part of this page (real
+// devices sometimes hit transient script-load or SDK races) — isolate it so
+// a failure there degrades to "map unavailable" instead of crashing the
+// whole route screen.
+class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    reportLovableError(error, { boundary: "rotas_map" });
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="grid h-56 w-full place-items-center rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-surface-soft)] text-center lg:h-[360px]">
+          <div>
+            <MapPin className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
+            <p className="mt-2 text-sm text-[var(--dash-text-muted)]">Map unavailable right now.</p>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 type StatItem = { icon: typeof MapPin; tint: string; value: string | number; label: string };
@@ -510,7 +538,9 @@ function RotasPage() {
 
         {activeRoute ? (
           <>
-            <RouteMap stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
+            <MapErrorBoundary>
+              <RouteMap stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
+            </MapErrorBoundary>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -641,7 +671,9 @@ function RotasPage() {
 
             <div className="space-y-3">
               <h2 className="text-[14px] font-bold text-[var(--dash-text)]">Route Map</h2>
-              <RouteMap stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
+              <MapErrorBoundary>
+                <RouteMap stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
+              </MapErrorBoundary>
               <CurrentStopPanel stop={detailStop} onViewDetails={() => setDetailStopId(detailStop?.id ?? null)} />
             </div>
           </div>
