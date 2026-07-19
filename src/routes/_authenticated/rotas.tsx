@@ -518,8 +518,12 @@ function RotasPage() {
                   {showAllStops ? "Ocultar" : "Ver todas"}
                 </button>
               </div>
-              {currentStop && <NextStopRow stop={currentStop} highlighted />}
-              {nextStop && <NextStopRow stop={nextStop} />}
+              {currentStop && (
+                <NextStopRow stop={currentStop} highlighted onStatus={(stop, status) => statusMut.mutate({ stop, status })} pending={statusMut.isPending} />
+              )}
+              {nextStop && (
+                <NextStopRow stop={nextStop} onStatus={(stop, status) => statusMut.mutate({ stop, status })} pending={statusMut.isPending} />
+              )}
               {!currentStop && !nextStop && (
                 <p className="text-sm text-[var(--dash-text-muted)]">All stops completed for this route.</p>
               )}
@@ -824,8 +828,11 @@ function stopStatusLabel(status: StopStatus) {
   return status === "Em serviço" ? "Em andamento" : status === "Concluído" ? "Concluído" : "Próxima";
 }
 
-function NextStopRow({ stop, highlighted }: { stop: RouteStop; highlighted?: boolean }) {
+function NextStopRow({
+  stop, highlighted, onStatus, pending,
+}: { stop: RouteStop; highlighted?: boolean; onStatus: (stop: RouteStop, status: StopStatus) => void; pending: boolean }) {
   const badgeStyle = STATUS_STYLES[stop.status] ?? STATUS_STYLES["Pendente"];
+  const next = nextStatus(stop.status);
   return (
     <div
       className="flex items-center gap-3 rounded-xl border p-3"
@@ -849,7 +856,19 @@ function NextStopRow({ stop, highlighted }: { stop: RouteStop; highlighted?: boo
           <Link to="/chemicals/$stopId" params={{ stopId: stop.id }} className="shrink-0" title="Pool Chemicals">
             <FlaskConical className="h-3.5 w-3.5" style={{ color: "var(--dash-green)" }} />
           </Link>
-          <span className="truncate text-[12px] text-[var(--dash-text-muted-2)]">{stop.client?.address}</span>
+          {stop.client?.address ? (
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(clientFullAddress(stop.client))}`}
+              target="_blank"
+              rel="noreferrer"
+              className="truncate text-[12px] text-[var(--dash-text-muted-2)] underline decoration-dotted underline-offset-2"
+              title="Open in Google Maps"
+            >
+              {stop.client.address}
+            </a>
+          ) : (
+            <span className="truncate text-[12px] text-[var(--dash-text-muted-2)]">—</span>
+          )}
         </div>
       </div>
       <div className="flex shrink-0 gap-1.5">
@@ -858,13 +877,24 @@ function NextStopRow({ stop, highlighted }: { stop: RouteStop; highlighted?: boo
             <Phone className="h-4 w-4" />
           </a>
         )}
+        {next && (
+          <button
+            onClick={() => onStatus(stop, next)}
+            disabled={pending}
+            title={next === "Concluído" ? "Complete" : "Start"}
+            className="grid h-9 w-9 place-items-center rounded-full text-white disabled:opacity-50"
+            style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
+          >
+            {next === "Concluído" ? <Check className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </button>
+        )}
         {stop.client?.address && (
           <a
             href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(clientFullAddress(stop.client))}`}
             target="_blank"
             rel="noreferrer"
-            className="grid h-9 w-9 place-items-center rounded-full text-white"
-            style={{ background: "var(--dash-navy)" }}
+            title="Navigate"
+            className="grid h-9 w-9 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
           >
             <Navigation className="h-4 w-4" />
           </a>
