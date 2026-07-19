@@ -35,6 +35,7 @@ export type Database = {
           pool_photos: string[]
           service_days: string[]
           service_frequency: string | null
+          stage: string
           state: string | null
           status: string
           technician_id: string | null
@@ -62,6 +63,7 @@ export type Database = {
           pool_photos?: string[]
           service_days?: string[]
           service_frequency?: string | null
+          stage?: string
           state?: string | null
           status?: string
           technician_id?: string | null
@@ -89,6 +91,7 @@ export type Database = {
           pool_photos?: string[]
           service_days?: string[]
           service_frequency?: string | null
+          stage?: string
           state?: string | null
           status?: string
           technician_id?: string | null
@@ -450,6 +453,56 @@ export type Database = {
         }
         Relationships: []
       }
+      stop_chemicals: {
+        Row: {
+          calcium_hardness: number | null
+          created_at: string
+          free_chlorine: number | null
+          id: string
+          notes: string | null
+          ph: number | null
+          products: Json
+          route_stop_id: string
+          stabilizer: number | null
+          total_alkalinity: number | null
+          updated_at: string
+        }
+        Insert: {
+          calcium_hardness?: number | null
+          created_at?: string
+          free_chlorine?: number | null
+          id?: string
+          notes?: string | null
+          ph?: number | null
+          products?: Json
+          route_stop_id: string
+          stabilizer?: number | null
+          total_alkalinity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          calcium_hardness?: number | null
+          created_at?: string
+          free_chlorine?: number | null
+          id?: string
+          notes?: string | null
+          ph?: number | null
+          products?: Json
+          route_stop_id?: string
+          stabilizer?: number | null
+          total_alkalinity?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stop_chemicals_route_stop_id_fkey"
+            columns: ["route_stop_id"]
+            isOneToOne: true
+            referencedRelation: "route_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       technicians: {
         Row: {
           active: boolean
@@ -494,28 +547,28 @@ export type Database = {
       get_my_technician_stops: {
         Args: { p_date: string }
         Returns: {
-          stop_id: string
-          route_id: string
-          position: number
-          scheduled_time: string | null
-          status: string
-          started_at: string | null
-          completed_at: string | null
-          stop_notes: string | null
+          client_address: string
+          client_city: string
           client_id: string
+          client_lat: number
+          client_lng: number
           client_name: string
-          client_phone: string | null
-          client_address: string | null
-          client_city: string | null
-          client_state: string | null
-          client_zip: string | null
-          client_lat: number | null
-          client_lng: number | null
+          client_phone: string
+          client_state: string
+          client_zip: string
+          completed_at: string
           has_chemicals: boolean
+          position: number
+          route_id: string
+          scheduled_time: string
+          started_at: string
+          status: string
+          stop_id: string
+          stop_notes: string
         }[]
       }
       update_my_stop_status: {
-        Args: { p_stop_id: string; p_status: string }
+        Args: { p_status: string; p_stop_id: string }
         Returns: undefined
       }
     }
