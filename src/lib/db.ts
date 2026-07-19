@@ -371,6 +371,15 @@ export async function getMyTechnician() {
   }
 }
 
+// Creates any missing recurring stops for the technician's own day before
+// reading it, so their route is correct regardless of whether the owner
+// happened to open that date first (the owner's auto-schedule effect is
+// client-side and only fires for whatever date it's currently viewing).
+export async function ensureMyTechnicianStops(date: string) {
+  const { error } = await supabase.rpc("ensure_my_technician_stops", { p_date: date });
+  if (error) throw error;
+}
+
 export async function getMyTechnicianStops(date: string) {
   const { data, error } = await supabase.rpc("get_my_technician_stops", { p_date: date });
   if (error) throw error;
