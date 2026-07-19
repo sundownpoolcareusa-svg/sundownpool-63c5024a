@@ -45,8 +45,15 @@ function nextStatus(status: StopStatus): StopStatus | null {
   return null;
 }
 
+// Local calendar date (YYYY-MM-DD), NOT toISOString() — that converts to UTC,
+// which silently rolls the date forward/back a day whenever local time is
+// near midnight relative to the UTC offset (e.g. any evening in US Eastern),
+// causing stops to land on the wrong weekday.
 function toDateStr(d: Date) {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function weekDays(center: Date) {
