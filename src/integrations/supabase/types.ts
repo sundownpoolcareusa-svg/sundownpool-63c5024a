@@ -547,25 +547,65 @@ export type Database = {
       get_my_technician_stops: {
         Args: { p_date: string }
         Returns: {
-          client_address: string
-          client_city: string
-          client_id: string
-          client_lat: number
-          client_lng: number
-          client_name: string
-          client_phone: string
-          client_state: string
-          client_zip: string
-          completed_at: string
-          has_chemicals: boolean
-          position: number
-          route_id: string
-          scheduled_time: string
-          started_at: string
-          status: string
           stop_id: string
-          stop_notes: string
+          route_id: string
+          position: number
+          scheduled_time: string | null
+          status: string
+          started_at: string | null
+          completed_at: string | null
+          stop_notes: string | null
+          client_id: string
+          client_name: string
+          client_phone: string | null
+          client_address: string | null
+          client_city: string | null
+          client_state: string | null
+          client_zip: string | null
+          client_lat: number | null
+          client_lng: number | null
+          client_type: string
+          has_chemicals: boolean
         }[]
+      }
+      get_my_stop_detail: {
+        Args: { p_stop_id: string }
+        Returns: {
+          stop_id: string
+          position: number
+          status: string
+          client_name: string
+          client_address: string | null
+          client_city: string | null
+          client_state: string | null
+          client_zip: string | null
+          client_type: string
+        }[]
+      }
+      get_my_stop_chemicals: {
+        Args: { p_stop_id: string }
+        Returns: {
+          free_chlorine: number | null
+          ph: number | null
+          total_alkalinity: number | null
+          calcium_hardness: number | null
+          stabilizer: number | null
+          products: Json
+          notes: string | null
+        }[]
+      }
+      save_my_stop_chemicals: {
+        Args: {
+          p_stop_id: string
+          p_free_chlorine: number | null
+          p_ph: number | null
+          p_total_alkalinity: number | null
+          p_calcium_hardness: number | null
+          p_stabilizer: number | null
+          p_products: Json
+          p_notes: string | null
+        }
+        Returns: undefined
       }
       update_my_stop_status: {
         Args: { p_status: string; p_stop_id: string }
