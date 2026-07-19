@@ -172,6 +172,7 @@ export type Technician = {
   phone: string | null;
   color: string;
   active: boolean;
+  auth_user_id?: string | null;
   created_at: string;
 };
 
@@ -315,6 +316,50 @@ export async function reorderStops(orderedStopIds: string[]) {
   await Promise.all(
     orderedStopIds.map((id, idx) => supabase.from("route_stops").update({ position: idx }).eq("id", id)),
   );
+}
+
+// ---- Technician self-service login (restricted view — no clients/estimates/invoices access) ----
+
+export type TechnicianStop = {
+  stop_id: string;
+  route_id: string;
+  position: number;
+  scheduled_time: string | null;
+  status: StopStatus;
+  started_at: string | null;
+  completed_at: string | null;
+  stop_notes: string | null;
+  client_id: string;
+  client_name: string;
+  client_phone: string | null;
+  client_address: string | null;
+  client_city: string | null;
+  client_state: string | null;
+  client_zip: string | null;
+  client_lat: number | null;
+  client_lng: number | null;
+  has_chemicals: boolean;
+};
+
+// Returns the technician record linked to the currently logged-in user, or
+// null if this login isn't a technician (e.g. it's the owner's account).
+export async function getMyTechnician() {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return null;
+  const { data, error } = await supabase.from("technicians").select("*").eq("auth_user_id", u.user.id).maybeSingle();
+  if (error) throw error;
+  return data as Technician | null;
+}
+
+export async function getMyTechnicianStops(date: string) {
+  const { data, error } = await supabase.rpc("get_my_technician_stops", { p_date: date });
+  if (error) throw error;
+  return (data ?? []) as TechnicianStop[];
+}
+
+export async function updateMyStopStatus(stopId: string, status: StopStatus) {
+  const { error } = await supabase.rpc("update_my_stop_status", { p_stop_id: stopId, p_status: status });
+  if (error) throw error;
 }
 
 export async function deleteStop(stopId: string) {

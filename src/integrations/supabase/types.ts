@@ -506,6 +506,7 @@ export type Database = {
       technicians: {
         Row: {
           active: boolean
+          auth_user_id: string | null
           color: string
           created_at: string
           id: string
@@ -516,6 +517,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          auth_user_id?: string | null
           color?: string
           created_at?: string
           id?: string
@@ -526,6 +528,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          auth_user_id?: string | null
           color?: string
           created_at?: string
           id?: string
@@ -541,7 +544,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_my_technician_stops: {
+        Args: { p_date: string }
+        Returns: {
+          stop_id: string
+          route_id: string
+          position: number
+          scheduled_time: string | null
+          status: string
+          started_at: string | null
+          completed_at: string | null
+          stop_notes: string | null
+          client_id: string
+          client_name: string
+          client_phone: string | null
+          client_address: string | null
+          client_city: string | null
+          client_state: string | null
+          client_zip: string | null
+          client_lat: number | null
+          client_lng: number | null
+          has_chemicals: boolean
+        }[]
+      }
+      update_my_stop_status: {
+        Args: { p_stop_id: string; p_status: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TecnicoRouteImport } from './routes/tecnico'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as ServiceAreasRouteImport } from './routes/service-areas'
 import { Route as MaintenancePlansRouteImport } from './routes/maintenance-plans'
@@ -24,6 +25,11 @@ import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authentic
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedChemicalsStopIdRouteImport } from './routes/_authenticated/chemicals.$stopId'
 
+const TecnicoRoute = TecnicoRouteImport.update({
+  id: '/tecnico',
+  path: '/tecnico',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/maintenance-plans': typeof MaintenancePlansRoute
   '/service-areas': typeof ServiceAreasRoute
   '/services': typeof ServicesRoute
+  '/tecnico': typeof TecnicoRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/maintenance-plans': typeof MaintenancePlansRoute
   '/service-areas': typeof ServiceAreasRoute
   '/services': typeof ServicesRoute
+  '/tecnico': typeof TecnicoRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/maintenance-plans': typeof MaintenancePlansRoute
   '/service-areas': typeof ServiceAreasRoute
   '/services': typeof ServicesRoute
+  '/tecnico': typeof TecnicoRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/estimativa': typeof AuthenticatedEstimativaRoute
   '/_authenticated/invoice': typeof AuthenticatedInvoiceRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/maintenance-plans'
     | '/service-areas'
     | '/services'
+    | '/tecnico'
     | '/clientes'
     | '/estimativa'
     | '/invoice'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/maintenance-plans'
     | '/service-areas'
     | '/services'
+    | '/tecnico'
     | '/clientes'
     | '/estimativa'
     | '/invoice'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/maintenance-plans'
     | '/service-areas'
     | '/services'
+    | '/tecnico'
     | '/_authenticated/clientes'
     | '/_authenticated/estimativa'
     | '/_authenticated/invoice'
@@ -199,12 +211,20 @@ export interface RootRouteChildren {
   MaintenancePlansRoute: typeof MaintenancePlansRoute
   ServiceAreasRoute: typeof ServiceAreasRoute
   ServicesRoute: typeof ServicesRoute
+  TecnicoRoute: typeof TecnicoRoute
   ETokenRoute: typeof ETokenRoute
   ITokenRoute: typeof ITokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tecnico': {
+      id: '/tecnico'
+      path: '/tecnico'
+      fullPath: '/tecnico'
+      preLoaderRoute: typeof TecnicoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services': {
       id: '/services'
       path: '/services'
@@ -333,6 +353,7 @@ const rootRouteChildren: RootRouteChildren = {
   MaintenancePlansRoute: MaintenancePlansRoute,
   ServiceAreasRoute: ServiceAreasRoute,
   ServicesRoute: ServicesRoute,
+  TecnicoRoute: TecnicoRoute,
   ETokenRoute: ETokenRoute,
   ITokenRoute: ITokenRoute,
 }

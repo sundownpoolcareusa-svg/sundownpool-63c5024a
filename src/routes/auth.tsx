@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyTechnician } from "@/lib/db";
 import { AppLogo } from "@/components/AppLogo";
 import { toast } from "sonner";
 import { Lock } from "lucide-react";
@@ -9,6 +10,11 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+async function destinationForCurrentUser() {
+  const technician = await getMyTechnician();
+  return technician ? "/tecnico" : "/invoice";
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -16,8 +22,8 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/invoice" });
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) navigate({ to: await destinationForCurrentUser() });
     });
   }, [navigate]);
 
@@ -27,7 +33,7 @@ function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      navigate({ to: "/invoice" });
+      navigate({ to: await destinationForCurrentUser() });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication error");
     } finally {
@@ -39,7 +45,7 @@ function AuthPage() {
     <div className="dash min-h-screen" style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))" }}>
       <div className="grid min-h-screen place-items-center px-4">
         <div className="w-full max-w-md rounded-[22px] bg-white p-8" style={{ boxShadow: "0 30px 90px rgba(10,20,40,.4)" }}>
-          <div className="flex justify-center p-4"><AppLogo className="h-36" /></div>
+          <div className="flex justify-center p-4"><AppLogo style={{ width: 247, height: 64 }} /></div>
           <div className="flex items-center justify-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-full" style={{ background: "var(--dash-water-bg)" }}>
               <Lock className="h-4 w-4" style={{ color: "var(--dash-water-icon)" }} />
