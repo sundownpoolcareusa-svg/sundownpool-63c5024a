@@ -7,7 +7,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
   Plus, Phone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Play, Trash2, MapPin, CalendarDays,
-  CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical,
+  CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
@@ -321,6 +321,7 @@ function RotasPage() {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [showAllStops, setShowAllStops] = useState(false);
   const [detailStopId, setDetailStopId] = useState<string | null>(null);
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
   const dateStr = toDateStr(selectedDate);
   const days = weekDays(selectedDate);
@@ -568,6 +569,13 @@ function RotasPage() {
           </div>
           <div className="flex items-center gap-3">
             <DaySelector days={days} dateStr={dateStr} onSelect={setSelectedDate} compact />
+            <button
+              onClick={() => setMobilePreviewOpen(true)}
+              title="Preview mobile view"
+              className="flex items-center gap-1.5 rounded-[11px] border border-[var(--dash-border)] bg-white px-3.5 py-2.5 text-sm font-semibold text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]"
+            >
+              <Smartphone className="h-4 w-4" /> View Mobile
+            </button>
             <button onClick={() => setNewRouteOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-3.5 py-2.5 text-sm font-semibold text-white hover:opacity-90">
               <Plus className="h-4 w-4" /> New Route
             </button>
@@ -670,6 +678,37 @@ function RotasPage() {
         routeId={activeRoute?.id ?? null}
         onAdded={() => { qc.invalidateQueries({ queryKey: ["route-stops", activeRoute?.id] }); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); }}
       />
+      <MobilePreviewOverlay open={mobilePreviewOpen} onClose={() => setMobilePreviewOpen(false)} />
+    </div>
+  );
+}
+
+function MobilePreviewOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/60 p-4" onClick={onClose}>
+      <div className="flex items-center gap-2 text-sm font-semibold text-white">
+        <Smartphone className="h-4 w-4" /> Mobile preview
+      </div>
+      <div
+        className="relative rounded-[42px] bg-[#111] p-3"
+        style={{ boxShadow: "0 30px 90px rgba(0,0,0,.5)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="absolute left-1/2 top-3 z-10 h-5 w-28 -translate-x-1/2 rounded-full bg-[#111]" />
+        <iframe
+          src="/rotas"
+          title="Mobile preview"
+          className="block rounded-[30px] border-0 bg-white"
+          style={{ width: 390, height: 780 }}
+        />
+      </div>
+      <button
+        onClick={onClose}
+        className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[var(--dash-text)] hover:opacity-90"
+      >
+        <X className="h-4 w-4" /> Close
+      </button>
     </div>
   );
 }
