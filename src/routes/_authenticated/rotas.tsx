@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GoogleMap, Marker, Polyline, useJsApiLoader } from "@react-google-maps/api";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
+import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 import {
   Plus, Phone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Play, Trash2, MapPin, CalendarDays,
   CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X,
@@ -214,34 +214,6 @@ function RouteMap({
       </button>
     </div>
   );
-}
-
-// Google Maps' loader/renderer is the most fragile part of this page (real
-// devices sometimes hit transient script-load or SDK races) — isolate it so
-// a failure there degrades to "map unavailable" instead of crashing the
-// whole route screen.
-class MapErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
-  state: { error: Error | null } = { error: null };
-  static getDerivedStateFromError(error: Error) {
-    return { error };
-  }
-  componentDidCatch(error: Error) {
-    reportLovableError(error, { boundary: "rotas_map" });
-  }
-  render() {
-    if (this.state.error) {
-      return (
-        <div className="grid h-56 w-full place-items-center rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-surface-soft)] text-center lg:h-[360px]">
-          <div className="px-4">
-            <MapPin className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
-            <p className="mt-2 text-sm text-[var(--dash-text-muted)]">Map unavailable right now.</p>
-            <p className="mt-1 break-words text-[11px] text-[var(--dash-text-muted)]">{this.state.error.message}</p>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
 }
 
 type StatItem = { icon: typeof MapPin; tint: string; value: string | number; label: string };

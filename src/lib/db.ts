@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export type Client = {
   id: string;
@@ -348,6 +349,7 @@ export type TechnicianStop = {
   client_zip: string | null;
   client_lat: number | null;
   client_lng: number | null;
+  client_type: string;
   has_chemicals: boolean;
 };
 
@@ -377,6 +379,37 @@ export async function getMyTechnicianStops(date: string) {
 
 export async function updateMyStopStatus(stopId: string, status: StopStatus) {
   const { error } = await supabase.rpc("update_my_stop_status", { p_stop_id: stopId, p_status: status });
+  if (error) throw error;
+}
+
+export async function getMyStopDetail(stopId: string) {
+  const { data, error } = await supabase.rpc("get_my_stop_detail", { p_stop_id: stopId });
+  if (error) throw error;
+  return data?.[0] ?? null;
+}
+
+export async function getMyStopChemicals(stopId: string) {
+  const { data, error } = await supabase.rpc("get_my_stop_chemicals", { p_stop_id: stopId });
+  if (error) throw error;
+  const row = data?.[0];
+  if (!row) return null;
+  return { ...row, products: (row.products as unknown as Product[]) ?? [] };
+}
+
+export async function saveMyStopChemicals(
+  stopId: string,
+  values: { readings: ChemicalReadings; products: Product[]; notes: string },
+) {
+  const { error } = await supabase.rpc("save_my_stop_chemicals", {
+    p_stop_id: stopId,
+    p_free_chlorine: values.readings.free_chlorine,
+    p_ph: values.readings.ph,
+    p_total_alkalinity: values.readings.total_alkalinity,
+    p_calcium_hardness: values.readings.calcium_hardness,
+    p_stabilizer: values.readings.stabilizer,
+    p_products: values.products as unknown as Json,
+    p_notes: values.notes || null,
+  });
   if (error) throw error;
 }
 

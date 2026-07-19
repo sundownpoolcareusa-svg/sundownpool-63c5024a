@@ -564,8 +564,48 @@ export type Database = {
           client_zip: string | null
           client_lat: number | null
           client_lng: number | null
+          client_type: string
           has_chemicals: boolean
         }[]
+      }
+      get_my_stop_detail: {
+        Args: { p_stop_id: string }
+        Returns: {
+          stop_id: string
+          position: number
+          status: string
+          client_name: string
+          client_address: string | null
+          client_city: string | null
+          client_state: string | null
+          client_zip: string | null
+          client_type: string
+        }[]
+      }
+      get_my_stop_chemicals: {
+        Args: { p_stop_id: string }
+        Returns: {
+          free_chlorine: number | null
+          ph: number | null
+          total_alkalinity: number | null
+          calcium_hardness: number | null
+          stabilizer: number | null
+          products: Json
+          notes: string | null
+        }[]
+      }
+      save_my_stop_chemicals: {
+        Args: {
+          p_stop_id: string
+          p_free_chlorine: number | null
+          p_ph: number | null
+          p_total_alkalinity: number | null
+          p_calcium_hardness: number | null
+          p_stabilizer: number | null
+          p_products: Json
+          p_notes: string | null
+        }
+        Returns: undefined
       }
       update_my_stop_status: {
         Args: { p_stop_id: string; p_status: string }
