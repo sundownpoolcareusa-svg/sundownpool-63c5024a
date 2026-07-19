@@ -4,11 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft, Droplet, FlaskConical, Beaker, Diamond, ShieldCheck, Minus, Plus,
-  CheckCircle2, AlertTriangle, Check, ChevronRight, StickyNote,
+  CheckCircle2, AlertTriangle, Check, ChevronRight, StickyNote, History, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getMyTechnician, getMyStopDetail, getMyStopChemicals, saveMyStopChemicals, updateMyStopStatus,
+  getMyStopChemicalsHistory, fmtDate,
   CHEMICAL_READING_META, DEFAULT_READINGS, DEFAULT_PRODUCTS, isReadingInRange,
   type ChemicalReadingKey, type ChemicalReadings, type Product,
 } from "@/lib/db";
@@ -59,6 +60,13 @@ function TechnicianChemicalsPage() {
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [newProductName, setNewProductName] = useState("");
   const [newProductUnit, setNewProductUnit] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const { data: history, isLoading: historyLoading } = useQuery({
+    queryKey: ["my-stop-chemicals-history", stopId],
+    queryFn: () => getMyStopChemicalsHistory(stopId),
+    enabled: historyOpen,
+  });
 
   useEffect(() => {
     if (isLoading || loaded) return;
@@ -148,6 +156,12 @@ function TechnicianChemicalsPage() {
         <section className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Leituras Químicas</h2>
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="flex items-center gap-1.5 rounded-full bg-[var(--dash-water-bg)] px-3 py-1.5 text-[12px] font-bold text-[var(--dash-water-icon)]"
+            >
+              <History className="h-3.5 w-3.5" /> Histórico
+            </button>
           </div>
 
           <div className="divide-y divide-[var(--dash-border-table)]">
@@ -270,6 +284,61 @@ function TechnicianChemicalsPage() {
           </button>
         </div>
       </footer>
+
+      {historyOpen && (
+        <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 sm:items-center" onClick={() => setHistoryOpen(false)}>
+          <div
+            className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-t-2xl bg-white sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[var(--dash-border)] p-4">
+              <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Histórico de Químicos</h2>
+              <button onClick={() => setHistoryOpen(false)} className="grid h-8 w-8 place-items-center rounded-full text-[var(--dash-text-secondary)]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {historyLoading ? (
+                <p className="py-8 text-center text-sm text-[var(--dash-text-muted-2)]">Carregando...</p>
+              ) : !history || history.length === 0 ? (
+                <p className="py-8 text-center text-sm text-[var(--dash-text-muted-2)]">Nenhuma leitura anterior para este cliente ainda.</p>
+              ) : (
+                history.map((entry) => (
+                  <div key={entry.route_stop_id} className="rounded-xl border border-[var(--dash-border)] p-3">
+                    <div className="text-[13px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</div>
+                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {READING_ORDER.map((key) => {
+                        const meta = CHEMICAL_READING_META[key];
+                        const value = entry.chemicals[key];
+                        if (value === null) return null;
+                        return (
+                          <div key={key} className="text-[12px]">
+                            <span className="text-[var(--dash-text-muted-2)]">{meta.label}: </span>
+                            <span className="font-bold text-[var(--dash-text)]">{value.toFixed(decimals(meta.step))}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {entry.chemicals.products.some((p) => p.qty > 0) && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {entry.chemicals.products.filter((p) => p.qty > 0).map((p) => (
+                          <span key={p.name} className="rounded-full bg-[var(--dash-bg)] px-2 py-0.5 text-[11px] font-semibold text-[var(--dash-text-secondary)]">
+                            {p.name}: {p.qty} {p.unit}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {entry.chemicals.notes && (
+                      <div className="mt-2 text-[12px] text-[var(--dash-text-muted-2)]">{entry.chemicals.notes}</div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

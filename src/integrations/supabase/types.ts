@@ -607,6 +607,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_my_stop_chemicals_history: {
+        Args: { p_stop_id: string }
+        Returns: {
+          route_stop_id: string
+          route_date: string
+          free_chlorine: number | null
+          ph: number | null
+          total_alkalinity: number | null
+          calcium_hardness: number | null
+          stabilizer: number | null
+          products: Json
+          notes: string | null
+        }[]
+      }
       ensure_my_technician_stops: {
         Args: { p_date: string }
         Returns: undefined

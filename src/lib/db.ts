@@ -422,6 +422,28 @@ export async function saveMyStopChemicals(
   if (error) throw error;
 }
 
+// Same shape as getClientChemicalsHistory (owner side), but scoped through
+// the technician RPC boundary instead of a direct table query.
+export async function getMyStopChemicalsHistory(stopId: string): Promise<ChemicalHistoryEntry[]> {
+  const { data, error } = await supabase.rpc("get_my_stop_chemicals_history", { p_stop_id: stopId });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    route_stop_id: row.route_stop_id,
+    route_date: row.route_date,
+    chemicals: {
+      id: row.route_stop_id,
+      route_stop_id: row.route_stop_id,
+      free_chlorine: row.free_chlorine,
+      ph: row.ph,
+      total_alkalinity: row.total_alkalinity,
+      calcium_hardness: row.calcium_hardness,
+      stabilizer: row.stabilizer,
+      products: (row.products as unknown as Product[]) ?? [],
+      notes: row.notes,
+    },
+  }));
+}
+
 export async function deleteStop(stopId: string) {
   const { error } = await supabase.from("route_stops").delete().eq("id", stopId);
   if (error) throw error;
