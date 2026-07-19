@@ -343,13 +343,20 @@ function TecnicoPage() {
                     <div className="mt-2 flex items-center gap-2">
                       <span
                         className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold"
-                        style={commercial ? { background: "var(--dash-border-table)", color: "var(--dash-text-secondary)" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
+                        style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
                       >
                         {commercial ? <Building2 className="h-3 w-3" /> : <Waves className="h-3 w-3" />}
                         {commercial ? "Comercial" : "Piscina Residencial"}
                       </span>
-                      <Link to="/tecnico/chemicals/$stopId" params={{ stopId: stop.stop_id }} title="Químicos da piscina">
-                        <FlaskConical className="h-4 w-4" style={{ color: "var(--dash-green)" }} />
+                      <Link
+                        to="/tecnico/chemicals/$stopId"
+                        params={{ stopId: stop.stop_id }}
+                        title="Chemical"
+                        className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white"
+                        style={{ background: "var(--dash-green)" }}
+                      >
+                        <FlaskConical className="h-3 w-3" />
+                        Chemical
                       </Link>
                     </div>
 
