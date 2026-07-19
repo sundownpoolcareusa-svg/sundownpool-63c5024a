@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Droplet, FlaskConical, Beaker, Diamond, ShieldCheck, Minus, Plus,
+  ArrowLeft, Droplet, FlaskConical, Diamond, ShieldCheck, Minus, Plus, Filter,
   CheckCircle2, AlertTriangle, Check, ChevronRight, StickyNote, History, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getMyTechnician, getMyStopDetail, getMyStopChemicals, saveMyStopChemicals, updateMyStopStatus,
-  getMyStopChemicalsHistory, fmtDate,
+  getMyStopChemicalsHistory, logMyStopFilterCleaning, fmtDate,
   CHEMICAL_READING_META, DEFAULT_READINGS, DEFAULT_PRODUCTS, isReadingInRange,
   type ChemicalReadingKey, type ChemicalReadings, type Product,
 } from "@/lib/db";
@@ -21,10 +21,24 @@ export const Route = createFileRoute("/tecnico_/chemicals/$stopId")({
 const READING_ICONS: Record<ChemicalReadingKey, { icon: typeof Droplet; bg: string; fg: string }> = {
   free_chlorine: { icon: Droplet, bg: "#DCEEFC", fg: "#2563EB" },
   ph: { icon: FlaskConical, bg: "#EDE4FB", fg: "#7C3AED" },
-  total_alkalinity: { icon: Beaker, bg: "#E1F4E3", fg: "#16A34A" },
+  total_alkalinity: { icon: FlaskConical, bg: "#E1F4E3", fg: "#16A34A" },
   calcium_hardness: { icon: Diamond, bg: "#FCE7D4", fg: "#E8813A" },
   stabilizer: { icon: ShieldCheck, bg: "#DCEEFC", fg: "#2563EB" },
 };
+
+function formatCleanedAt(iso: string | null | undefined) {
+  if (!iso) return "Nunca";
+  const d = new Date(iso);
+  const isToday = d.toDateString() === new Date().toDateString();
+  const datePart = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  const timePart = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return `${isToday ? "Hoje, " : ""}${datePart} às ${timePart}`;
+}
+
+function daysSince(iso: string | null | undefined) {
+  if (!iso) return null;
+  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+}
 
 const READING_ORDER: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer"];
 
@@ -93,6 +107,15 @@ function TechnicianChemicalsPage() {
       toast.success("Químicos salvos e parada concluída!");
       qc.invalidateQueries({ queryKey: ["my-technician-stops"] });
       navigate({ to: "/tecnico" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const filterCleanMut = useMutation({
+    mutationFn: () => logMyStopFilterCleaning(stopId),
+    onSuccess: () => {
+      toast.success("Limpeza do filtro registrada!");
+      qc.invalidateQueries({ queryKey: ["my-stop-detail", stopId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -198,6 +221,39 @@ function TechnicianChemicalsPage() {
                 </div>
               );
             })}
+          </div>
+
+          <div className="mt-3 border-t border-[var(--dash-border)] pt-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl p-3" style={{ background: "#EDF5FE" }}>
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: "#DCEEFC", color: "#2563EB" }}>
+                  <Filter className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-[14px] font-bold text-[var(--dash-text)]">Limpeza do Filtro</div>
+                  <div className="text-[12px] text-[var(--dash-text-muted-2)]">Acompanhe a manutenção do filtro</div>
+                </div>
+              </div>
+              <button
+                onClick={() => filterCleanMut.mutate()}
+                disabled={filterCleanMut.isPending}
+                className="flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-bold text-white disabled:opacity-50"
+                style={{ background: "#2563EB" }}
+              >
+                <Check className="h-4 w-4" /> Filtro Limpo
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[12px] text-[var(--dash-text-muted-2)]">
+              <span>Última limpeza: <span className="font-bold text-[var(--dash-text)]">{formatCleanedAt(stop?.filter_last_cleaned_at)}</span></span>
+              {daysSince(stop?.filter_last_cleaned_at) !== null && (
+                <>
+                  <span className="text-[var(--dash-border)]">|</span>
+                  <span>{daysSince(stop?.filter_last_cleaned_at)} dias</span>
+                </>
+              )}
+              <span className="text-[var(--dash-border)]">|</span>
+              <span># Limpezas: <span className="font-bold text-[var(--dash-text)]">{stop?.filter_cleaning_count ?? 0}</span></span>
+            </div>
           </div>
         </section>
 
