@@ -18,12 +18,12 @@ export const Route = createFileRoute("/_authenticated/chemicals/$stopId")({
   component: PoolChemicalsPage,
 });
 
-const READING_ICONS: Record<ChemicalReadingKey, { icon: typeof Droplet; bg: string; fg: string }> = {
-  free_chlorine: { icon: Droplet, bg: "#DCEEFC", fg: "#2563EB" },
-  ph: { icon: FlaskConical, bg: "#EDE4FB", fg: "#7C3AED" },
-  total_alkalinity: { icon: FlaskConical, bg: "#E1F4E3", fg: "#16A34A" },
-  calcium_hardness: { icon: Diamond, bg: "#FCE7D4", fg: "#E8813A" },
-  stabilizer: { icon: ShieldCheck, bg: "#DCEEFC", fg: "#2563EB" },
+const READING_ICONS: Record<ChemicalReadingKey, { icon: typeof Droplet; gradient: string }> = {
+  free_chlorine: { icon: Droplet, gradient: "linear-gradient(135deg, #4FADF7 0%, #0B63E8 100%)" },
+  ph: { icon: FlaskConical, gradient: "linear-gradient(135deg, #A66BEE 0%, #7C3AED 100%)" },
+  total_alkalinity: { icon: FlaskConical, gradient: "linear-gradient(135deg, #7FC97F 0%, #3C8D40 100%)" },
+  calcium_hardness: { icon: Diamond, gradient: "linear-gradient(135deg, #FBB03B 0%, #F2711C 100%)" },
+  stabilizer: { icon: ShieldCheck, gradient: "linear-gradient(135deg, #4FADF7 0%, #0B63E8 100%)" },
 };
 
 function formatCleanedAt(iso: string | null | undefined) {
@@ -193,13 +193,13 @@ function PoolChemicalsPage() {
           <div className="divide-y divide-[var(--dash-border-table)]">
             {READING_ORDER.map((key) => {
               const meta = CHEMICAL_READING_META[key];
-              const { icon: Icon, bg, fg } = READING_ICONS[key];
+              const { icon: Icon, gradient } = READING_ICONS[key];
               const value = readings[key];
               const inRange = isReadingInRange(key, value);
               return (
                 <div key={key} className="flex items-center gap-3 py-3">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full" style={{ background: bg, color: fg }}>
-                    <Icon className="h-5 w-5" />
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full shadow-sm" style={{ background: gradient }}>
+                    <Icon className="h-5 w-5 text-white" strokeWidth={2.4} style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))" }} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-bold text-[var(--dash-text)]">
