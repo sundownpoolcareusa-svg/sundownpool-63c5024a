@@ -200,8 +200,18 @@ export type RouteRow = {
   route_stops?: RouteStop[];
 };
 
+// Local calendar date (YYYY-MM-DD), NOT toISOString() — that converts to UTC,
+// which silently rolls the date forward/back a day whenever local time is
+// near midnight relative to the UTC offset (e.g. any evening in US Eastern).
 export function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return dateStr(new Date());
+}
+
+export function dateStr(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export async function listTechnicians() {
