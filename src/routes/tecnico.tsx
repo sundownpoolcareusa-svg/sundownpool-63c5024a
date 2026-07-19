@@ -353,9 +353,9 @@ function TecnicoPage() {
                       </div>
                     </div>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <div className="mt-2 flex flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       <span
-                        className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold"
+                        className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-1 text-[11px] font-bold"
                         style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
                       >
                         {commercial ? <Building2 className="h-3 w-3" /> : <Waves className="h-3 w-3" />}
@@ -365,7 +365,7 @@ function TecnicoPage() {
                         to="/tecnico/chemicals/$stopId"
                         params={{ stopId: stop.stop_id }}
                         title="Chemical"
-                        className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white"
+                        className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-1 text-[11px] font-bold text-white"
                         style={{ background: "var(--dash-green)" }}
                       >
                         <FlaskConical className="h-3 w-3" />
@@ -391,7 +391,7 @@ function TecnicoPage() {
                         <button
                           onClick={() => statusMut.mutate({ stopId: stop.stop_id, status: next })}
                           disabled={statusMut.isPending}
-                          className="flex items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-50"
+                          className="flex shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"
                           style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
                         >
                           {next === "Concluído" ? <Check className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
