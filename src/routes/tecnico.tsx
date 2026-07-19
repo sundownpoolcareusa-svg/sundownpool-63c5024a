@@ -12,8 +12,21 @@ import {
 import { getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, initials, type StopStatus, type TechnicianStop } from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
 import { toast } from "sonner";
+import tecnicoIcon from "@/assets/tecnico-apple-touch-icon.png";
 
 export const Route = createFileRoute("/tecnico")({
+  head: () => ({
+    meta: [
+      { title: "Route - Sundown" },
+      { name: "apple-mobile-web-app-title", content: "Route - Sundown" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+    ],
+    links: [
+      { rel: "apple-touch-icon", href: tecnicoIcon },
+      { rel: "icon", href: tecnicoIcon },
+    ],
+  }),
   component: TecnicoPage,
 });
 
