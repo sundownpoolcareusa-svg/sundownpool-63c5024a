@@ -504,6 +504,45 @@ export async function saveStopChemicals(
   if (error) throw error;
 }
 
+export type ChemicalHistoryEntry = {
+  route_stop_id: string;
+  route_date: string;
+  chemicals: StopChemicals;
+};
+
+// Every past chemical reading logged for this client, across all of their
+// route stops, newest first — used by the "History" view on the chemicals
+// page. Excludes the stop currently being edited (its own live readings are
+// already shown above, not part of "history").
+export async function getClientChemicalsHistory(clientId: string, excludeStopId?: string) {
+  const { data: stops, error: stopsErr } = await supabase
+    .from("route_stops")
+    .select("id, route:routes(route_date)")
+    .eq("client_id", clientId);
+  if (stopsErr) throw stopsErr;
+
+  const stopIds = (stops ?? []).map((s) => s.id).filter((id) => id !== excludeStopId);
+  if (stopIds.length === 0) return [];
+
+  const { data: chem, error: chemErr } = await supabase
+    .from("stop_chemicals")
+    .select("*")
+    .in("route_stop_id", stopIds);
+  if (chemErr) throw chemErr;
+
+  const dateByStop = new Map(
+    (stops ?? []).map((s) => [s.id, (s.route as { route_date: string } | null)?.route_date ?? ""]),
+  );
+
+  return (chem ?? [])
+    .map((c) => ({
+      route_stop_id: c.route_stop_id,
+      route_date: dateByStop.get(c.route_stop_id) ?? "",
+      chemicals: { ...c, products: (c.products as unknown as Product[]) ?? [] } as StopChemicals,
+    }))
+    .sort((a, b) => b.route_date.localeCompare(a.route_date)) as ChemicalHistoryEntry[];
+}
+
 export function fmt(n: number) {
   return `$${(n ?? 0).toFixed(2)}`;
 }
