@@ -153,9 +153,10 @@ function RouteMap({
   if (!GOOGLE_MAPS_KEY || loadError) {
     return (
       <div className={`${wrapperClass} grid place-items-center bg-[var(--dash-surface-soft)] text-center`}>
-        <div>
+        <div className="px-4">
           <MapPin className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
           <p className="mt-2 text-sm text-[var(--dash-text-muted)]">Map unavailable — check the Google Maps API key.</p>
+          {loadError && <p className="mt-1 break-words text-[11px] text-[var(--dash-text-muted)]">{loadError.message}</p>}
         </div>
       </div>
     );
@@ -212,21 +213,22 @@ function RouteMap({
 // devices sometimes hit transient script-load or SDK races) — isolate it so
 // a failure there degrades to "map unavailable" instead of crashing the
 // whole route screen.
-class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
-  state = { hasError: false };
-  static getDerivedStateFromError() {
-    return { hasError: true };
+class MapErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state: { error: Error | null } = { error: null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
   }
   componentDidCatch(error: Error) {
     reportLovableError(error, { boundary: "rotas_map" });
   }
   render() {
-    if (this.state.hasError) {
+    if (this.state.error) {
       return (
         <div className="grid h-56 w-full place-items-center rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-surface-soft)] text-center lg:h-[360px]">
-          <div>
+          <div className="px-4">
             <MapPin className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
             <p className="mt-2 text-sm text-[var(--dash-text-muted)]">Map unavailable right now.</p>
+            <p className="mt-1 break-words text-[11px] text-[var(--dash-text-muted)]">{this.state.error.message}</p>
           </div>
         </div>
       );
