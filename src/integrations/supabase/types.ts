@@ -35,7 +35,6 @@ export type Database = {
           pool_photos: string[]
           service_days: string[]
           service_frequency: string | null
-          stage: string
           state: string | null
           status: string
           technician_id: string | null
@@ -63,7 +62,6 @@ export type Database = {
           pool_photos?: string[]
           service_days?: string[]
           service_frequency?: string | null
-          stage?: string
           state?: string | null
           status?: string
           technician_id?: string | null
@@ -91,7 +89,6 @@ export type Database = {
           pool_photos?: string[]
           service_days?: string[]
           service_frequency?: string | null
-          stage?: string
           state?: string | null
           status?: string
           technician_id?: string | null
@@ -381,56 +378,6 @@ export type Database = {
             columns: ["route_id"]
             isOneToOne: false
             referencedRelation: "routes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      stop_chemicals: {
-        Row: {
-          calcium_hardness: number | null
-          created_at: string
-          free_chlorine: number | null
-          id: string
-          notes: string | null
-          ph: number | null
-          products: Json
-          route_stop_id: string
-          stabilizer: number | null
-          total_alkalinity: number | null
-          updated_at: string
-        }
-        Insert: {
-          calcium_hardness?: number | null
-          created_at?: string
-          free_chlorine?: number | null
-          id?: string
-          notes?: string | null
-          ph?: number | null
-          products?: Json
-          route_stop_id: string
-          stabilizer?: number | null
-          total_alkalinity?: number | null
-          updated_at?: string
-        }
-        Update: {
-          calcium_hardness?: number | null
-          created_at?: string
-          free_chlorine?: number | null
-          id?: string
-          notes?: string | null
-          ph?: number | null
-          products?: Json
-          route_stop_id?: string
-          stabilizer?: number | null
-          total_alkalinity?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stop_chemicals_route_stop_id_fkey"
-            columns: ["route_stop_id"]
-            isOneToOne: true
-            referencedRelation: "route_stops"
             referencedColumns: ["id"]
           },
         ]
