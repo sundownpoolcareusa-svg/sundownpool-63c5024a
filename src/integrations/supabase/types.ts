@@ -22,6 +22,8 @@ export type Database = {
           created_at: string
           email: string | null
           equipment_photos: string[]
+          filter_cleaning_count: number
+          filter_last_cleaned_at: string | null
           id: string
           last_service_date: string | null
           lat: number | null
@@ -50,6 +52,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           equipment_photos?: string[]
+          filter_cleaning_count?: number
+          filter_last_cleaned_at?: string | null
           id?: string
           last_service_date?: string | null
           lat?: number | null
@@ -78,6 +82,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           equipment_photos?: string[]
+          filter_cleaning_count?: number
+          filter_last_cleaned_at?: string | null
           id?: string
           last_service_date?: string | null
           lat?: number | null
@@ -580,6 +586,15 @@ export type Database = {
           client_state: string | null
           client_zip: string | null
           client_type: string
+          filter_last_cleaned_at: string | null
+          filter_cleaning_count: number
+        }[]
+      }
+      log_my_stop_filter_cleaning: {
+        Args: { p_stop_id: string }
+        Returns: {
+          filter_last_cleaned_at: string | null
+          filter_cleaning_count: number
         }[]
       }
       get_my_stop_chemicals: {

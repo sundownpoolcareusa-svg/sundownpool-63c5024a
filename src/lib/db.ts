@@ -18,6 +18,8 @@ export type Client = {
   technician_id?: string | null;
   lat?: number | null;
   lng?: number | null;
+  filter_last_cleaned_at?: string | null;
+  filter_cleaning_count?: number;
   created_at: string;
 };
 
@@ -287,6 +289,23 @@ export async function getRouteStop(stopId: string) {
   return data as RouteStop;
 }
 
+export async function logFilterCleaning(clientId: string) {
+  const { data: current, error: readErr } = await supabase
+    .from("clients")
+    .select("filter_cleaning_count")
+    .eq("id", clientId)
+    .single();
+  if (readErr) throw readErr;
+  const { data, error } = await supabase
+    .from("clients")
+    .update({ filter_last_cleaned_at: new Date().toISOString(), filter_cleaning_count: (current.filter_cleaning_count ?? 0) + 1 })
+    .eq("id", clientId)
+    .select("filter_last_cleaned_at, filter_cleaning_count")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function addStopToRoute(routeId: string, clientId: string, scheduledTime?: string) {
   const { data: existing, error: countErr } = await supabase
     .from("route_stops")
@@ -393,6 +412,12 @@ export async function updateMyStopStatus(stopId: string, status: StopStatus) {
 
 export async function getMyStopDetail(stopId: string) {
   const { data, error } = await supabase.rpc("get_my_stop_detail", { p_stop_id: stopId });
+  if (error) throw error;
+  return data?.[0] ?? null;
+}
+
+export async function logMyStopFilterCleaning(stopId: string) {
+  const { data, error } = await supabase.rpc("log_my_stop_filter_cleaning", { p_stop_id: stopId });
   if (error) throw error;
   return data?.[0] ?? null;
 }
