@@ -385,56 +385,6 @@ export type Database = {
           },
         ]
       }
-      stop_chemicals: {
-        Row: {
-          calcium_hardness: number | null
-          created_at: string
-          free_chlorine: number | null
-          id: string
-          notes: string | null
-          ph: number | null
-          products: Json
-          route_stop_id: string
-          stabilizer: number | null
-          total_alkalinity: number | null
-          updated_at: string
-        }
-        Insert: {
-          calcium_hardness?: number | null
-          created_at?: string
-          free_chlorine?: number | null
-          id?: string
-          notes?: string | null
-          ph?: number | null
-          products?: Json
-          route_stop_id: string
-          stabilizer?: number | null
-          total_alkalinity?: number | null
-          updated_at?: string
-        }
-        Update: {
-          calcium_hardness?: number | null
-          created_at?: string
-          free_chlorine?: number | null
-          id?: string
-          notes?: string | null
-          ph?: number | null
-          products?: Json
-          route_stop_id?: string
-          stabilizer?: number | null
-          total_alkalinity?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stop_chemicals_route_stop_id_fkey"
-            columns: ["route_stop_id"]
-            isOneToOne: true
-            referencedRelation: "route_stops"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       routes: {
         Row: {
           created_at: string
@@ -502,6 +452,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      stop_chemicals: {
+        Row: {
+          calcium_hardness: number | null
+          created_at: string
+          free_chlorine: number | null
+          id: string
+          notes: string | null
+          ph: number | null
+          products: Json
+          route_stop_id: string
+          stabilizer: number | null
+          total_alkalinity: number | null
+          updated_at: string
+        }
+        Insert: {
+          calcium_hardness?: number | null
+          created_at?: string
+          free_chlorine?: number | null
+          id?: string
+          notes?: string | null
+          ph?: number | null
+          products?: Json
+          route_stop_id: string
+          stabilizer?: number | null
+          total_alkalinity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          calcium_hardness?: number | null
+          created_at?: string
+          free_chlorine?: number | null
+          id?: string
+          notes?: string | null
+          ph?: number | null
+          products?: Json
+          route_stop_id?: string
+          stabilizer?: number | null
+          total_alkalinity?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stop_chemicals_route_stop_id_fkey"
+            columns: ["route_stop_id"]
+            isOneToOne: true
+            referencedRelation: "route_stops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       technicians: {
         Row: {
@@ -608,7 +608,7 @@ export type Database = {
         Returns: undefined
       }
       update_my_stop_status: {
-        Args: { p_stop_id: string; p_status: string }
+        Args: { p_status: string; p_stop_id: string }
         Returns: undefined
       }
     }
