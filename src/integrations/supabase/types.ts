@@ -453,9 +453,60 @@ export type Database = {
         }
         Relationships: []
       }
+      stop_chemicals: {
+        Row: {
+          calcium_hardness: number | null
+          created_at: string
+          free_chlorine: number | null
+          id: string
+          notes: string | null
+          ph: number | null
+          products: Json
+          route_stop_id: string
+          stabilizer: number | null
+          total_alkalinity: number | null
+          updated_at: string
+        }
+        Insert: {
+          calcium_hardness?: number | null
+          created_at?: string
+          free_chlorine?: number | null
+          id?: string
+          notes?: string | null
+          ph?: number | null
+          products?: Json
+          route_stop_id: string
+          stabilizer?: number | null
+          total_alkalinity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          calcium_hardness?: number | null
+          created_at?: string
+          free_chlorine?: number | null
+          id?: string
+          notes?: string | null
+          ph?: number | null
+          products?: Json
+          route_stop_id?: string
+          stabilizer?: number | null
+          total_alkalinity?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stop_chemicals_route_stop_id_fkey"
+            columns: ["route_stop_id"]
+            isOneToOne: true
+            referencedRelation: "route_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       technicians: {
         Row: {
           active: boolean
+          auth_user_id: string | null
           color: string
           created_at: string
           id: string
@@ -466,6 +517,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          auth_user_id?: string | null
           color?: string
           created_at?: string
           id?: string
@@ -476,6 +528,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          auth_user_id?: string | null
           color?: string
           created_at?: string
           id?: string
@@ -491,7 +544,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_my_technician_stops: {
+        Args: { p_date: string }
+        Returns: {
+          client_address: string
+          client_city: string
+          client_id: string
+          client_lat: number
+          client_lng: number
+          client_name: string
+          client_phone: string
+          client_state: string
+          client_zip: string
+          completed_at: string
+          has_chemicals: boolean
+          position: number
+          route_id: string
+          scheduled_time: string
+          started_at: string
+          status: string
+          stop_id: string
+          stop_notes: string
+        }[]
+      }
+      update_my_stop_status: {
+        Args: { p_status: string; p_stop_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
