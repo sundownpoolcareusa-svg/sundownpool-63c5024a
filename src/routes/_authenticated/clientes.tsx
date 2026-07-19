@@ -66,6 +66,7 @@ function ClientesPage() {
   const total = clients.length;
   const ativos = clients.filter((c) => c.status === "Ativo").length;
   const onRouteCount = clients.filter(isOnRoute).length;
+  const prospectCount = clients.filter((c) => c.stage === "Prospecção").length;
   const now = new Date();
   const novos = clients.filter((c) => {
     const d = new Date(c.created_at);
@@ -108,6 +109,7 @@ function ClientesPage() {
               <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Total Clients</span><span className="font-bold tabular-nums text-[var(--dash-text)]">{total}</span></div>
               <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Active Clients</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-green)" }}>{ativos}</span></div>
               <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">On Route</span><span className="font-bold tabular-nums" style={{ color: "#7C3AED" }}>{onRouteCount}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Prospects</span><span className="font-bold tabular-nums" style={{ color: "#B45309" }}>{prospectCount}</span></div>
               <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">New this month</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-navy)" }}>{novos}</span></div>
               <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Services this month</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-orange)" }}>0</span></div>
             </div>
@@ -204,7 +206,14 @@ function ClientesPage() {
                       </td>
                       <td className="py-4 text-[var(--dash-text-secondary)]">{fmtDate(c.created_at)}</td>
                       <td className="py-4">
-                        {isOnRoute(c) ? (
+                        {c.status !== "Ativo" ? (
+                          <span
+                            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                            style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}
+                          >
+                            Inativo
+                          </span>
+                        ) : isOnRoute(c) ? (
                           <span
                             className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
                             style={{ background: "#EDE4FB", color: "#7C3AED" }}
@@ -212,15 +221,19 @@ function ClientesPage() {
                           >
                             Route
                           </span>
+                        ) : c.stage === "Prospecção" ? (
+                          <span
+                            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                            style={{ background: "#FEF3C7", color: "#B45309" }}
+                          >
+                            Prospecção
+                          </span>
                         ) : (
                           <span
                             className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                            style={{
-                              background: c.status === "Ativo" ? "var(--dash-badge-paid-bg)" : "var(--dash-border-table)",
-                              color: c.status === "Ativo" ? "var(--dash-badge-paid-text)" : "var(--dash-text-muted-2)",
-                            }}
+                            style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}
                           >
-                            {c.status}
+                            Cliente
                           </span>
                         )}
                       </td>
@@ -374,7 +387,7 @@ function ClientFormModal({
 }: { open: boolean; onClose: () => void; onSaved: () => void; editing?: ClientFull | null }) {
   const empty = {
     name: "", email: "", phone: "", address: "", city: "", state: "", zip: "",
-    client_type: "Residential", status: "Ativo", service_days: [] as string[],
+    client_type: "Residential", status: "Ativo", stage: "Prospecção", service_days: [] as string[],
     monthly_value: 0 as number,
     pool_photos: [] as string[],
     equipment_photos: [] as string[],
@@ -402,6 +415,7 @@ function ClientFormModal({
         zip: editing.zip || "",
         client_type: editing.client_type || "Residential",
         status: editing.status || "Ativo",
+        stage: editing.stage || "Cliente",
         service_days: editing.service_days || [],
         monthly_value: Number(editing.monthly_value || 0),
         pool_photos: editing.pool_photos || [],
@@ -470,7 +484,7 @@ function ClientFormModal({
           <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
           <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Type</label>
             <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
@@ -481,6 +495,12 @@ function ClientFormModal({
             <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Status</label>
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
               <option>Ativo</option><option>Inativo</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Stage</label>
+            <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
+              <option>Cliente</option><option>Prospecção</option>
             </select>
           </div>
         </div>

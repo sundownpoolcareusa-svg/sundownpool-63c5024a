@@ -11,6 +11,7 @@ export type Client = {
   zip?: string | null;
   client_type: string;
   status: string;
+  stage?: string;
   service_days?: string[];
   service_frequency?: string | null;
   technician_id?: string | null;

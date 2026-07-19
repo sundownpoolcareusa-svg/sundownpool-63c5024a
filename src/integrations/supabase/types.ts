@@ -35,6 +35,7 @@ export type Database = {
           pool_photos: string[]
           service_days: string[]
           service_frequency: string | null
+          stage: string
           state: string | null
           status: string
           technician_id: string | null
@@ -62,6 +63,7 @@ export type Database = {
           pool_photos?: string[]
           service_days?: string[]
           service_frequency?: string | null
+          stage?: string
           state?: string | null
           status?: string
           technician_id?: string | null
@@ -89,6 +91,7 @@ export type Database = {
           pool_photos?: string[]
           service_days?: string[]
           service_frequency?: string | null
+          stage?: string
           state?: string | null
           status?: string
           technician_id?: string | null
