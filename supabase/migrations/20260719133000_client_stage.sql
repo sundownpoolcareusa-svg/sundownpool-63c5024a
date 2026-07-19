@@ -1,0 +1,2 @@
+ALTER TABLE public.clients
+  ADD COLUMN IF NOT EXISTS stage TEXT NOT NULL DEFAULT 'Cliente';
