@@ -9,7 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import {
   getMyTechnician, getMyStopDetail, getMyStopChemicals, saveMyStopChemicals, updateMyStopStatus,
-  getMyStopChemicalsHistory, logMyStopFilterCleaning, fmtDate, formatProductQty,
+  getMyStopChemicalsHistory, logMyStopFilterCleaning, fmtDate, formatProductQty, mergeSavedProducts,
   CHEMICAL_READING_META, DEFAULT_READINGS, DEFAULT_PRODUCTS, isReadingInRange,
   type ChemicalReadingKey, type ChemicalReadings, type Product,
 } from "@/lib/db";
@@ -89,7 +89,7 @@ function TechnicianChemicalsPage() {
   });
 
   useEffect(() => {
-    if (isLoading || loaded) return;
+    if (!checkedSession || isLoading || loaded) return;
     if (existing) {
       setReadings({
         free_chlorine: existing.free_chlorine ?? DEFAULT_READINGS.free_chlorine,
@@ -98,11 +98,11 @@ function TechnicianChemicalsPage() {
         calcium_hardness: existing.calcium_hardness ?? DEFAULT_READINGS.calcium_hardness,
         stabilizer: existing.stabilizer ?? DEFAULT_READINGS.stabilizer,
       });
-      setProducts(existing.products.length > 0 ? existing.products : DEFAULT_PRODUCTS);
+      setProducts(existing.products.length > 0 ? mergeSavedProducts(existing.products) : DEFAULT_PRODUCTS);
       setNotes(existing.notes ?? "");
     }
     setLoaded(true);
-  }, [existing, isLoading, loaded]);
+  }, [checkedSession, existing, isLoading, loaded]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
