@@ -35,9 +35,15 @@ function formatCleanedAt(iso: string | null | undefined) {
   return `${isToday ? "Today, " : ""}${datePart} at ${timePart}`;
 }
 
+// Calendar-day difference, not exact 24h elapsed — cleaned today counts as
+// 0, the next calendar day counts as 1 regardless of what time it is now.
 function daysSince(iso: string | null | undefined) {
   if (!iso) return null;
-  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+  const d = new Date(iso);
+  const cleanedDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const now = new Date();
+  const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.max(0, Math.round((todayDate.getTime() - cleanedDate.getTime()) / 86400000));
 }
 
 const READING_ORDER: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer"];
@@ -229,12 +235,12 @@ function PoolChemicalsPage() {
           </div>
 
           <div className="mt-3 border-t border-[var(--dash-border)] pt-3">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl p-3" style={{ background: "#EDF5FE" }}>
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: "#DCEEFC", color: "#2563EB" }}>
-                  <Filter className="h-5 w-5" />
+            <div className="flex items-center justify-between gap-1.5 rounded-xl p-2.5" style={{ background: "#EDF5FE" }}>
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <div className="grid h-7 w-7 shrink-0 place-items-center rounded-xl" style={{ background: "#DCEEFC", color: "#2563EB" }}>
+                  <Filter className="h-4 w-4" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-[14px] font-bold text-[var(--dash-text)]">Filter Cleaning</div>
                   <div className="text-[12px] text-[var(--dash-text-muted-2)]">Keep track of your filter maintenance</div>
                 </div>
@@ -242,10 +248,10 @@ function PoolChemicalsPage() {
               <button
                 onClick={() => filterCleanMut.mutate()}
                 disabled={filterCleanMut.isPending}
-                className="flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-bold text-white disabled:opacity-50"
+                className="flex shrink-0 items-center gap-1 rounded-full px-2 py-1.5 text-[12px] font-bold text-white disabled:opacity-50"
                 style={{ background: "#2563EB" }}
               >
-                <Check className="h-4 w-4" /> Filter Cleaned
+                <Check className="h-3.5 w-3.5" /> Filter Cleaned
               </button>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[12px] text-[var(--dash-text-muted-2)]">
