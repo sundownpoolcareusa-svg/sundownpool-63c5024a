@@ -9,7 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import {
   getRouteStop, getStopChemicals, saveStopChemicals, updateStopStatus, getClientChemicalsHistory, fmtDate,
-  logFilterCleaning,
+  logFilterCleaning, formatProductQty,
   CHEMICAL_READING_META, DEFAULT_READINGS, DEFAULT_PRODUCTS, isReadingInRange,
   type ChemicalReadingKey, type ChemicalReadings, type Product,
 } from "@/lib/db";
@@ -132,7 +132,7 @@ function PoolChemicalsPage() {
   }
 
   function adjustProduct(name: string, dir: 1 | -1) {
-    setProducts((list) => list.map((p) => (p.name === name ? { ...p, qty: Math.max(0, Math.round((p.qty + dir * 1) * 10) / 10) } : p)));
+    setProducts((list) => list.map((p) => (p.name === name ? { ...p, qty: Math.max(0, Math.round((p.qty + dir * (p.step ?? 1)) * 100) / 100) } : p)));
   }
 
   function addProduct() {
@@ -315,7 +315,7 @@ function PoolChemicalsPage() {
                   <button onClick={() => adjustProduct(p.name, -1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
                     <Minus className="h-3.5 w-3.5" />
                   </button>
-                  <span className="text-[15px] font-extrabold text-[var(--dash-text)]">{p.qty.toFixed(1).replace(/\.0$/, "")}</span>
+                  <span className="text-[15px] font-extrabold text-[var(--dash-text)]">{formatProductQty(p.qty)}</span>
                   <button onClick={() => adjustProduct(p.name, 1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
                     <Plus className="h-3.5 w-3.5" />
                   </button>
@@ -422,7 +422,7 @@ function PoolChemicalsPage() {
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {usedProducts.map((p) => (
                             <span key={p.name} className="rounded-full bg-[var(--dash-bg)] px-2.5 py-1 text-[12px] font-semibold text-[var(--dash-text-secondary)]">
-                              {p.name}: <span className="font-bold text-[var(--dash-text)]">{p.qty} {p.unit}</span>
+                              {p.name}: <span className="font-bold text-[var(--dash-text)]">{formatProductQty(p.qty)} {p.unit}</span>
                             </span>
                           ))}
                         </div>
