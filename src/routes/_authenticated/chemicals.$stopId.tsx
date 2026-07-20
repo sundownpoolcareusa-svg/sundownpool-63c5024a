@@ -77,8 +77,8 @@ function PoolChemicalsPage() {
   const [historyMode, setHistoryMode] = useState<"chemicals" | "products">("chemicals");
 
   const { data: history, isLoading: historyLoading } = useQuery({
-    queryKey: ["client-chemicals-history", stop?.client_id, stopId],
-    queryFn: () => getClientChemicalsHistory(stop!.client_id, stopId),
+    queryKey: ["client-chemicals-history", stop?.client_id],
+    queryFn: () => getClientChemicalsHistory(stop!.client_id),
     enabled: historyOpen && !!stop,
   });
 
