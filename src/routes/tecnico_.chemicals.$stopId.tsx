@@ -272,12 +272,20 @@ function TechnicianChemicalsPage() {
               </div>
               <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Produtos Usados</h2>
             </div>
-            <button
-              onClick={() => setAddProductOpen((v) => !v)}
-              className="flex items-center gap-1.5 rounded-full bg-[var(--dash-water-bg)] px-3 py-1.5 text-[12px] font-bold text-[var(--dash-water-icon)]"
-            >
-              <Plus className="h-3.5 w-3.5" /> Adicionar
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setHistoryOpen(true)}
+                className="flex items-center gap-1.5 rounded-full bg-[var(--dash-water-bg)] px-3 py-1.5 text-[12px] font-bold text-[var(--dash-water-icon)]"
+              >
+                <History className="h-3.5 w-3.5" /> Histórico
+              </button>
+              <button
+                onClick={() => setAddProductOpen((v) => !v)}
+                className="flex items-center gap-1.5 rounded-full bg-[var(--dash-water-bg)] px-3 py-1.5 text-[12px] font-bold text-[var(--dash-water-icon)]"
+              >
+                <Plus className="h-3.5 w-3.5" /> Adicionar
+              </button>
+            </div>
           </div>
 
           {addProductOpen && (
