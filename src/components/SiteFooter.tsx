@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Phone, Mail, MapPin, Clock, ShieldCheck, Facebook, Instagram } from "lucide-react";
 import logoWhite from "@/assets/sundown-logo-new-white.png";
+import { FooterMap } from "@/components/FooterMap";
 
 const AREAS = ["Osprey", "Sarasota", "Venice", "Nokomis", "Siesta Key", "And Surrounding Areas"];
 
@@ -71,6 +72,10 @@ export function SiteFooter() {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="relative mx-auto max-w-[1180px] px-7 pb-10">
+        <FooterMap />
       </div>
 
       <div className="relative border-t border-white/10">
