@@ -76,6 +76,9 @@ export function SiteFooter() {
 
       <div className="relative mx-auto max-w-[1180px] px-7 pb-10">
         <FooterMap />
+        <p className="mt-3 text-center text-[13.5px] text-[#b4c4de]">
+          Sundown Pool Care — 4008 Destination Dr Apt 2208, Osprey, FL 34229
+        </p>
       </div>
 
       <div className="relative border-t border-white/10">
