@@ -480,7 +480,7 @@ export type ChemicalReadingKey = "free_chlorine" | "ph" | "total_alkalinity" | "
 
 export type ChemicalReadings = Record<ChemicalReadingKey, number>;
 
-export type Product = { name: string; unit: string; qty: number };
+export type Product = { name: string; unit: string; qty: number; step?: number };
 
 export type StopChemicals = {
   id: string;
@@ -511,13 +511,26 @@ export const DEFAULT_READINGS: ChemicalReadings = {
 };
 
 export const DEFAULT_PRODUCTS: Product[] = [
-  { name: "Liquid Chlorine", unit: "gal", qty: 0 },
-  { name: "Chlorine Tabs", unit: "tabs", qty: 0 },
-  { name: "Muriatic Acid", unit: "gal", qty: 0 },
-  { name: "Baking Soda", unit: "lb", qty: 0 },
-  { name: "Calcium", unit: "lb", qty: 0 },
-  { name: "Stabilizer", unit: "lb", qty: 0 },
+  { name: "Liquid Chlorine", unit: "gal", qty: 0, step: 0.5 },
+  { name: "Chlorine Tabs", unit: "tabs", qty: 0, step: 1 },
+  { name: "Muriatic Acid", unit: "gal", qty: 0, step: 0.25 },
+  { name: "Baking Soda", unit: "scoop", qty: 0, step: 0.5 },
+  { name: "Calcium", unit: "scoop", qty: 0, step: 0.5 },
+  { name: "Stabilizer", unit: "scoop", qty: 0, step: 0.5 },
 ];
+
+const QTY_FRACTIONS: Record<string, string> = { "0.25": "¼", "0.50": "½", "0.75": "¾" };
+
+// Renders fractional product quantities the way technicians write them by
+// hand (1/4, 1/2, 3/4 gallon; 1/2, 1 1/2 scoop) instead of decimals.
+export function formatProductQty(qty: number) {
+  if (qty === 0) return "0";
+  const whole = Math.floor(qty);
+  const fracKey = (Math.round((qty - whole) * 100) / 100).toFixed(2);
+  const fracStr = QTY_FRACTIONS[fracKey];
+  if (!fracStr) return qty.toFixed(1).replace(/\.0$/, "");
+  return whole === 0 ? fracStr : `${whole} ${fracStr}`;
+}
 
 export function isReadingInRange(key: ChemicalReadingKey, value: number) {
   const meta = CHEMICAL_READING_META[key];
