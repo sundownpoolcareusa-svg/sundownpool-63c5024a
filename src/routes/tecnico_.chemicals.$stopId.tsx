@@ -30,9 +30,8 @@ function formatCleanedAt(iso: string | null | undefined) {
   if (!iso) return "Nunca";
   const d = new Date(iso);
   const isToday = d.toDateString() === new Date().toDateString();
-  const datePart = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
-  const timePart = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  return `${isToday ? "Hoje, " : ""}${datePart} às ${timePart}`;
+  if (isToday) return "Hoje";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 // Calendar-day difference, not exact 24h elapsed — cleaned today counts as
@@ -239,7 +238,7 @@ function TechnicianChemicalsPage() {
                 </div>
                 <div className="min-w-0">
                   <div className="text-[14px] font-bold text-[var(--dash-text)]">Limpeza do Filtro</div>
-                  <div className="text-[12px] text-[var(--dash-text-muted-2)]">Acompanhe a manutenção do filtro</div>
+                  <div className="text-[12px] text-[var(--dash-text-muted-2)]">filter maintenance</div>
                 </div>
               </div>
               <button

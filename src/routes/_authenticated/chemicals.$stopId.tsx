@@ -30,9 +30,8 @@ function formatCleanedAt(iso: string | null | undefined) {
   if (!iso) return "Never";
   const d = new Date(iso);
   const isToday = d.toDateString() === new Date().toDateString();
-  const datePart = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const timePart = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-  return `${isToday ? "Today, " : ""}${datePart} at ${timePart}`;
+  if (isToday) return "Today";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 // Calendar-day difference, not exact 24h elapsed — cleaned today counts as
