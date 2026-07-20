@@ -532,6 +532,21 @@ export function formatProductQty(qty: number) {
   return whole === 0 ? fracStr : `${whole} ${fracStr}`;
 }
 
+// Loaded chemicals records store a snapshot of the product list as it was
+// when saved, so a stop saved before a unit/step change (e.g. lb -> scoop)
+// would otherwise show stale units forever. Keeps the saved quantities but
+// always takes unit/step from the current DEFAULT_PRODUCTS, so config
+// changes apply everywhere immediately. Custom products the technician
+// added by name (not in DEFAULT_PRODUCTS) are kept as-is.
+export function mergeSavedProducts(saved: Product[]): Product[] {
+  const known = DEFAULT_PRODUCTS.map((def) => ({
+    ...def,
+    qty: saved.find((p) => p.name === def.name)?.qty ?? def.qty,
+  }));
+  const custom = saved.filter((p) => !DEFAULT_PRODUCTS.some((def) => def.name === p.name));
+  return [...known, ...custom];
+}
+
 export function isReadingInRange(key: ChemicalReadingKey, value: number) {
   const meta = CHEMICAL_READING_META[key];
   return value >= meta.min && value <= meta.max;

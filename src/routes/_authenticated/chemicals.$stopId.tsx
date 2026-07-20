@@ -9,7 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import {
   getRouteStop, getStopChemicals, saveStopChemicals, updateStopStatus, getClientChemicalsHistory, fmtDate,
-  logFilterCleaning, formatProductQty,
+  logFilterCleaning, formatProductQty, mergeSavedProducts,
   CHEMICAL_READING_META, DEFAULT_READINGS, DEFAULT_PRODUCTS, isReadingInRange,
   type ChemicalReadingKey, type ChemicalReadings, type Product,
 } from "@/lib/db";
@@ -92,7 +92,7 @@ function PoolChemicalsPage() {
         calcium_hardness: existing.calcium_hardness ?? DEFAULT_READINGS.calcium_hardness,
         stabilizer: existing.stabilizer ?? DEFAULT_READINGS.stabilizer,
       });
-      setProducts(existing.products.length > 0 ? existing.products : DEFAULT_PRODUCTS);
+      setProducts(existing.products.length > 0 ? mergeSavedProducts(existing.products) : DEFAULT_PRODUCTS);
       setNotes(existing.notes ?? "");
     }
     setLoaded(true);
