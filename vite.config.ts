@@ -16,6 +16,11 @@ export default defineConfig({
       server: { entry: "server" },
     }),
     viteReact(),
-    nitro({ preset: "vercel" }),
+    nitro({
+      preset: "vercel",
+      routeRules: {
+        "/sitemap.xml": { headers: { "content-type": "application/xml; charset=utf-8" } },
+      },
+    }),
   ],
 });
