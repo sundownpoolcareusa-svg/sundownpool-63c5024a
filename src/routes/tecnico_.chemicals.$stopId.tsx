@@ -80,6 +80,7 @@ function TechnicianChemicalsPage() {
   const [newProductName, setNewProductName] = useState("");
   const [newProductUnit, setNewProductUnit] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyMode, setHistoryMode] = useState<"chemicals" | "products">("chemicals");
 
   const { data: history, isLoading: historyLoading } = useQuery({
     queryKey: ["my-stop-chemicals-history", stopId],
@@ -185,7 +186,7 @@ function TechnicianChemicalsPage() {
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Leituras Químicas</h2>
             <button
-              onClick={() => setHistoryOpen(true)}
+              onClick={() => { setHistoryMode("chemicals"); setHistoryOpen(true); }}
               className="flex items-center gap-1.5 rounded-full bg-[var(--dash-water-bg)] px-3 py-1.5 text-[12px] font-bold text-[var(--dash-water-icon)]"
             >
               <History className="h-3.5 w-3.5" /> Histórico
@@ -274,7 +275,7 @@ function TechnicianChemicalsPage() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setHistoryOpen(true)}
+                onClick={() => { setHistoryMode("products"); setHistoryOpen(true); }}
                 className="flex items-center gap-1.5 rounded-full bg-[var(--dash-water-bg)] px-3 py-1.5 text-[12px] font-bold text-[var(--dash-water-icon)]"
               >
                 <History className="h-3.5 w-3.5" /> Histórico
@@ -363,7 +364,9 @@ function TechnicianChemicalsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-[var(--dash-border)] p-4">
-              <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Histórico de Químicos</h2>
+              <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">
+                {historyMode === "chemicals" ? "Histórico de Químicos" : "Histórico de Produtos"}
+              </h2>
               <button onClick={() => setHistoryOpen(false)} className="grid h-8 w-8 place-items-center rounded-full text-[var(--dash-text-secondary)]">
                 <X className="h-4 w-4" />
               </button>
@@ -373,8 +376,10 @@ function TechnicianChemicalsPage() {
               {historyLoading ? (
                 <p className="py-8 text-center text-sm text-[var(--dash-text-muted-2)]">Carregando...</p>
               ) : !history || history.length === 0 ? (
-                <p className="py-8 text-center text-sm text-[var(--dash-text-muted-2)]">Nenhuma leitura anterior para este cliente ainda.</p>
-              ) : (
+                <p className="py-8 text-center text-sm text-[var(--dash-text-muted-2)]">
+                  {historyMode === "chemicals" ? "Nenhuma leitura anterior para este cliente ainda." : "Nenhum produto registrado para este cliente ainda."}
+                </p>
+              ) : historyMode === "chemicals" ? (
                 history.map((entry) => (
                   <div key={entry.route_stop_id} className="rounded-xl border border-[var(--dash-border)] p-3">
                     <div className="text-[13px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</div>
@@ -391,20 +396,31 @@ function TechnicianChemicalsPage() {
                         );
                       })}
                     </div>
-                    {entry.chemicals.products.some((p) => p.qty > 0) && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {entry.chemicals.products.filter((p) => p.qty > 0).map((p) => (
-                          <span key={p.name} className="rounded-full bg-[var(--dash-bg)] px-2 py-0.5 text-[11px] font-semibold text-[var(--dash-text-secondary)]">
-                            {p.name}: {p.qty} {p.unit}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                     {entry.chemicals.notes && (
                       <div className="mt-2 text-[12px] text-[var(--dash-text-muted-2)]">{entry.chemicals.notes}</div>
                     )}
                   </div>
                 ))
+              ) : (
+                history.map((entry) => {
+                  const usedProducts = entry.chemicals.products.filter((p) => p.qty > 0);
+                  return (
+                    <div key={entry.route_stop_id} className="rounded-xl border border-[var(--dash-border)] p-3">
+                      <div className="text-[13px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</div>
+                      {usedProducts.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {usedProducts.map((p) => (
+                            <span key={p.name} className="rounded-full bg-[var(--dash-bg)] px-2.5 py-1 text-[12px] font-semibold text-[var(--dash-text-secondary)]">
+                              {p.name}: <span className="font-bold text-[var(--dash-text)]">{p.qty} {p.unit}</span>
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="mt-1 text-[12px] text-[var(--dash-text-muted-2)]">Nenhum produto usado nesta visita.</div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
