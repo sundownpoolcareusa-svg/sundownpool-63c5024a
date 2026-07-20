@@ -197,9 +197,9 @@ function PoolChemicalsPage() {
               const value = readings[key];
               const inRange = isReadingInRange(key, value);
               return (
-                <div key={key} className="flex items-center gap-3 py-3">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full shadow-sm" style={{ background: gradient }}>
-                    <Icon className="h-5 w-5 text-white" strokeWidth={2.4} style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))" }} />
+                <div key={key} className="flex items-center gap-1 py-3">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full shadow-sm" style={{ background: gradient }}>
+                    <Icon className="h-3.5 w-3.5 text-white" strokeWidth={2.4} style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))" }} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-[14px] font-bold text-[var(--dash-text)]">
@@ -207,19 +207,21 @@ function PoolChemicalsPage() {
                     </div>
                     <div className="text-[12px] text-[var(--dash-text-muted-2)]">Ideal: {meta.min} – {meta.max}</div>
                   </div>
-                  <button onClick={() => adjustReading(key, -1)} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <div className="w-16 shrink-0 text-center text-xl font-extrabold text-[var(--dash-text)]">
-                    {value.toFixed(decimals(meta.step))}
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button onClick={() => adjustReading(key, -1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                      <Minus className="h-3 w-3" />
+                    </button>
+                    <div className="w-9 shrink-0 text-center text-xl font-extrabold text-[var(--dash-text)]">
+                      {value.toFixed(decimals(meta.step))}
+                    </div>
+                    <button onClick={() => adjustReading(key, 1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                      <Plus className="h-3 w-3" />
+                    </button>
                   </div>
-                  <button onClick={() => adjustReading(key, 1)} className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-                    <Plus className="h-4 w-4" />
-                  </button>
                   {inRange ? (
-                    <CheckCircle2 className="h-6 w-6 shrink-0" style={{ color: "var(--dash-green)" }} />
+                    <CheckCircle2 className="h-5 w-5 shrink-0" style={{ color: "var(--dash-green)" }} />
                   ) : (
-                    <AlertTriangle className="h-6 w-6 shrink-0" style={{ color: "var(--dash-orange)" }} />
+                    <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: "var(--dash-orange)" }} />
                   )}
                 </div>
               );
