@@ -585,18 +585,17 @@ export type ChemicalHistoryEntry = {
   chemicals: StopChemicals;
 };
 
-// Every past chemical reading logged for this client, across all of their
-// route stops, newest first — used by the "History" view on the chemicals
-// page. Excludes the stop currently being edited (its own live readings are
-// already shown above, not part of "history").
-export async function getClientChemicalsHistory(clientId: string, excludeStopId?: string) {
+// Every chemical reading logged for this client, across all of their route
+// stops (including today's, if already saved), newest first — used by the
+// "History" view on the chemicals page.
+export async function getClientChemicalsHistory(clientId: string) {
   const { data: stops, error: stopsErr } = await supabase
     .from("route_stops")
     .select("id, route:routes(route_date)")
     .eq("client_id", clientId);
   if (stopsErr) throw stopsErr;
 
-  const stopIds = (stops ?? []).map((s) => s.id).filter((id) => id !== excludeStopId);
+  const stopIds = (stops ?? []).map((s) => s.id);
   if (stopIds.length === 0) return [];
 
   const { data: chem, error: chemErr } = await supabase
