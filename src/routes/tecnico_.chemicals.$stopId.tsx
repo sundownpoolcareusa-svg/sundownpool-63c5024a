@@ -306,13 +306,14 @@ function TechnicianChemicalsPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {products.map((p) => (
               <div key={p.name} className="rounded-xl border border-[var(--dash-border)] p-3">
-                <div className="text-[13px] font-bold text-[var(--dash-text)]">{p.name}</div>
-                <div className="text-[11px] text-[var(--dash-text-muted-2)]">{p.unit}</div>
+                <div className="text-[13px] font-bold text-[var(--dash-text)]">
+                  {p.name} {p.unit && <span className="font-normal text-[var(--dash-text-muted-2)]">({p.unit})</span>}
+                </div>
                 <div className="mt-2 flex items-center justify-between gap-1">
                   <button onClick={() => adjustProduct(p.name, -1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
                     <Minus className="h-3.5 w-3.5" />
                   </button>
-                  <span className="text-[15px] font-extrabold text-[var(--dash-text)]">{formatProductQty(p.qty)}</span>
+                  <span className="text-xl font-extrabold text-[var(--dash-text)]">{formatProductQty(p.qty)}</span>
                   <button onClick={() => adjustProduct(p.name, 1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
                     <Plus className="h-3.5 w-3.5" />
                   </button>
