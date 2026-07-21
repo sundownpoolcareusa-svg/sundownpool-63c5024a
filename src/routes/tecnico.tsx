@@ -314,25 +314,25 @@ function TecnicoPage() {
           })}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <button
             onClick={() => setMapOpen(true)}
-            className="flex items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
           >
             <MapPin className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Ver mapa
           </button>
           <button
             onClick={() => toast.info("Rota otimizada — em breve")}
-            className="flex items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
           >
             <RouteIcon className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Rota otimizada
           </button>
           <button
             onClick={() => { setShowTraffic((v) => !v); setMapOpen(true); }}
-            className="flex items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
           >
             <Car className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Tráfego
-            <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
+            <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
               Normal
             </span>
           </button>
