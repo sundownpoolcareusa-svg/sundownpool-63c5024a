@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
-  ChevronLeft, ChevronRight, Pencil, Trash2, Users, Map,
+  ChevronLeft, ChevronRight, Pencil, Trash2, Users, Map, CalendarDays,
 } from "lucide-react";
 import { listClients, listTechnicians, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -428,6 +428,7 @@ function ClientFormModal({
   const [visitMode, setVisitMode] = useState<"recorrente" | "unica">("recorrente");
   const [oneTimeDate, setOneTimeDate] = useState(tomorrowStr());
   const [oneTimeNote, setOneTimeNote] = useState("");
+  const [showVisitSchedule, setShowVisitSchedule] = useState(false);
   const [userId, setUserId] = useState<string>("anon");
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUserId(data.user.id); }); }, []);
   const { data: technicians = [] } = useQuery({ queryKey: ["technicians"], queryFn: listTechnicians, enabled: open });
@@ -672,6 +673,16 @@ function ClientFormModal({
                   className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
                 />
               </div>
+              {editing && (
+                <button
+                  type="button"
+                  onClick={() => setShowVisitSchedule(true)}
+                  className="flex items-center gap-1 text-xs font-semibold"
+                  style={{ color: "var(--dash-link)" }}
+                >
+                  <CalendarDays className="h-3.5 w-3.5" /> Ver visitas agendadas
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -686,48 +697,6 @@ function ClientFormModal({
             <option value="">None</option>
             {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
-        </div>
-        <div>
-          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Additional Contacts</label>
-          <p className="text-xs text-[var(--dash-text-muted)]">e.g. an assistant or property manager for this client</p>
-          <div className="mt-2 space-y-2">
-            {form.contacts.map((c, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  value={c.name}
-                  onChange={(e) => setForm((f) => ({
-                    ...f,
-                    contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, name: e.target.value } : x)),
-                  }))}
-                  placeholder="Name"
-                  className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-                />
-                <input
-                  value={formatPhone(c.phone)}
-                  onChange={(e) => setForm((f) => ({
-                    ...f,
-                    contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, phone: formatPhone(e.target.value) } : x)),
-                  }))}
-                  placeholder="Phone"
-                  className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, contacts: f.contacts.filter((_, xi) => xi !== i) }))}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-red)]"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => setForm((f) => ({ ...f, contacts: [...f.contacts, { name: "", phone: "" }] }))}
-              className="flex items-center gap-1.5 rounded-[10px] border border-[var(--dash-border)] px-3 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]"
-            >
-              <Plus className="h-4 w-4" /> Add Contact
-            </button>
-          </div>
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Monthly pool value (USD)</label>
@@ -760,7 +729,50 @@ function ClientFormModal({
           </button>
         </div>
       </form>
+
+      {editing && (
+        <Modal open={showVisitSchedule} onClose={() => setShowVisitSchedule(false)} title="Visitas agendadas" maxWidth="max-w-lg">
+          <ClientScheduledStops clientId={editing.id} />
+        </Modal>
+      )}
     </Modal>
+  );
+}
+
+function ClientScheduledStops({ clientId }: { clientId: string }) {
+  const { data: stops = [], isLoading } = useQuery({
+    queryKey: ["client-scheduled-stops", clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("route_stops")
+        .select("id, status, notes, route:routes(route_date)")
+        .eq("client_id", clientId)
+        .order("id");
+      if (error) throw error;
+      return (data ?? [])
+        .map((s) => ({ id: s.id, status: s.status, notes: s.notes, route_date: (s.route as { route_date: string } | null)?.route_date ?? "" }))
+        .filter((s) => s.route_date)
+        .sort((a, b) => b.route_date.localeCompare(a.route_date));
+    },
+  });
+
+  if (isLoading) return <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">Loading...</p>;
+  if (stops.length === 0) return <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">No visits scheduled yet.</p>;
+
+  return (
+    <div className="space-y-2">
+      {stops.map((s) => (
+        <div key={s.id} className="rounded-[12px] border border-[var(--dash-border)] p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold text-[var(--dash-text)]">{fmtDate(s.route_date)}</span>
+            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
+              {s.status}
+            </span>
+          </div>
+          {s.notes && <div className="mt-1 text-xs text-[var(--dash-text-secondary)]">{s.notes}</div>}
+        </div>
+      ))}
+    </div>
   );
 }
 
