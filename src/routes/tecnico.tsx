@@ -517,6 +517,7 @@ function TecnicoClientsList({ clients, isLoading }: { clients: TechnicianClient[
         clients.map((c, idx) => {
           const address = clientFullAddress(c);
           const isOnRoute = (c.service_days ?? []).length > 0;
+          const commercial = isCommercial(c.client_type);
           return (
             <div key={c.client_id} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
               <div className="flex items-start justify-between gap-2">
@@ -526,12 +527,17 @@ function TecnicoClientsList({ clients, isLoading }: { clients: TechnicianClient[
                   </div>
                   <div>
                     <div className="text-[14px] font-bold text-[var(--dash-text)]">{c.name}</div>
-                    <div className="text-[11px] text-[var(--dash-text-muted)]">{c.client_type}</div>
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                      style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
+                    >
+                      {commercial ? <Building2 className="h-2.5 w-2.5" /> : <Waves className="h-2.5 w-2.5" />}
+                      {commercial ? "Comercial" : "Residencial"}
+                    </span>
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-[15px] font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(c.monthly_value || 0))}</div>
-                  <div className="text-[11px] text-[var(--dash-text-muted-2)]">{(c.service_days && c.service_days.length) ? c.service_days.join(", ") : "—"}</div>
                 </div>
               </div>
 
