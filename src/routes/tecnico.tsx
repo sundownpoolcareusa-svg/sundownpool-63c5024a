@@ -481,6 +481,16 @@ const clientAvatarColors = [
   "bg-yellow-200 text-yellow-800", "bg-pink-200 text-pink-800", "bg-green-200 text-green-800",
 ];
 
+const WEEKDAY_BADGE: Record<string, { bg: string; text: string }> = {
+  "Seg": { bg: "#DBEAFE", text: "#2563EB" },
+  "Ter": { bg: "#DCFCE7", text: "#16A34A" },
+  "Qua": { bg: "#FEF3C7", text: "#B45309" },
+  "Qui": { bg: "#EDE4FB", text: "#7C3AED" },
+  "Sex": { bg: "#FEE2E2", text: "#DC2626" },
+  "Sáb": { bg: "#CFFAFE", text: "#0891B2" },
+  "Dom": { bg: "#FCE7F3", text: "#DB2777" },
+};
+
 function clientFullAddress(c: TechnicianClient) {
   return [c.address, c.city, c.state, c.zip].filter(Boolean).join(", ");
 }
@@ -548,15 +558,20 @@ function TecnicoClientsList({ clients, isLoading }: { clients: TechnicianClient[
                 )}
               </div>
 
-              <div className="mt-2.5 flex items-center gap-1.5">
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                 {c.status !== "Ativo" ? (
                   <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
                     Inativo
                   </span>
                 ) : isOnRoute ? (
-                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "#EDE4FB", color: "#7C3AED" }}>
-                    Na rota
-                  </span>
+                  (c.service_days ?? []).map((day) => {
+                    const badge = WEEKDAY_BADGE[day] ?? { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
+                    return (
+                      <span key={day} className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: badge.bg, color: badge.text }}>
+                        {day}
+                      </span>
+                    );
+                  })
                 ) : (
                   <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
                     Cliente
