@@ -442,7 +442,7 @@ export async function saveMyStopChemicals(
     p_calcium_hardness: values.readings.calcium_hardness,
     p_stabilizer: values.readings.stabilizer,
     p_products: values.products as unknown as Json,
-    p_notes: values.notes || null,
+    p_notes: values.notes,
   });
   if (error) throw error;
 }

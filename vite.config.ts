@@ -20,6 +20,7 @@ export default defineConfig({
       preset: "vercel",
       routeRules: {
         "/sitemap.xml": { headers: { "content-type": "application/xml; charset=utf-8" } },
+        "/robots.txt": { headers: { "content-type": "text/plain; charset=utf-8" } },
       },
     }),
   ],
