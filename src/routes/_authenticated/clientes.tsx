@@ -758,12 +758,12 @@ function ClientScheduledStops({ clientId }: { clientId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("route_stops")
-        .select("id, status, notes, route:routes(route_date)")
+        .select("id, status, notes, manual, route:routes(route_date)")
         .eq("client_id", clientId)
         .order("id");
       if (error) throw error;
       return (data ?? [])
-        .map((s) => ({ id: s.id, status: s.status, notes: s.notes, route_date: (s.route as { route_date: string } | null)?.route_date ?? "" }))
+        .map((s) => ({ id: s.id, status: s.status, notes: s.notes, manual: s.manual, route_date: (s.route as { route_date: string } | null)?.route_date ?? "" }))
         .filter((s) => s.route_date)
         .sort((a, b) => b.route_date.localeCompare(a.route_date));
     },
@@ -778,9 +778,16 @@ function ClientScheduledStops({ clientId }: { clientId: string }) {
         <div key={s.id} className="rounded-[12px] border border-[var(--dash-border)] p-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-[var(--dash-text)]">{fmtDate(s.route_date)}</span>
-            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
-              {s.status}
-            </span>
+            <div className="flex items-center gap-1.5">
+              {s.manual && (
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: "#EDE4FB", color: "#7C3AED" }}>
+                  Manual
+                </span>
+              )}
+              <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
+                {s.status}
+              </span>
+            </div>
           </div>
           {s.notes && <div className="mt-1 text-xs text-[var(--dash-text-secondary)]">{s.notes}</div>}
         </div>
