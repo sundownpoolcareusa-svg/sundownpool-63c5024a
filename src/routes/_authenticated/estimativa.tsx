@@ -10,7 +10,7 @@ import {
   Wrench, ListChecks, CalendarDays, Clock, ShieldCheck, Phone, CheckCircle2, Trash2, Pencil, Save,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listEstimates, listClients, nextNumber, fmt, fmtDate, createService, type Estimate } from "@/lib/db";
+import { listEstimates, listClients, nextNumber, fmt, fmtDate, createService, type Estimate, type BillingType } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
@@ -346,8 +346,8 @@ function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; on
             <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(estimate.subtotal)}</span></div>
             <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums" style={{ color: "var(--dash-green)" }}>-{fmt(estimate.discount)}</span></div>
             <div className="mt-2 flex items-center justify-between border-t border-[var(--dash-border)] pt-2">
-              <span className="text-base font-bold text-[var(--dash-text)]">Total</span>
-              <span className="text-2xl font-extrabold tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(estimate.total)}</span>
+              <span className="text-base font-bold text-[var(--dash-text)]">{estimate.billing_type === "monthly" ? "Monthly Payment" : "Total"}</span>
+              <span className="text-2xl font-extrabold tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(estimate.total)}{estimate.billing_type === "monthly" && "/mo"}</span>
             </div>
           </div>
         </div>
@@ -375,6 +375,7 @@ function EstimateFormModal({
   const [clientId, setClientId] = useState("");
   const [title, setTitle] = useState("Pool Cleaning & Maintenance");
   const [validUntil, setValidUntil] = useState("");
+  const [billingType, setBillingType] = useState<BillingType>("total");
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState("Prices may change after on-site inspection.");
   const [items, setItems] = useState<ItemRow[]>([
@@ -388,6 +389,7 @@ function EstimateFormModal({
       setClientId(editing.client_id);
       setTitle(editing.title ?? "");
       setValidUntil(editing.valid_until ?? "");
+      setBillingType(editing.billing_type ?? "total");
       setDiscount(Number(editing.discount) || 0);
       setNotes(editing.notes ?? "");
       const sorted = (editing.estimate_items ?? []).slice().sort((a, b) => a.position - b.position);
@@ -402,6 +404,7 @@ function EstimateFormModal({
 
   const resetForm = () => {
     setClientId(""); setTitle("Pool Cleaning & Maintenance"); setValidUntil("");
+    setBillingType("total");
     setDiscount(0); setNotes("Prices may change after on-site inspection.");
     setItems([{ name: "Pool Cleaning", description: "Vacuuming and brushing", qty: 1, unit_price: 100 }]);
   };
@@ -413,7 +416,7 @@ function EstimateFormModal({
       if (editing) {
         const { error } = await supabase.from("estimates").update({
           client_id: clientId, title, valid_until: validUntil || null,
-          subtotal, discount, total, notes,
+          subtotal, discount, total, billing_type: billingType, notes,
         }).eq("id", editing.id);
         if (error) throw error;
         await supabase.from("estimate_items").delete().eq("estimate_id", editing.id);
@@ -430,7 +433,7 @@ function EstimateFormModal({
         const { data: est, error } = await supabase.from("estimates").insert({
           user_id: u.user.id, client_id: clientId, number, title,
           valid_until: validUntil || null, status: "PENDENTE",
-          subtotal, discount, total, notes,
+          subtotal, discount, total, billing_type: billingType, notes,
         }).select().single();
         if (error) throw error;
         const rows = items.map((it, idx) => ({
@@ -484,6 +487,36 @@ function EstimateFormModal({
           </div>
 
           <div>
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Billing</label>
+            <div className="mt-1.5 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setBillingType("total")}
+                className="rounded-[10px] border px-3 py-2 text-sm font-semibold transition"
+                style={{
+                  borderColor: billingType === "total" ? "var(--dash-navy)" : "var(--dash-border)",
+                  background: billingType === "total" ? "var(--dash-navy)" : "#fff",
+                  color: billingType === "total" ? "#fff" : "var(--dash-text-secondary)",
+                }}
+              >
+                One-time Total
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingType("monthly")}
+                className="rounded-[10px] border px-3 py-2 text-sm font-semibold transition"
+                style={{
+                  borderColor: billingType === "monthly" ? "var(--dash-navy)" : "var(--dash-border)",
+                  background: billingType === "monthly" ? "var(--dash-navy)" : "#fff",
+                  color: billingType === "monthly" ? "#fff" : "var(--dash-text-secondary)",
+                }}
+              >
+                Monthly Payment
+              </button>
+            </div>
+          </div>
+
+          <div>
             <div className="mb-2 flex items-center justify-between gap-2">
               <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Services</label>
               <div className="flex items-center gap-3">
@@ -515,7 +548,10 @@ function EstimateFormModal({
             <div className="w-72 space-y-1.5 text-sm">
               <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
               <div className="flex items-center justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><input type="number" step="0.01" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className="w-24 rounded-[10px] border border-[var(--dash-border-input)] px-2 py-1 text-right text-sm" /></div>
-              <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base font-bold"><span>Total</span><span className="tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(total)}</span></div>
+              <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base font-bold">
+                <span>{billingType === "monthly" ? "Monthly Payment" : "Total"}</span>
+                <span className="tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(total)}{billingType === "monthly" && "/mo"}</span>
+              </div>
             </div>
           </div>
 
