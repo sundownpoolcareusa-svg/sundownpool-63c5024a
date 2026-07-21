@@ -623,6 +623,23 @@ export type Database = {
           stop_id: string
         }[]
       }
+      get_my_technician_clients: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          address: string
+          city: string
+          client_id: string
+          client_type: string
+          email: string
+          monthly_value: number
+          name: string
+          phone: string
+          service_days: string[]
+          state: string
+          status: string
+          zip: string
+        }[]
+      }
       get_my_technician_stops: {
         Args: { p_date: string }
         Returns: {
