@@ -492,6 +492,45 @@ function ClientFormModal({
           <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
           <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} />
         </div>
+        <div>
+          {form.contacts.map((c, i) => (
+            <div key={i} className="mb-2 flex items-center gap-2">
+              <input
+                value={c.name}
+                onChange={(e) => setForm((f) => ({
+                  ...f,
+                  contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, name: e.target.value } : x)),
+                }))}
+                placeholder="Contact name"
+                className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+              />
+              <input
+                value={formatPhone(c.phone)}
+                onChange={(e) => setForm((f) => ({
+                  ...f,
+                  contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, phone: formatPhone(e.target.value) } : x)),
+                }))}
+                placeholder="Contact phone"
+                className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, contacts: f.contacts.filter((_, xi) => xi !== i) }))}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-red)]"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setForm((f) => ({ ...f, contacts: [...f.contacts, { name: "", phone: "" }] }))}
+            className="flex items-center gap-1 text-xs font-semibold"
+            style={{ color: "var(--dash-link)" }}
+          >
+            <Plus className="h-3 w-3" /> Add contact
+          </button>
+        </div>
         <AddressAutocomplete
           value={form.address}
           onChange={(v) => setForm((f) => ({ ...f, address: v }))}
