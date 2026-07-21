@@ -664,6 +664,40 @@ export async function deleteStop(stopId: string) {
   if (error) throw error;
 }
 
+const WEEKDAY_ABBR = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+function localDateStr(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Stops are only ever auto-added for a client's matching weekdays, never
+// reconciled — so editing a client's service_days would otherwise leave old
+// still-pending stops sitting on days the client is no longer scheduled for.
+// Removes any not-yet-started stop, today or later, whose weekday fell out
+// of the client's current service_days.
+export async function removeStaleClientStops(clientId: string, serviceDays: string[]) {
+  const { data, error } = await supabase
+    .from("route_stops")
+    .select("id, route:routes(route_date)")
+    .eq("client_id", clientId)
+    .eq("status", "Pendente");
+  if (error) throw error;
+
+  const todayStr = localDateStr(new Date());
+  const staleIds = (data ?? [])
+    .filter((s) => {
+      const routeDate = (s.route as { route_date: string } | null)?.route_date;
+      if (!routeDate || routeDate < todayStr) return false;
+      const abbr = WEEKDAY_ABBR[new Date(`${routeDate}T00:00:00`).getDay()];
+      return !serviceDays.includes(abbr);
+    })
+    .map((s) => s.id);
+
+  if (staleIds.length === 0) return;
+  const { error: delErr } = await supabase.from("route_stops").delete().in("id", staleIds);
+  if (delErr) throw delErr;
+}
+
 // ---- Pool chemicals (readings + products logged per stop) ----
 
 export type ChemicalReadingKey =

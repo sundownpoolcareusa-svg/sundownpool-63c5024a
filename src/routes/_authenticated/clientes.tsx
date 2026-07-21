@@ -8,7 +8,7 @@ import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users, Map,
 } from "lucide-react";
-import { listClients, listTechnicians, fmtDate, initials, fmt, type Client, type Invoice } from "@/lib/db";
+import { listClients, listTechnicians, removeStaleClientStops, fmtDate, initials, fmt, type Client, type Invoice } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -447,6 +447,7 @@ function ClientFormModal({
       if (editing) {
         const { error } = await supabase.from("clients").update(values).eq("id", editing.id);
         if (error) throw error;
+        await removeStaleClientStops(editing.id, values.service_days);
       } else {
         const { data: u } = await supabase.auth.getUser();
         if (!u.user) throw new Error("Not authenticated");
