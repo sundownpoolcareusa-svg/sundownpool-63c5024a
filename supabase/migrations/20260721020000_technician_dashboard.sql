@@ -72,7 +72,7 @@ AS $$
     (SELECT count(*)::int FROM public.invoices i JOIN my_clients c ON c.id = i.client_id WHERE i.status <> 'PAID' AND i.due_date < p_date),
     (SELECT CASE WHEN visit_count > 0 THEN round(total_cost / visit_count, 2) ELSE 0 END FROM month_cost),
     (SELECT coalesce(sum(monthly_value), 0) FROM my_clients),
-    (SELECT CASE WHEN count(*) > 0 THEN round(coalesce(sum(monthly_value), 0) / count(*), 2) ELSE 0 END FROM my_clients),
+    (SELECT CASE WHEN coalesce(sum(cardinality(service_days)), 0) > 0 THEN round(coalesce(sum(monthly_value), 0) / sum(cardinality(service_days)), 2) ELSE 0 END FROM my_clients),
     (SELECT count(*)::int FROM my_clients),
     (SELECT count(*)::int FROM my_clients WHERE 'Seg' = ANY(service_days)),
     (SELECT count(*)::int FROM my_clients WHERE 'Ter' = ANY(service_days)),
