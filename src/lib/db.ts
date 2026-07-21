@@ -461,6 +461,29 @@ export async function getMyTechnicianStops(date: string) {
   return (data ?? []) as TechnicianStop[];
 }
 
+export type TechnicianClient = {
+  client_id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  client_type: string;
+  status: string;
+  service_days: string[] | null;
+  monthly_value: number | null;
+};
+
+// Every client assigned to the signed-in technician (technician_id on the
+// client, not scoped to a single day/route) — used by the "Clientes" tab.
+export async function getMyTechnicianClients() {
+  const { data, error } = await supabase.rpc("get_my_technician_clients");
+  if (error) throw error;
+  return (data ?? []) as TechnicianClient[];
+}
+
 export async function updateMyStopStatus(stopId: string, status: StopStatus) {
   const { error } = await supabase.rpc("update_my_stop_status", {
     p_stop_id: stopId,

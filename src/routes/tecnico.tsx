@@ -6,10 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLogo } from "@/components/AppLogo";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 import {
-  CalendarDays, ChevronLeft, ChevronRight, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin,
+  CalendarDays, ChevronLeft, ChevronRight, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Waves, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
 } from "lucide-react";
-import { getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, initials, type StopStatus, type TechnicianStop } from "@/lib/db";
+import {
+  getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
+  initials, fmt, type StopStatus, type TechnicianStop, type TechnicianClient,
+} from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
 import { toast } from "sonner";
 import tecnicoIcon from "@/assets/tecnico-apple-touch-icon.png";
@@ -179,6 +182,7 @@ function TecnicoPage() {
   const [checkedSession, setCheckedSession] = useState(false);
   const [date, setDate] = useState(() => new Date());
   const dateStr = toDateStr(date);
+  const [view, setView] = useState<"rota" | "clientes">("rota");
 
   useEffect(() => {
     (async () => {
@@ -203,6 +207,11 @@ function TecnicoPage() {
       await ensureMyTechnicianStops(dateStr);
       return getMyTechnicianStops(dateStr);
     },
+    enabled: checkedSession,
+  });
+  const { data: myClients = [], isLoading: isLoadingClients } = useQuery({
+    queryKey: ["my-technician-clients"],
+    queryFn: getMyTechnicianClients,
     enabled: checkedSession,
   });
 
@@ -271,6 +280,10 @@ function TecnicoPage() {
       </header>
 
       <main className="mx-auto max-w-md space-y-4 p-4">
+        {view === "clientes" ? (
+          <TecnicoClientsList clients={myClients} isLoading={isLoadingClients} />
+        ) : (
+          <>
         <div className="flex items-center justify-between rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
           <button onClick={() => setDate((d) => new Date(d.getTime() - 86400000))} className="grid h-8 w-8 place-items-center rounded-full text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
             <ChevronLeft className="h-4 w-4" />
@@ -422,14 +435,24 @@ function TecnicoPage() {
             </button>
           </div>
         )}
+          </>
+        )}
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-[var(--dash-border)] bg-white px-2 py-2">
-        <button className="flex flex-col items-center gap-0.5 px-2 text-[10px] font-bold" style={{ color: "var(--dash-navy)" }}>
+        <button
+          onClick={() => setView("rota")}
+          className="flex flex-col items-center gap-0.5 px-2 text-[10px] font-bold"
+          style={{ color: view === "rota" ? "var(--dash-navy)" : "var(--dash-text-muted-2)" }}
+        >
           <RouteIcon className="h-5 w-5" />
           Rota
         </button>
-        <button onClick={() => comingSoon("Clientes")} className="flex flex-col items-center gap-0.5 px-2 text-[10px] font-medium text-[var(--dash-text-muted-2)]">
+        <button
+          onClick={() => setView("clientes")}
+          className="flex flex-col items-center gap-0.5 px-2 text-[10px] font-bold"
+          style={{ color: view === "clientes" ? "var(--dash-navy)" : "var(--dash-text-muted-2)" }}
+        >
           <Users className="h-5 w-5" />
           Clientes
         </button>
@@ -449,6 +472,101 @@ function TecnicoPage() {
           Mais
         </button>
       </nav>
+    </div>
+  );
+}
+
+const clientAvatarColors = [
+  "bg-sky-200 text-sky-800", "bg-orange-200 text-orange-800", "bg-purple-200 text-purple-800",
+  "bg-yellow-200 text-yellow-800", "bg-pink-200 text-pink-800", "bg-green-200 text-green-800",
+];
+
+function clientFullAddress(c: TechnicianClient) {
+  return [c.address, c.city, c.state, c.zip].filter(Boolean).join(", ");
+}
+
+// Read-only client list for the technician's own assigned clients — no
+// edit/delete (technicians have no write access to the clients table) and
+// no drill-down into a detail page, so no chevron either.
+function TecnicoClientsList({ clients, isLoading }: { clients: TechnicianClient[]; isLoading: boolean }) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <h1 className="text-lg font-extrabold text-[var(--dash-text)]">Meus Clientes</h1>
+        <p className="text-[12px] text-[var(--dash-text-muted)]">Clientes atribuídos a você</p>
+      </div>
+
+      {isLoading ? (
+        <p className="py-10 text-center text-sm text-[var(--dash-text-muted)]">Carregando...</p>
+      ) : clients.length === 0 ? (
+        <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white py-14 text-center">
+          <Users className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
+          <p className="mt-3 text-sm font-semibold text-[var(--dash-text-secondary)]">Nenhum cliente atribuído</p>
+        </div>
+      ) : (
+        clients.map((c, idx) => {
+          const address = clientFullAddress(c);
+          const isOnRoute = (c.service_days ?? []).length > 0;
+          return (
+            <div key={c.client_id} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-[13px] font-bold ${clientAvatarColors[idx % clientAvatarColors.length]}`}>
+                    {initials(c.name)}
+                  </div>
+                  <div>
+                    <div className="text-[14px] font-bold text-[var(--dash-text)]">{c.name}</div>
+                    <div className="text-[11px] text-[var(--dash-text-muted)]">{c.client_type}</div>
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className="text-[15px] font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(c.monthly_value || 0))}</div>
+                  <div className="text-[11px] text-[var(--dash-text-muted-2)]">{(c.service_days && c.service_days.length) ? c.service_days.join(", ") : "—"}</div>
+                </div>
+              </div>
+
+              <div className="mt-2.5 space-y-1.5 text-[12.5px]">
+                {c.phone && (
+                  <a href={`tel:${c.phone}`} className="flex items-center gap-2 text-[var(--dash-text-secondary)]">
+                    <Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> {formatPhone(c.phone)}
+                  </a>
+                )}
+                {c.email && (
+                  <a href={`mailto:${c.email}`} className="flex items-center gap-2 truncate text-[var(--dash-link)]">
+                    <Mail className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">{c.email}</span>
+                  </a>
+                )}
+                {address && (
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-start gap-2 text-[var(--dash-text-secondary)]"
+                  >
+                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> {address}
+                  </a>
+                )}
+              </div>
+
+              <div className="mt-2.5 flex items-center gap-1.5">
+                {c.status !== "Ativo" ? (
+                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
+                    Inativo
+                  </span>
+                ) : isOnRoute ? (
+                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "#EDE4FB", color: "#7C3AED" }}>
+                    Na rota
+                  </span>
+                ) : (
+                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
+                    Cliente
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
