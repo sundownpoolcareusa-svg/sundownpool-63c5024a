@@ -135,7 +135,7 @@ function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; show
             key={p.s.stop_id}
             position={p.pos}
             title={p.s.client_name}
-            label={{ text: String(p.s.position + 1), color: "#fff", fontWeight: "bold", fontSize: "12px" }}
+            label={{ text: String(stops.findIndex((s) => s.stop_id === p.s.stop_id) + 1), color: "#fff", fontWeight: "bold", fontSize: "12px" }}
             icon={{
               path: google.maps.SymbolPath.CIRCLE,
               scale: 14,
@@ -353,7 +353,7 @@ function TecnicoPage() {
               <p className="mt-3 text-sm font-semibold text-[var(--dash-text-secondary)]">Nenhuma parada neste dia</p>
             </div>
           ) : (
-            sorted.map((stop) => {
+            sorted.map((stop, i) => {
               const badgeStyle = STATUS_STYLES[stop.status] ?? STATUS_STYLES["Pendente"];
               const next = nextStatus(stop.status);
               const address = stopAddress(stop);
@@ -364,7 +364,7 @@ function TecnicoPage() {
                     className="absolute -left-2 -top-2 z-10 grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold text-white ring-2 ring-white"
                     style={{ background: statusMarkerColor(stop.status) }}
                   >
-                    {stop.position + 1}
+                    {i + 1}
                   </div>
                   <div className="flex-1 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 pl-5">
                     <div className="flex items-start justify-between gap-2">
