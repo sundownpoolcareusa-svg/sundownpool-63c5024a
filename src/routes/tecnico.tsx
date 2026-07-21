@@ -24,6 +24,7 @@ export const Route = createFileRoute("/tecnico")({
   head: () => ({
     meta: [
       { title: "Route - Sundown" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "apple-mobile-web-app-title", content: "Route - Sundown" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
