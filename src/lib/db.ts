@@ -722,14 +722,17 @@ function localDateStr(d: Date) {
 export async function removeStaleClientStops(clientId: string, serviceDays: string[]) {
   const { data, error } = await supabase
     .from("route_stops")
-    .select("id, route_id, route:routes(route_date)")
+    .select("id, route_id, manual, notes, route:routes(route_date)")
     .eq("client_id", clientId)
-    .eq("status", "Pendente")
-    .eq("manual", false);
+    .eq("status", "Pendente");
   if (error) throw error;
 
   const todayStr = localDateStr(new Date());
   const stale = (data ?? []).filter((s) => {
+    // Belt-and-suspenders: a note is only ever set by a one-time visit, so
+    // treat it as manual too even if the `manual` flag itself is somehow off
+    // (e.g. a row created before that column existed).
+    if (s.manual || s.notes) return false;
     const routeDate = (s.route as { route_date: string } | null)?.route_date;
     if (!routeDate || routeDate < todayStr) return false;
     const abbr = WEEKDAY_ABBR[new Date(`${routeDate}T00:00:00`).getDay()];
