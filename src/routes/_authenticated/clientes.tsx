@@ -171,12 +171,14 @@ function ClientesPage() {
             </div>
           ) : (
             <>
-              <div className="-mx-4 mt-5 overflow-x-auto sm:mx-0"><table className="w-full min-w-[640px] text-sm">
+              <div className="-mx-4 mt-5 overflow-x-auto sm:mx-0"><table className="w-full min-w-[820px] text-sm">
                 <thead>
                   <tr className="border-b border-[var(--dash-border-table)] text-left text-[var(--dash-text-muted)]">
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Client</th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Contact</th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Address</th>
+                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Pool Value</th>
+                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Day</th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Registered</th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Status</th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Actions</th>
@@ -203,6 +205,12 @@ function ClientesPage() {
                       <td className="py-4">
                         <div className="text-[var(--dash-text)]">{(c as ClientFull).address || "—"}</div>
                         <div className="text-xs text-[var(--dash-text-muted)]">{c.city || ""}</div>
+                      </td>
+                      <td className="py-4 font-semibold tabular-nums text-[var(--dash-text)]">
+                        {(c as ClientFull).monthly_value ? fmt(Number((c as ClientFull).monthly_value)) : "—"}
+                      </td>
+                      <td className="py-4 text-[var(--dash-text-secondary)]">
+                        {(c.service_days && c.service_days.length) ? c.service_days.join(", ") : "—"}
                       </td>
                       <td className="py-4 text-[var(--dash-text-secondary)]">{fmtDate(c.created_at)}</td>
                       <td className="py-4">
