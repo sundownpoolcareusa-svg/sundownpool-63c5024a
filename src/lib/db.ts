@@ -391,6 +391,7 @@ export async function addStopToRoute(routeId: string, clientId: string, schedule
 // treats a deliberately-scheduled one-time visit as stale.
 export async function scheduleOneTimeVisit(technicianId: string, date: string, clientId: string, notes: string) {
   const route = await getOrCreateRoute(technicianId, date);
+  console.log("[scheduleOneTimeVisit]", { technicianId, date, clientId, routeId: route.id, routeDate: route.route_date });
   const { data: existing, error: findErr } = await supabase
     .from("route_stops")
     .select("id")
@@ -398,6 +399,7 @@ export async function scheduleOneTimeVisit(technicianId: string, date: string, c
     .eq("client_id", clientId)
     .maybeSingle();
   if (findErr) throw findErr;
+  console.log("[scheduleOneTimeVisit] existing stop on this route:", existing);
 
   if (existing) {
     const { error } = await supabase.from("route_stops").update({ notes: notes || null, manual: true }).eq("id", existing.id);
@@ -728,6 +730,10 @@ export async function removeStaleClientStops(clientId: string, serviceDays: stri
   if (error) throw error;
 
   const todayStr = localDateStr(new Date());
+  // TEMP DEBUG: logging every candidate row so we can see exactly why a
+  // stop is (or isn't) being treated as stale — remove once the one-time
+  // visit disappearing bug is confirmed fixed.
+  console.log("[removeStaleClientStops]", { clientId, serviceDays, todayStr, rows: data });
   const stale = (data ?? []).filter((s) => {
     // Belt-and-suspenders: a note is only ever set by a one-time visit, so
     // treat it as manual too even if the `manual` flag itself is somehow off
@@ -738,6 +744,7 @@ export async function removeStaleClientStops(clientId: string, serviceDays: stri
     const abbr = WEEKDAY_ABBR[new Date(`${routeDate}T00:00:00`).getDay()];
     return !serviceDays.includes(abbr);
   });
+  console.log("[removeStaleClientStops] stale:", stale);
   if (stale.length === 0) return;
 
   const staleIds = stale.map((s) => s.id);
