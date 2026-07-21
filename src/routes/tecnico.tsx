@@ -678,16 +678,16 @@ function TecnicoHomeDashboard({
         <ChevronDown className="h-4 w-4 text-[var(--dash-text-muted)]" />
       </button>
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+      <div className="grid grid-cols-4 gap-2">
         {statCards.map((c) => {
           const Icon = c.icon;
           return (
-            <div key={c.label} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3 text-center">
-              <div className="mx-auto grid h-9 w-9 place-items-center rounded-full" style={{ background: `${c.tint}1A`, color: c.tint }}>
-                <Icon className="h-4.5 w-4.5" />
+            <div key={c.label} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+              <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: `${c.tint}1A`, color: c.tint }}>
+                <Icon className="h-4 w-4" />
               </div>
-              <div className="mt-1.5 text-[17px] font-extrabold leading-tight text-[var(--dash-text)]">{c.value}</div>
-              <div className="text-[10.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">{c.label}</div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{c.value}</div>
+              <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">{c.label}</div>
             </div>
           );
         })}
