@@ -216,16 +216,20 @@ function TecnicoPage() {
     queryFn: getMyTechnicianClients,
     enabled: checkedSession,
   });
-  const { data: dashboard, isLoading: isLoadingDashboard } = useQuery({
+  const { data: dashboard, isLoading: isLoadingDashboard, error: dashboardError } = useQuery({
     queryKey: ["my-technician-dashboard", dateStr],
     queryFn: () => getMyTechnicianDashboard(dateStr),
     enabled: checkedSession,
   });
-  const { data: alerts = [], isLoading: isLoadingAlerts } = useQuery({
+  const { data: alerts = [], isLoading: isLoadingAlerts, error: alertsError } = useQuery({
     queryKey: ["my-technician-alerts", dateStr],
     queryFn: () => getMyTechnicianAlerts(dateStr),
     enabled: checkedSession,
   });
+  useEffect(() => {
+    if (dashboardError) console.error("get_my_technician_dashboard failed", dashboardError);
+    if (alertsError) console.error("get_my_technician_alerts failed", alertsError);
+  }, [dashboardError, alertsError]);
 
   const statusMut = useMutation({
     mutationFn: ({ stopId, status }: { stopId: string; status: StopStatus }) => updateMyStopStatus(stopId, status),
@@ -300,6 +304,7 @@ function TecnicoPage() {
             stats={dashboard ?? null}
             alerts={alerts}
             isLoading={isLoadingDashboard || isLoadingAlerts}
+            error={dashboardError ?? alertsError ?? null}
             onJumpToday={() => setDate(new Date())}
           />
         ) : view === "clientes" ? (
@@ -631,8 +636,17 @@ const ALERT_META: Record<TechnicianAlert["alert_type"], { label: string; icon: t
 // All numbers come from SECURITY DEFINER RPCs since the technician has no
 // direct read access to clients' financial fields, chemicals, or invoices.
 function TecnicoHomeDashboard({
-  date, stats, alerts, isLoading, onJumpToday,
-}: { date: Date; stats: TechnicianDashboardStats | null; alerts: TechnicianAlert[]; isLoading: boolean; onJumpToday: () => void }) {
+  date, stats, alerts, isLoading, error, onJumpToday,
+}: { date: Date; stats: TechnicianDashboardStats | null; alerts: TechnicianAlert[]; isLoading: boolean; error: Error | null; onJumpToday: () => void }) {
+  if (error) {
+    return (
+      <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-4 text-center">
+        <AlertTriangle className="mx-auto h-6 w-6" style={{ color: "var(--dash-red)" }} />
+        <p className="mt-2 text-sm font-semibold text-[var(--dash-text-secondary)]">Não foi possível carregar o painel</p>
+        <p className="mt-1 break-words text-[11px] text-[var(--dash-text-muted)]">{error.message}</p>
+      </div>
+    );
+  }
   if (isLoading || !stats) {
     return <p className="py-10 text-center text-sm text-[var(--dash-text-muted)]">Carregando...</p>;
   }
