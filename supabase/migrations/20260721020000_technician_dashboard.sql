@@ -109,7 +109,7 @@ AS $$
     JOIN me ON r.technician_id = me.tech_id
     ORDER BY rs.client_id, r.route_date DESC, sc.created_at DESC
   )
-  SELECT 'filtro', c.name, (p_date - c.filter_last_cleaned_at::date)::int
+  SELECT 'filtro' AS alert_type, c.name AS client_name, (p_date - c.filter_last_cleaned_at::date)::int AS days
   FROM my_clients c
   WHERE c.filter_last_cleaned_at IS NOT NULL AND c.filter_last_cleaned_at < (p_date - INTERVAL '21 days')
   UNION ALL
