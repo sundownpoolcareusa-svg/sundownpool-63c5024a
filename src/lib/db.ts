@@ -528,6 +528,24 @@ export async function getMyClientInvoices(clientId: string) {
   return (data ?? []) as ClientInvoiceSummary[];
 }
 
+export type ClientVisitHistoryEntry = {
+  route_stop_id: string;
+  route_date: string;
+  status: StopStatus;
+  started_at: string | null;
+  completed_at: string | null;
+  notes: string | null;
+};
+
+// Every scheduled stop for a client (not just ones with logged chemicals) —
+// used by the Visit History screen for Total/Completed/Missed counts and
+// per-visit time ranges.
+export async function getMyClientVisitHistory(clientId: string) {
+  const { data, error } = await supabase.rpc("get_my_client_visit_history", { p_client_id: clientId });
+  if (error) throw error;
+  return (data ?? []) as ClientVisitHistoryEntry[];
+}
+
 export async function updateMyClientPoolPhotos(clientId: string, photos: string[]) {
   const { error } = await supabase.rpc("update_my_client_pool_photos", { p_client_id: clientId, p_photos: photos });
   if (error) throw error;

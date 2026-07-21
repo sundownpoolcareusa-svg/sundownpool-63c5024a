@@ -2,14 +2,14 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
-  X, MapPin, Phone, Clock, FlaskConical, TestTube, FileText, Camera, Wrench, CheckCircle2,
+  X, MapPin, Phone, Clock, FlaskConical, TestTube, FileText, Camera, Wrench, CheckCircle2, Filter, CalendarDays, CalendarPlus,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import {
-  getMyClientChemicalsHistory, getMyClientInvoices, updateMyClientPoolPhotos, updateMyClientEquipment,
-  formatProductQty, fmt, fmtDate, initials, CHEMICAL_READING_META,
-  type TechnicianClient, type ChemicalReadingKey,
+  getMyClientInvoices, getMyClientVisitHistory, updateMyClientPoolPhotos, updateMyClientEquipment,
+  fmt, fmtDate, initials,
+  type TechnicianClient, type ClientVisitHistoryEntry,
 } from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
 import { toast } from "sonner";
@@ -162,7 +162,7 @@ export function TecnicoClientDetail({
       </div>
 
       <Modal open={subView === "history"} onClose={() => setSubView(null)} title="Visit History">
-        <ClientHistoryList clientId={client.client_id} />
+        <ClientHistoryList client={client} />
       </Modal>
       <Modal open={subView === "invoices"} onClose={() => setSubView(null)} title="Invoices" maxWidth="max-w-lg">
         <ClientInvoicesList clientId={client.client_id} />
@@ -198,45 +198,147 @@ function DetailRow({
   );
 }
 
-const READING_ORDER: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer"];
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
-function ClientHistoryList({ clientId }: { clientId: string }) {
-  const { data: history = [], isLoading } = useQuery({
-    queryKey: ["my-client-chemicals-history", clientId],
-    queryFn: () => getMyClientChemicalsHistory(clientId),
+function formatTimeRange(start: string | null, end: string | null) {
+  if (!start) return null;
+  const fmtT = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return end ? `${fmtT(start)} – ${fmtT(end)}` : fmtT(start);
+}
+
+function StatCell({ icon: Icon, bg, fg, value, label }: { icon: typeof Clock; bg: string; fg: string; value: number; label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1 px-2 text-center">
+      <div className="grid h-9 w-9 place-items-center rounded-full" style={{ background: bg, color: fg }}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="text-lg font-extrabold text-[var(--dash-text)]">{value}</div>
+      <div className="text-[11px] text-[var(--dash-text-muted)]">{label}</div>
+    </div>
+  );
+}
+
+function VisitRow({ visit }: { visit: ClientVisitHistoryEntry }) {
+  const d = new Date(`${visit.route_date}T00:00:00`);
+  const weekday = d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+  const monthDay = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const year = d.getFullYear();
+  const timeRange = formatTimeRange(visit.started_at, visit.completed_at);
+  const isCompleted = visit.status === "Concluído";
+  const isMissed = !isCompleted && visit.route_date < todayStr();
+  const statusLabel = isCompleted ? "Completed" : isMissed ? "Missed" : "Pending";
+  const statusColor = isCompleted ? "var(--dash-green)" : isMissed ? "var(--dash-red)" : "var(--dash-text-muted-2)";
+
+  return (
+    <div className="flex items-start gap-3 rounded-[14px] border border-[var(--dash-border)] p-3">
+      <div className="w-14 shrink-0 text-center">
+        <div className="text-[11px] font-bold" style={{ color: "#4F46E5" }}>{weekday}</div>
+        <div className="text-[15px] font-extrabold text-[var(--dash-text)]">{monthDay}</div>
+        <div className="text-[11px] text-[var(--dash-text-muted)]">{year}</div>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 text-[13px] font-bold" style={{ color: statusColor }}>
+          {isCompleted ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
+          {statusLabel}
+        </div>
+        {timeRange && (
+          <div className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[var(--dash-text-secondary)]">
+            <Clock className="h-3.5 w-3.5 shrink-0" /> {timeRange}
+          </div>
+        )}
+        {visit.notes && (
+          <div className="mt-1 flex items-start gap-1.5 text-[12px] text-[var(--dash-text-muted)]">
+            <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {visit.notes}
+          </div>
+        )}
+      </div>
+      <span className="mt-1 text-[var(--dash-text-muted)]">›</span>
+    </div>
+  );
+}
+
+function ClientHistoryList({ client }: { client: TechnicianClient }) {
+  const { data: visits = [], isLoading } = useQuery({
+    queryKey: ["my-client-visit-history", client.client_id],
+    queryFn: () => getMyClientVisitHistory(client.client_id),
   });
+  const [showAll, setShowAll] = useState(false);
 
-  if (isLoading) return <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">Carregando...</p>;
-  if (history.length === 0) return <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">Nenhuma visita registrada ainda.</p>;
+  if (isLoading) return <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">Loading...</p>;
+
+  const address = clientFullAddress(client);
+  const totalVisits = visits.length;
+  const completed = visits.filter((v) => v.status === "Concluído").length;
+  const missed = visits.filter((v) => v.status !== "Concluído" && v.route_date < todayStr()).length;
+  const visible = showAll ? visits : visits.slice(0, 5);
 
   return (
     <div className="space-y-4">
-      {history.map((h) => {
-        const usedProducts = h.products.filter((p) => p.qty > 0);
-        return (
-          <div key={h.route_stop_id} className="rounded-[14px] border border-[var(--dash-border)] p-3">
-            <div className="text-sm font-bold text-[var(--dash-text)]">{fmtDate(h.route_date)}</div>
-            <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {READING_ORDER.map((key) => {
-                const meta = CHEMICAL_READING_META[key];
-                const value = h[key];
-                return (
-                  <div key={key} className="rounded-[10px] bg-[var(--dash-bg)] p-2 text-center">
-                    <div className="text-[10px] font-semibold text-[var(--dash-text-muted-2)]">{meta.label}</div>
-                    <div className="text-sm font-bold text-[var(--dash-text)]">{value != null ? value : "—"}</div>
-                  </div>
-                );
-              })}
-            </div>
-            {usedProducts.length > 0 && (
-              <div className="mt-2 text-[12.5px] text-[var(--dash-text-secondary)]">
-                {usedProducts.map((p) => `${p.name} ${formatProductQty(p.qty)} ${p.unit}`).join(", ")}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-base font-bold ${avatarColors[nameHash(client.name) % avatarColors.length]}`}>
+            {initials(client.name)}
+          </div>
+          <div>
+            <div className="font-bold text-[var(--dash-text)]">{client.name}</div>
+            <div className="text-[12px] text-[var(--dash-text-muted)]">{client.client_type}</div>
+            {address && (
+              <div className="mt-1 flex items-start gap-1 text-[12px] text-[var(--dash-text-secondary)]">
+                <MapPin className="mt-0.5 h-3 w-3 shrink-0" style={{ color: "var(--dash-navy)" }} /> {address}
               </div>
             )}
-            {h.notes && <div className="mt-1 text-[12px] italic text-[var(--dash-text-muted)]">{h.notes}</div>}
           </div>
-        );
-      })}
+        </div>
+        <button onClick={() => toast.info("Filters — coming soon")} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+          <Filter className="h-4 w-4" />
+        </button>
+      </div>
+
+      {visits.length === 0 ? (
+        <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">No visits recorded yet.</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 divide-x divide-[var(--dash-border)] rounded-[14px] border border-[var(--dash-border)] bg-white py-3">
+            <StatCell icon={CalendarDays} bg="#EDE4FB" fg="#7C3AED" value={totalVisits} label="Total Visits" />
+            <StatCell icon={CheckCircle2} bg="#DCFCE7" fg="#16A34A" value={completed} label="Completed" />
+            <StatCell icon={Clock} bg="#FEF3C7" fg="#B45309" value={missed} label="Missed" />
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-[15px] font-bold text-[var(--dash-text)]">Recent Visits</h3>
+            <div className="space-y-2.5">
+              {visible.map((v) => <VisitRow key={v.route_stop_id} visit={v} />)}
+            </div>
+          </div>
+
+          {visits.length > 5 && (
+            <button
+              onClick={() => setShowAll((s) => !s)}
+              className="flex w-full items-center gap-3 rounded-[14px] border border-[var(--dash-border)] p-3"
+            >
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: "#EDE4FB", color: "#7C3AED" }}>
+                <CalendarDays className="h-4 w-4" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-sm font-bold text-[var(--dash-text)]">{showAll ? "Show Less" : "View Full History"}</div>
+                <div className="text-[12px] text-[var(--dash-text-muted)]">See all visits and notes</div>
+              </div>
+              <span className="text-[var(--dash-text-muted)]">›</span>
+            </button>
+          )}
+        </>
+      )}
+
+      <button
+        onClick={() => toast.info("Add New Visit — coming soon")}
+        className="flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white"
+        style={{ background: "#4F46E5" }}
+      >
+        <CalendarPlus className="h-4 w-4" /> Add New Visit
+      </button>
     </div>
   );
 }
