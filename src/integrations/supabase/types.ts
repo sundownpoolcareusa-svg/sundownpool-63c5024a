@@ -609,6 +609,17 @@ export type Database = {
           total: number
         }[]
       }
+      get_my_client_visit_history: {
+        Args: { p_client_id: string }
+        Returns: {
+          completed_at: string
+          notes: string
+          route_date: string
+          route_stop_id: string
+          started_at: string
+          status: string
+        }[]
+      }
       get_my_stop_chemicals: {
         Args: { p_stop_id: string }
         Returns: {
