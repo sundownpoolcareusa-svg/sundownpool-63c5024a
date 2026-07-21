@@ -23,6 +23,8 @@ export type Client = {
   created_at: string;
 };
 
+export type ClientContact = { name: string; phone: string };
+
 // Street address alone is often ambiguous for geocoding/navigation (e.g. a
 // street name that also exists in another state) — always include city/state/zip.
 export function clientFullAddress(c: Pick<Client, "address" | "city" | "state" | "zip">) {

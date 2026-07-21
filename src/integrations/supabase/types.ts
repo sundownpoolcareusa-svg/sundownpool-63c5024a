@@ -19,12 +19,14 @@ export type Database = {
           address: string | null
           city: string | null
           client_type: string
+          contacts: Json
           created_at: string
           email: string | null
           equipment_notes: string | null
           equipment_photos: string[]
           filter_cleaning_count: number
           filter_last_cleaned_at: string | null
+          gate_code: string | null
           id: string
           last_service_date: string | null
           lat: number | null
@@ -50,12 +52,14 @@ export type Database = {
           address?: string | null
           city?: string | null
           client_type?: string
+          contacts?: Json
           created_at?: string
           email?: string | null
           equipment_notes?: string | null
           equipment_photos?: string[]
           filter_cleaning_count?: number
           filter_last_cleaned_at?: string | null
+          gate_code?: string | null
           id?: string
           last_service_date?: string | null
           lat?: number | null
@@ -81,12 +85,14 @@ export type Database = {
           address?: string | null
           city?: string | null
           client_type?: string
+          contacts?: Json
           created_at?: string
           email?: string | null
           equipment_notes?: string | null
           equipment_photos?: string[]
           filter_cleaning_count?: number
           filter_last_cleaned_at?: string | null
+          gate_code?: string | null
           id?: string
           last_service_date?: string | null
           lat?: number | null
