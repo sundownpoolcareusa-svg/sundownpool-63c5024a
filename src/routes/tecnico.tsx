@@ -5,6 +5,7 @@ import { GoogleMap, Marker, TrafficLayer, useJsApiLoader } from "@react-google-m
 import { supabase } from "@/integrations/supabase/client";
 import { AppLogo } from "@/components/AppLogo";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
+import { Modal } from "@/components/Modal";
 import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Waves, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
@@ -80,15 +81,12 @@ const AVG_MINUTES_PER_STOP = 30;
 
 type LatLng = { lat: number; lng: number };
 
-function TecnicoRouteMap({ stops }: { stops: TechnicianStop[] }) {
+function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; showTraffic: boolean }) {
   const { isLoaded, loadError } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY });
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [showTraffic, setShowTraffic] = useState(false);
   const points = stops
     .map((s) => ({ s, pos: (s.client_lat != null && s.client_lng != null ? { lat: s.client_lat, lng: s.client_lng } : null) as LatLng | null }))
     .filter((p): p is { s: TechnicianStop; pos: LatLng } => !!p.pos);
-  const pathKey = points.map((p) => `${p.pos.lat},${p.pos.lng}`).join("|");
 
   useEffect(() => {
     if (!mapRef.current || points.length === 0) return;
@@ -102,21 +100,7 @@ function TecnicoRouteMap({ stops }: { stops: TechnicianStop[] }) {
     mapRef.current.fitBounds(bounds, 48);
   }, [points]);
 
-  // Drawn via the raw Maps SDK — see rotas.tsx RouteMap for why.
-  useEffect(() => {
-    if (!map || points.length < 2) return;
-    const polyline = new google.maps.Polyline({
-      path: points.map((p) => p.pos),
-      strokeColor: "#2563EB",
-      strokeOpacity: 0.8,
-      strokeWeight: 3,
-      map,
-    });
-    return () => polyline.setMap(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, pathKey]);
-
-  const wrapperClass = "relative h-56 w-full overflow-hidden rounded-2xl border border-[var(--dash-border)]";
+  const wrapperClass = "relative h-72 w-full overflow-hidden rounded-2xl border border-[var(--dash-border)]";
 
   if (!GOOGLE_MAPS_KEY || loadError) {
     return (
@@ -140,7 +124,7 @@ function TecnicoRouteMap({ stops }: { stops: TechnicianStop[] }) {
         mapContainerStyle={mapContainerStyle}
         center={SARASOTA_CENTER}
         zoom={11}
-        onLoad={(m) => { mapRef.current = m; setMap(m); }}
+        onLoad={(m) => { mapRef.current = m; }}
         options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false }}
       >
         {showTraffic && <TrafficLayer />}
@@ -161,19 +145,6 @@ function TecnicoRouteMap({ stops }: { stops: TechnicianStop[] }) {
           />
         ))}
       </GoogleMap>
-      <button
-        onClick={() => toast.info("Otimização de rota — em breve")}
-        className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[12px] font-bold text-[var(--dash-text-secondary)] shadow-md"
-      >
-        <RouteIcon className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Rota otimizada
-      </button>
-      <button
-        onClick={() => setShowTraffic((v) => !v)}
-        className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold shadow-md"
-        style={{ background: showTraffic ? "var(--dash-navy)" : "#fff", color: showTraffic ? "#fff" : "var(--dash-text-secondary)" }}
-      >
-        <Car className="h-3.5 w-3.5" /> Tráfego
-      </button>
     </div>
   );
 }
@@ -185,6 +156,8 @@ function TecnicoPage() {
   const [date, setDate] = useState(() => new Date());
   const dateStr = toDateStr(date);
   const [view, setView] = useState<"inicio" | "rota" | "clientes">("inicio");
+  const [mapOpen, setMapOpen] = useState(false);
+  const [showTraffic, setShowTraffic] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -341,9 +314,35 @@ function TecnicoPage() {
           })}
         </div>
 
-        <MapErrorBoundary key={dateStr}>
-          <TecnicoRouteMap key={dateStr} stops={sorted} />
-        </MapErrorBoundary>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setMapOpen(true)}
+            className="flex items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
+          >
+            <MapPin className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Ver mapa
+          </button>
+          <button
+            onClick={() => toast.info("Rota otimizada — em breve")}
+            className="flex items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
+          >
+            <RouteIcon className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Rota otimizada
+          </button>
+          <button
+            onClick={() => { setShowTraffic((v) => !v); setMapOpen(true); }}
+            className="flex items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
+          >
+            <Car className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Tráfego
+            <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
+              Normal
+            </span>
+          </button>
+        </div>
+
+        <Modal open={mapOpen} onClose={() => setMapOpen(false)} title="Mapa da rota">
+          <MapErrorBoundary key={dateStr}>
+            <TecnicoRouteMap key={dateStr} stops={sorted} showTraffic={showTraffic} />
+          </MapErrorBoundary>
+        </Modal>
 
         <div className="space-y-0">
           {isLoading ? (
