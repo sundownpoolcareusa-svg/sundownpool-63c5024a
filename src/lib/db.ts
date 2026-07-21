@@ -355,7 +355,7 @@ export async function logFilterCleaning(clientId: string) {
   return data;
 }
 
-export async function addStopToRoute(routeId: string, clientId: string, scheduledTime?: string, notes?: string) {
+export async function addStopToRoute(routeId: string, clientId: string, scheduledTime?: string, notes?: string, manual = false) {
   const { data: existing, error: countErr } = await supabase
     .from("route_stops")
     .select("position")
@@ -371,6 +371,7 @@ export async function addStopToRoute(routeId: string, clientId: string, schedule
     position: nextPosition,
     scheduled_time: scheduledTime || null,
     notes: notes || null,
+    manual,
   });
   if (error) {
     if (error.code === "23505") throw new Error("This client is already on this route.");
@@ -382,6 +383,9 @@ export async function addStopToRoute(routeId: string, clientId: string, schedule
 // recurring Wednesday client who also needs an extra note for tomorrow) —
 // addStopToRoute would just fail on the route_id+client_id unique constraint
 // in that case. Attaches the note to the existing stop instead of failing.
+// The newly-created stop is flagged `manual` so removeStaleClientStops (which
+// cleans up stops that no longer match a client's *recurring* days) never
+// treats a deliberately-scheduled one-time visit as stale.
 export async function scheduleOneTimeVisit(technicianId: string, date: string, clientId: string, notes: string) {
   const route = await getOrCreateRoute(technicianId, date);
   const { data: existing, error: findErr } = await supabase
@@ -393,10 +397,10 @@ export async function scheduleOneTimeVisit(technicianId: string, date: string, c
   if (findErr) throw findErr;
 
   if (existing) {
-    const { error } = await supabase.from("route_stops").update({ notes: notes || null }).eq("id", existing.id);
+    const { error } = await supabase.from("route_stops").update({ notes: notes || null, manual: true }).eq("id", existing.id);
     if (error) throw error;
   } else {
-    await addStopToRoute(route.id, clientId, undefined, notes);
+    await addStopToRoute(route.id, clientId, undefined, notes, true);
   }
 }
 
@@ -708,13 +712,17 @@ function localDateStr(d: Date) {
 // reconciled — so editing a client's service_days would otherwise leave old
 // still-pending stops sitting on days the client is no longer scheduled for.
 // Removes any not-yet-started stop, today or later, whose weekday fell out
-// of the client's current service_days.
+// of the client's current service_days. Manual stops (one-time visits, or
+// anything added by hand from the Rotas page) are excluded — they aren't
+// tied to the recurring schedule, so a service_days edit should never
+// delete them.
 export async function removeStaleClientStops(clientId: string, serviceDays: string[]) {
   const { data, error } = await supabase
     .from("route_stops")
     .select("id, route_id, route:routes(route_date)")
     .eq("client_id", clientId)
-    .eq("status", "Pendente");
+    .eq("status", "Pendente")
+    .eq("manual", false);
   if (error) throw error;
 
   const todayStr = localDateStr(new Date());

@@ -1388,7 +1388,7 @@ function AddStopModal({ open, onClose, routeId, onAdded }: { open: boolean; onCl
     mutationFn: async () => {
       if (!routeId) throw new Error("Select or create a route first");
       if (!clientId) throw new Error("Select a client");
-      await addStopToRoute(routeId, clientId, time || undefined);
+      await addStopToRoute(routeId, clientId, time || undefined, undefined, true);
     },
     onSuccess: () => {
       toast.success("Stop added!");
