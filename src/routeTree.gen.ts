@@ -19,7 +19,9 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ITokenRouteImport } from './routes/i.$token'
 import { Route as ETokenRouteImport } from './routes/e.$token'
+import { Route as AuthenticatedTecnicosRouteImport } from './routes/_authenticated/tecnicos'
 import { Route as AuthenticatedRotasRouteImport } from './routes/_authenticated/rotas'
+import { Route as AuthenticatedQuimicosRouteImport } from './routes/_authenticated/quimicos'
 import { Route as AuthenticatedInvoiceRouteImport } from './routes/_authenticated/invoice'
 import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authenticated/estimativa'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
@@ -75,9 +77,19 @@ const ETokenRoute = ETokenRouteImport.update({
   path: '/e/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTecnicosRoute = AuthenticatedTecnicosRouteImport.update({
+  id: '/tecnicos',
+  path: '/tecnicos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRotasRoute = AuthenticatedRotasRouteImport.update({
   id: '/rotas',
   path: '/rotas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedQuimicosRoute = AuthenticatedQuimicosRouteImport.update({
+  id: '/quimicos',
+  path: '/quimicos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedInvoiceRoute = AuthenticatedInvoiceRouteImport.update({
@@ -118,7 +130,9 @@ export interface FileRoutesByFullPath {
   '/clientes': typeof AuthenticatedClientesRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
+  '/quimicos': typeof AuthenticatedQuimicosRoute
   '/rotas': typeof AuthenticatedRotasRoute
+  '/tecnicos': typeof AuthenticatedTecnicosRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
   '/chemicals/$stopId': typeof AuthenticatedChemicalsStopIdRoute
@@ -135,7 +149,9 @@ export interface FileRoutesByTo {
   '/clientes': typeof AuthenticatedClientesRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
+  '/quimicos': typeof AuthenticatedQuimicosRoute
   '/rotas': typeof AuthenticatedRotasRoute
+  '/tecnicos': typeof AuthenticatedTecnicosRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
   '/chemicals/$stopId': typeof AuthenticatedChemicalsStopIdRoute
@@ -154,7 +170,9 @@ export interface FileRoutesById {
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/estimativa': typeof AuthenticatedEstimativaRoute
   '/_authenticated/invoice': typeof AuthenticatedInvoiceRoute
+  '/_authenticated/quimicos': typeof AuthenticatedQuimicosRoute
   '/_authenticated/rotas': typeof AuthenticatedRotasRoute
+  '/_authenticated/tecnicos': typeof AuthenticatedTecnicosRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
   '/_authenticated/chemicals/$stopId': typeof AuthenticatedChemicalsStopIdRoute
@@ -173,7 +191,9 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/estimativa'
     | '/invoice'
+    | '/quimicos'
     | '/rotas'
+    | '/tecnicos'
     | '/e/$token'
     | '/i/$token'
     | '/chemicals/$stopId'
@@ -190,7 +210,9 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/estimativa'
     | '/invoice'
+    | '/quimicos'
     | '/rotas'
+    | '/tecnicos'
     | '/e/$token'
     | '/i/$token'
     | '/chemicals/$stopId'
@@ -208,7 +230,9 @@ export interface FileRouteTypes {
     | '/_authenticated/clientes'
     | '/_authenticated/estimativa'
     | '/_authenticated/invoice'
+    | '/_authenticated/quimicos'
     | '/_authenticated/rotas'
+    | '/_authenticated/tecnicos'
     | '/e/$token'
     | '/i/$token'
     | '/_authenticated/chemicals/$stopId'
@@ -301,11 +325,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ETokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/tecnicos': {
+      id: '/_authenticated/tecnicos'
+      path: '/tecnicos'
+      fullPath: '/tecnicos'
+      preLoaderRoute: typeof AuthenticatedTecnicosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rotas': {
       id: '/_authenticated/rotas'
       path: '/rotas'
       fullPath: '/rotas'
       preLoaderRoute: typeof AuthenticatedRotasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/quimicos': {
+      id: '/_authenticated/quimicos'
+      path: '/quimicos'
+      fullPath: '/quimicos'
+      preLoaderRoute: typeof AuthenticatedQuimicosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/invoice': {
@@ -350,7 +388,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedEstimativaRoute: typeof AuthenticatedEstimativaRoute
   AuthenticatedInvoiceRoute: typeof AuthenticatedInvoiceRoute
+  AuthenticatedQuimicosRoute: typeof AuthenticatedQuimicosRoute
   AuthenticatedRotasRoute: typeof AuthenticatedRotasRoute
+  AuthenticatedTecnicosRoute: typeof AuthenticatedTecnicosRoute
   AuthenticatedChemicalsStopIdRoute: typeof AuthenticatedChemicalsStopIdRoute
 }
 
@@ -358,7 +398,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedEstimativaRoute: AuthenticatedEstimativaRoute,
   AuthenticatedInvoiceRoute: AuthenticatedInvoiceRoute,
+  AuthenticatedQuimicosRoute: AuthenticatedQuimicosRoute,
   AuthenticatedRotasRoute: AuthenticatedRotasRoute,
+  AuthenticatedTecnicosRoute: AuthenticatedTecnicosRoute,
   AuthenticatedChemicalsStopIdRoute: AuthenticatedChemicalsStopIdRoute,
 }
 

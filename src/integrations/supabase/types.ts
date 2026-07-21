@@ -334,6 +334,33 @@ export type Database = {
           },
         ]
       }
+      product_costs: {
+        Row: {
+          cost_per_unit: number
+          created_at: string
+          id: string
+          product_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cost_per_unit?: number
+          created_at?: string
+          id?: string
+          product_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cost_per_unit?: number
+          created_at?: string
+          id?: string
+          product_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       route_stops: {
         Row: {
           client_id: string
