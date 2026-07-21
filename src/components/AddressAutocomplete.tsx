@@ -27,7 +27,7 @@ export function AddressAutocomplete({
         placesRef.current = places;
         sessionRef.current = new places.AutocompleteSessionToken();
       })
-      .catch(() => {});
+      .catch((e) => console.error("AddressAutocomplete: failed to load Google Places", e));
   }, []);
 
   function handleInput(v: string) {
@@ -54,7 +54,8 @@ export function AddressAutocomplete({
           }));
         setItems(mapped);
         setOpen(mapped.length > 0);
-      } catch {
+      } catch (e) {
+        console.error("AddressAutocomplete: failed to fetch suggestions", e);
         setItems([]);
         setOpen(false);
       }
@@ -83,7 +84,8 @@ export function AddressAutocomplete({
       onChange(address);
       onSelectPlace?.({ address, city, state, zip, lat, lng });
       sessionRef.current = new placesRef.current.AutocompleteSessionToken();
-    } catch {
+    } catch (e) {
+      console.error("AddressAutocomplete: failed to fetch place details", e);
       onChange(s.text);
     }
   }
