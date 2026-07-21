@@ -314,27 +314,24 @@ function TecnicoPage() {
           })}
         </div>
 
-        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="grid grid-cols-3 gap-1.5">
           <button
             onClick={() => setMapOpen(true)}
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
+            className="flex items-center justify-center gap-1 rounded-full border border-[var(--dash-border)] bg-white px-1.5 py-2 text-[11px] font-bold text-[var(--dash-text-secondary)]"
           >
-            <MapPin className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Ver mapa
+            <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">Ver mapa</span>
           </button>
           <button
             onClick={() => toast.info("Rota otimizada — em breve")}
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
+            className="flex items-center justify-center gap-1 rounded-full border border-[var(--dash-border)] bg-white px-1.5 py-2 text-[11px] font-bold text-[var(--dash-text-secondary)]"
           >
-            <RouteIcon className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Rota otimizada
+            <RouteIcon className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">Otimizar</span>
           </button>
           <button
             onClick={() => { setShowTraffic((v) => !v); setMapOpen(true); }}
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--dash-border)] bg-white px-3 py-2 text-[12px] font-bold text-[var(--dash-text-secondary)]"
+            className="flex items-center justify-center gap-1 rounded-full border border-[var(--dash-border)] bg-white px-1.5 py-2 text-[11px] font-bold text-[var(--dash-text-secondary)]"
           >
-            <Car className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Tráfego
-            <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
-              Normal
-            </span>
+            <Car className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">Tráfego</span>
           </button>
         </div>
 
@@ -353,21 +350,20 @@ function TecnicoPage() {
               <p className="mt-3 text-sm font-semibold text-[var(--dash-text-secondary)]">Nenhuma parada neste dia</p>
             </div>
           ) : (
-            sorted.map((stop, i) => {
+            sorted.map((stop) => {
               const badgeStyle = STATUS_STYLES[stop.status] ?? STATUS_STYLES["Pendente"];
               const next = nextStatus(stop.status);
               const address = stopAddress(stop);
               const commercial = isCommercial(stop.client_type);
-              const isLast = i === sorted.length - 1;
               return (
-                <div key={stop.stop_id} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white" style={{ background: statusMarkerColor(stop.status) }}>
-                      {stop.position + 1}
-                    </div>
-                    {!isLast && <div className="w-px flex-1 border-l-2 border-dashed border-[var(--dash-border)]" style={{ minHeight: 8 }} />}
+                <div key={stop.stop_id} className="relative mb-3">
+                  <div
+                    className="absolute -left-2 -top-2 z-10 grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold text-white ring-2 ring-white"
+                    style={{ background: statusMarkerColor(stop.status) }}
+                  >
+                    {stop.position + 1}
                   </div>
-                  <div className="mb-3 flex-1 rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+                  <div className="flex-1 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 pl-5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="truncate text-[14px] font-bold text-[var(--dash-text)]">{stop.client_name}</div>
