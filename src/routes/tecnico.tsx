@@ -556,16 +556,23 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
           const isOnRoute = (c.service_days ?? []).length > 0;
           const commercial = isCommercial(c.client_type);
           return (
-            <div key={c.client_id} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+            <div
+              key={c.client_id}
+              role="button"
+              tabIndex={0}
+              onClick={() => onSelectClient(c)}
+              onKeyDown={(e) => { if (e.key === "Enter") onSelectClient(c); }}
+              className="cursor-pointer rounded-[14px] border border-[var(--dash-border)] bg-white p-3"
+            >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
                   <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-[13px] font-bold ${clientAvatarColors[idx % clientAvatarColors.length]}`}>
                     {initials(c.name)}
                   </div>
                   <div>
-                    <button type="button" onClick={() => onSelectClient(c)} className="block text-[14px] font-bold text-[var(--dash-text)] underline decoration-dotted underline-offset-2">
+                    <span className="block text-[14px] font-bold text-[var(--dash-text)] underline decoration-dotted underline-offset-2">
                       {c.name}
-                    </button>
+                    </span>
                     <span
                       className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
                       style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
@@ -582,12 +589,12 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
 
               <div className="mt-2.5 space-y-1.5 text-[12.5px]">
                 {c.phone && (
-                  <a href={`tel:${c.phone}`} className="flex items-center gap-2 text-[var(--dash-text-secondary)]">
+                  <a href={`tel:${c.phone}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 text-[var(--dash-text-secondary)]">
                     <Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> {formatPhone(c.phone)}
                   </a>
                 )}
                 {c.email && (
-                  <a href={`mailto:${c.email}`} className="flex items-center gap-2 truncate text-[var(--dash-link)]">
+                  <a href={`mailto:${c.email}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 truncate text-[var(--dash-link)]">
                     <Mail className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">{c.email}</span>
                   </a>
                 )}
@@ -596,6 +603,7 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
                     href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
                     target="_blank"
                     rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="flex items-start gap-2 text-[var(--dash-text-secondary)]"
                   >
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> {address}
