@@ -8,7 +8,7 @@ import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users, Map,
 } from "lucide-react";
-import { listClients, listTechnicians, removeStaleClientStops, fmtDate, initials, fmt, type Client, type Invoice } from "@/lib/db";
+import { listClients, listTechnicians, removeStaleClientStops, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +43,8 @@ type ClientFull = Client & {
   monthly_value?: number | null;
   pool_photos?: string[] | null;
   equipment_photos?: string[] | null;
+  gate_code?: string | null;
+  contacts?: ClientContact[] | null;
 };
 
 function ClientesPage() {
@@ -321,6 +323,17 @@ function ClientesPage() {
             </div>
             <Row label="Service days" value={(viewClient.service_days && viewClient.service_days.length) ? viewClient.service_days.join(", ") : "—"} />
             <Row label="Monthly value" value={fmt(Number(viewClient.monthly_value || 0))} />
+            <Row label="Gate code" value={viewClient.gate_code || "—"} />
+            {(viewClient.contacts && viewClient.contacts.length > 0) && (
+              <div>
+                <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted)]">Additional contacts</div>
+                <div className="mt-1 space-y-1">
+                  {viewClient.contacts.map((c, i) => (
+                    <div key={i} className="text-[var(--dash-text)]">{c.name} — {c.phone ? formatPhone(c.phone) : "—"}</div>
+                  ))}
+                </div>
+              </div>
+            )}
             <Row label="Notes" value={viewClient.notes || "—"} />
             <Row label="Registered" value={fmtDate(viewClient.created_at)} />
             {(viewClient.pool_photos && viewClient.pool_photos.length > 0) && (
@@ -402,6 +415,8 @@ function ClientFormModal({
     lat: null as number | null,
     lng: null as number | null,
     technician_id: null as string | null,
+    gate_code: "",
+    contacts: [] as ClientContact[],
   };
   const [form, setForm] = useState(empty);
   const [userId, setUserId] = useState<string>("anon");
@@ -431,6 +446,8 @@ function ClientFormModal({
         lat: editing.lat ?? null,
         lng: editing.lng ?? null,
         technician_id: editing.technician_id ?? null,
+        gate_code: editing.gate_code || "",
+        contacts: editing.contacts || [],
       });
     } else {
       setForm(empty);
@@ -493,6 +510,7 @@ function ClientFormModal({
           <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
           <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
         </div>
+        <Field label="Gate code" value={form.gate_code} onChange={(v) => setForm({ ...form, gate_code: v })} />
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Type</label>
@@ -548,6 +566,48 @@ function ClientFormModal({
             <option value="">None</option>
             {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
+        </div>
+        <div>
+          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Additional Contacts</label>
+          <p className="text-xs text-[var(--dash-text-muted)]">e.g. an assistant or property manager for this client</p>
+          <div className="mt-2 space-y-2">
+            {form.contacts.map((c, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  value={c.name}
+                  onChange={(e) => setForm((f) => ({
+                    ...f,
+                    contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, name: e.target.value } : x)),
+                  }))}
+                  placeholder="Name"
+                  className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                />
+                <input
+                  value={formatPhone(c.phone)}
+                  onChange={(e) => setForm((f) => ({
+                    ...f,
+                    contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, phone: formatPhone(e.target.value) } : x)),
+                  }))}
+                  placeholder="Phone"
+                  className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, contacts: f.contacts.filter((_, xi) => xi !== i) }))}
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-red)]"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setForm((f) => ({ ...f, contacts: [...f.contacts, { name: "", phone: "" }] }))}
+              className="flex items-center gap-1.5 rounded-[10px] border border-[var(--dash-border)] px-3 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]"
+            >
+              <Plus className="h-4 w-4" /> Add Contact
+            </button>
+          </div>
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Monthly pool value (USD)</label>
