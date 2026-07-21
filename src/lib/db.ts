@@ -355,7 +355,7 @@ export async function logFilterCleaning(clientId: string) {
   return data;
 }
 
-export async function addStopToRoute(routeId: string, clientId: string, scheduledTime?: string) {
+export async function addStopToRoute(routeId: string, clientId: string, scheduledTime?: string, notes?: string) {
   const { data: existing, error: countErr } = await supabase
     .from("route_stops")
     .select("position")
@@ -370,6 +370,7 @@ export async function addStopToRoute(routeId: string, clientId: string, schedule
     client_id: clientId,
     position: nextPosition,
     scheduled_time: scheduledTime || null,
+    notes: notes || null,
   });
   if (error) {
     if (error.code === "23505") throw new Error("This client is already on this route.");

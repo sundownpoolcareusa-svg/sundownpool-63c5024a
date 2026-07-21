@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -8,7 +8,7 @@ import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users, Map,
 } from "lucide-react";
-import { listClients, listTechnicians, removeStaleClientStops, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
+import { listClients, listTechnicians, removeStaleClientStops, getOrCreateRoute, addStopToRoute, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -393,6 +393,12 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
+function tomorrowStr() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 const WEEKDAYS = [
   { v: "Seg", label: "Segunda" },
   { v: "Ter", label: "Terça" },
@@ -419,6 +425,9 @@ function ClientFormModal({
     contacts: [] as ClientContact[],
   };
   const [form, setForm] = useState(empty);
+  const [visitMode, setVisitMode] = useState<"recorrente" | "unica">("recorrente");
+  const [oneTimeDate, setOneTimeDate] = useState(tomorrowStr());
+  const [oneTimeNote, setOneTimeNote] = useState("");
   const [userId, setUserId] = useState<string>("anon");
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUserId(data.user.id); }); }, []);
   const { data: technicians = [] } = useQuery({ queryKey: ["technicians"], queryFn: listTechnicians, enabled: open });
@@ -452,6 +461,9 @@ function ClientFormModal({
     } else {
       setForm(empty);
     }
+    setVisitMode("recorrente");
+    setOneTimeDate(tomorrowStr());
+    setOneTimeNote("");
     setLoadedId(editingId);
   }
   if (!open && loadedId !== null) setLoadedId(null);
@@ -461,6 +473,7 @@ function ClientFormModal({
 
   const mut = useMutation({
     mutationFn: async (values: typeof form) => {
+      let clientId = editing?.id;
       if (editing) {
         const { error } = await supabase.from("clients").update(values).eq("id", editing.id);
         if (error) throw error;
@@ -468,12 +481,19 @@ function ClientFormModal({
       } else {
         const { data: u } = await supabase.auth.getUser();
         if (!u.user) throw new Error("Not authenticated");
-        const { error } = await supabase.from("clients").insert({ ...values, user_id: u.user.id });
+        const { data, error } = await supabase.from("clients").insert({ ...values, user_id: u.user.id }).select("id").single();
         if (error) throw error;
+        clientId = data.id;
+      }
+
+      if (visitMode === "unica" && clientId && values.technician_id) {
+        const route = await getOrCreateRoute(values.technician_id, oneTimeDate);
+        await addStopToRoute(route.id, clientId, undefined, oneTimeNote);
       }
     },
     onSuccess: () => {
       toast.success(editing ? "Client updated!" : "Client created!");
+      if (visitMode === "unica") toast.success("One-time visit scheduled!");
       setForm(empty);
       onSaved();
       onClose();
@@ -481,12 +501,18 @@ function ClientFormModal({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (visitMode === "unica" && !form.technician_id) {
+      toast.error("Choose an assigned technician for this one-time visit");
+      return;
+    }
+    mut.mutate(form);
+  }
+
   return (
     <Modal open={open} onClose={onClose} title={editing ? "Edit Client" : "New Client"}>
-      <form
-        onSubmit={(e) => { e.preventDefault(); mut.mutate(form); }}
-        className="space-y-4"
-      >
+      <form onSubmit={handleSubmit} className="space-y-4">
         <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
         <div className="grid grid-cols-2 gap-4">
           <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
@@ -571,32 +597,88 @@ function ClientFormModal({
           </div>
         </div>
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Recurring Service Days</label>
-          <p className="text-xs text-[var(--dash-text-muted)]">Select one or more days of the week</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {WEEKDAYS.map((d) => {
-              const active = form.service_days.includes(d.v);
-              return (
-                <button
-                  type="button"
-                  key={d.v}
-                  onClick={() => toggleDay(d.v)}
-                  className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                  style={{
-                    borderColor: active ? "var(--dash-navy)" : "var(--dash-border)",
-                    background: active ? "var(--dash-navy)" : "#fff",
-                    color: active ? "#fff" : "var(--dash-text-secondary)",
-                  }}
-                >
-                  {d.v}
-                </button>
-              );
-            })}
+          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Schedule</label>
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setVisitMode("recorrente")}
+              className="rounded-[10px] border px-3 py-2 text-sm font-semibold transition"
+              style={{
+                borderColor: visitMode === "recorrente" ? "var(--dash-navy)" : "var(--dash-border)",
+                background: visitMode === "recorrente" ? "var(--dash-navy)" : "#fff",
+                color: visitMode === "recorrente" ? "#fff" : "var(--dash-text-secondary)",
+              }}
+            >
+              Recorrente
+            </button>
+            <button
+              type="button"
+              onClick={() => setVisitMode("unica")}
+              className="rounded-[10px] border px-3 py-2 text-sm font-semibold transition"
+              style={{
+                borderColor: visitMode === "unica" ? "var(--dash-navy)" : "var(--dash-border)",
+                background: visitMode === "unica" ? "var(--dash-navy)" : "#fff",
+                color: visitMode === "unica" ? "#fff" : "var(--dash-text-secondary)",
+              }}
+            >
+              Visita única
+            </button>
           </div>
+
+          {visitMode === "recorrente" ? (
+            <>
+              <p className="mt-2 text-xs text-[var(--dash-text-muted)]">Select one or more days of the week</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {WEEKDAYS.map((d) => {
+                  const active = form.service_days.includes(d.v);
+                  return (
+                    <button
+                      type="button"
+                      key={d.v}
+                      onClick={() => toggleDay(d.v)}
+                      className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+                      style={{
+                        borderColor: active ? "var(--dash-navy)" : "var(--dash-border)",
+                        background: active ? "var(--dash-navy)" : "#fff",
+                        color: active ? "#fff" : "var(--dash-text-secondary)",
+                      }}
+                    >
+                      {d.v}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="mt-2 space-y-2">
+              <p className="text-xs text-[var(--dash-text-muted)]">Doesn't change the client's recurring days — just adds one extra visit on the technician's route</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Date</label>
+                  <input
+                    type="date"
+                    value={oneTimeDate}
+                    onChange={(e) => setOneTimeDate(e.target.value)}
+                    className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Service note</label>
+                <textarea
+                  value={oneTimeNote}
+                  onChange={(e) => setOneTimeNote(e.target.value)}
+                  rows={2}
+                  placeholder="e.g. replace filter sand, check for leak..."
+                  className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+          )}
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Assigned Technician</label>
-          <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring days to auto-schedule</p>
+          <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring/one-time scheduling</p>
           <select
             value={form.technician_id ?? ""}
             onChange={(e) => setForm({ ...form, technician_id: e.target.value || null })}
