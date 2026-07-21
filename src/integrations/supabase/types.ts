@@ -623,6 +623,14 @@ export type Database = {
           stop_id: string
         }[]
       }
+      get_my_technician_alerts: {
+        Args: { p_date: string }
+        Returns: {
+          alert_type: string
+          client_name: string
+          days: number
+        }[]
+      }
       get_my_technician_clients: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -638,6 +646,25 @@ export type Database = {
           state: string
           status: string
           zip: string
+        }[]
+      }
+      get_my_technician_dashboard: {
+        Args: { p_date: string }
+        Returns: {
+          avg_cost_per_visit: number
+          avg_revenue_per_pool: number
+          clients_today: number
+          completed_today: number
+          estimated_route_revenue: number
+          filters_overdue: number
+          overdue_invoices: number
+          pools_with_alert: number
+          qua_routes: number
+          qui_routes: number
+          seg_routes: number
+          sex_routes: number
+          ter_routes: number
+          total_pools: number
         }[]
       }
       get_my_technician_stops: {

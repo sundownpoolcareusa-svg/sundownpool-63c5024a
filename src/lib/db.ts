@@ -484,6 +484,40 @@ export async function getMyTechnicianClients() {
   return (data ?? []) as TechnicianClient[];
 }
 
+export type TechnicianDashboardStats = {
+  clients_today: number;
+  completed_today: number;
+  filters_overdue: number;
+  pools_with_alert: number;
+  overdue_invoices: number;
+  avg_cost_per_visit: number;
+  estimated_route_revenue: number;
+  avg_revenue_per_pool: number;
+  total_pools: number;
+  seg_routes: number;
+  ter_routes: number;
+  qua_routes: number;
+  qui_routes: number;
+  sex_routes: number;
+};
+
+// Aggregate stats for the technician's Home dashboard — computed server-side
+// (SECURITY DEFINER) since the technician has no direct read access to
+// clients' financial fields, chemicals readings, or invoices.
+export async function getMyTechnicianDashboard(date: string) {
+  const { data, error } = await supabase.rpc("get_my_technician_dashboard", { p_date: date });
+  if (error) throw error;
+  return (data?.[0] ?? null) as TechnicianDashboardStats | null;
+}
+
+export type TechnicianAlert = { alert_type: "filtro" | "cloro" | "pagamento"; client_name: string; days: number };
+
+export async function getMyTechnicianAlerts(date: string) {
+  const { data, error } = await supabase.rpc("get_my_technician_alerts", { p_date: date });
+  if (error) throw error;
+  return (data ?? []) as TechnicianAlert[];
+}
+
 export async function updateMyStopStatus(stopId: string, status: StopStatus) {
   const { error } = await supabase.rpc("update_my_stop_status", {
     p_stop_id: stopId,
