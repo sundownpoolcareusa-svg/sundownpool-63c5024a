@@ -85,7 +85,6 @@ export type Invoice = {
   invoice_items?: InvoiceItem[];
 };
 
-
 export type Service = {
   id: string;
   name: string;
@@ -95,7 +94,10 @@ export type Service = {
 };
 
 export async function listClients() {
-  const { data, error } = await supabase.from("clients").select("*").order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("clients")
+    .select("*")
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return data as Client[];
 }
@@ -122,11 +124,23 @@ const DEFAULT_SERVICES: Array<{ name: string; description: string; unit_price: n
   { name: "Pool Cleaning", description: "Vacuuming, brushing and skimming", unit_price: 100 },
   { name: "Chemical Balance", description: "Water testing and chemical treatment", unit_price: 60 },
   { name: "Filter Cleaning", description: "Filter inspection and cleaning", unit_price: 75 },
-  { name: "Green Pool Recovery", description: "Algae treatment and full recovery clean-up", unit_price: 250 },
+  {
+    name: "Green Pool Recovery",
+    description: "Algae treatment and full recovery clean-up",
+    unit_price: 250,
+  },
   { name: "Equipment Repair", description: "Pump, filter or heater repair", unit_price: 150 },
   { name: "Tile Cleaning", description: "Waterline tile scrubbing", unit_price: 90 },
-  { name: "Salt System Service", description: "Salt cell cleaning and inspection", unit_price: 120 },
-  { name: "Pool Start-Up", description: "Seasonal opening: inspection, cleaning and balancing", unit_price: 200 },
+  {
+    name: "Salt System Service",
+    description: "Salt cell cleaning and inspection",
+    unit_price: 120,
+  },
+  {
+    name: "Pool Start-Up",
+    description: "Seasonal opening: inspection, cleaning and balancing",
+    unit_price: 200,
+  },
 ];
 
 export async function listServices() {
@@ -150,7 +164,11 @@ export async function ensureDefaultServices() {
   return (data as Service[]).slice().sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function createService(values: { name: string; description?: string; unit_price: number }) {
+export async function createService(values: {
+  name: string;
+  description?: string;
+  unit_price: number;
+}) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Not authenticated");
   const { data, error } = await supabase
@@ -218,13 +236,20 @@ export function dateStr(d: Date) {
 }
 
 export async function listTechnicians() {
-  const { data, error } = await supabase.from("technicians").select("*").eq("active", true).order("name");
+  const { data, error } = await supabase
+    .from("technicians")
+    .select("*")
+    .eq("active", true)
+    .order("name");
   if (error) throw error;
   return data as Technician[];
 }
 
 export async function setClientTechnician(clientId: string, technicianId: string) {
-  const { error } = await supabase.from("clients").update({ technician_id: technicianId }).eq("id", clientId);
+  const { error } = await supabase
+    .from("clients")
+    .update({ technician_id: technicianId })
+    .eq("id", clientId);
   if (error) throw error;
 }
 
@@ -238,6 +263,21 @@ export async function createTechnician(values: { name: string; phone?: string; c
     .single();
   if (error) throw error;
   return data as Technician;
+}
+
+export async function updateTechnician(
+  id: string,
+  values: { name: string; phone?: string | null; color?: string },
+) {
+  const { error } = await supabase.from("technicians").update(values).eq("id", id);
+  if (error) throw error;
+}
+
+// Technicians aren't hard-deleted (routes reference them), just deactivated
+// so they drop out of listTechnicians() and the assignment dropdowns.
+export async function deactivateTechnician(id: string) {
+  const { error } = await supabase.from("technicians").update({ active: false }).eq("id", id);
+  if (error) throw error;
 }
 
 export async function listRoutesForDate(date: string) {
@@ -284,7 +324,11 @@ export async function listRouteStops(routeId: string) {
 }
 
 export async function getRouteStop(stopId: string) {
-  const { data, error } = await supabase.from("route_stops").select("*, client:clients(*)").eq("id", stopId).single();
+  const { data, error } = await supabase
+    .from("route_stops")
+    .select("*, client:clients(*)")
+    .eq("id", stopId)
+    .single();
   if (error) throw error;
   return data as RouteStop;
 }
@@ -298,7 +342,10 @@ export async function logFilterCleaning(clientId: string) {
   if (readErr) throw readErr;
   const { data, error } = await supabase
     .from("clients")
-    .update({ filter_last_cleaned_at: new Date().toISOString(), filter_cleaning_count: (current.filter_cleaning_count ?? 0) + 1 })
+    .update({
+      filter_last_cleaned_at: new Date().toISOString(),
+      filter_cleaning_count: (current.filter_cleaning_count ?? 0) + 1,
+    })
     .eq("id", clientId)
     .select("filter_last_cleaned_at, filter_cleaning_count")
     .single();
@@ -338,13 +385,18 @@ export async function updateStopStatus(stopId: string, status: StopStatus, clien
   if (error) throw error;
 
   if (status === "Concluído" && clientId) {
-    await supabase.from("clients").update({ last_service_date: now.slice(0, 10) }).eq("id", clientId);
+    await supabase
+      .from("clients")
+      .update({ last_service_date: now.slice(0, 10) })
+      .eq("id", clientId);
   }
 }
 
 export async function reorderStops(orderedStopIds: string[]) {
   await Promise.all(
-    orderedStopIds.map((id, idx) => supabase.from("route_stops").update({ position: idx }).eq("id", id)),
+    orderedStopIds.map((id, idx) =>
+      supabase.from("route_stops").update({ position: idx }).eq("id", id),
+    ),
   );
 }
 
@@ -382,7 +434,11 @@ export async function getMyTechnician() {
   try {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return null;
-    const { data, error } = await supabase.from("technicians").select("*").eq("auth_user_id", u.user.id).maybeSingle();
+    const { data, error } = await supabase
+      .from("technicians")
+      .select("*")
+      .eq("auth_user_id", u.user.id)
+      .maybeSingle();
     if (error) return null;
     return data as Technician | null;
   } catch {
@@ -406,7 +462,10 @@ export async function getMyTechnicianStops(date: string) {
 }
 
 export async function updateMyStopStatus(stopId: string, status: StopStatus) {
-  const { error } = await supabase.rpc("update_my_stop_status", { p_stop_id: stopId, p_status: status });
+  const { error } = await supabase.rpc("update_my_stop_status", {
+    p_stop_id: stopId,
+    p_status: status,
+  });
   if (error) throw error;
 }
 
@@ -450,7 +509,9 @@ export async function saveMyStopChemicals(
 // Same shape as getClientChemicalsHistory (owner side), but scoped through
 // the technician RPC boundary instead of a direct table query.
 export async function getMyStopChemicalsHistory(stopId: string): Promise<ChemicalHistoryEntry[]> {
-  const { data, error } = await supabase.rpc("get_my_stop_chemicals_history", { p_stop_id: stopId });
+  const { data, error } = await supabase.rpc("get_my_stop_chemicals_history", {
+    p_stop_id: stopId,
+  });
   if (error) throw error;
   return (data ?? []).map((row) => ({
     route_stop_id: row.route_stop_id,
@@ -476,7 +537,12 @@ export async function deleteStop(stopId: string) {
 
 // ---- Pool chemicals (readings + products logged per stop) ----
 
-export type ChemicalReadingKey = "free_chlorine" | "ph" | "total_alkalinity" | "calcium_hardness" | "stabilizer";
+export type ChemicalReadingKey =
+  | "free_chlorine"
+  | "ph"
+  | "total_alkalinity"
+  | "calcium_hardness"
+  | "stabilizer";
 
 export type ChemicalReadings = Record<ChemicalReadingKey, number>;
 
@@ -494,7 +560,10 @@ export type StopChemicals = {
   notes: string | null;
 };
 
-export const CHEMICAL_READING_META: Record<ChemicalReadingKey, { label: string; unit: string; min: number; max: number; step: number }> = {
+export const CHEMICAL_READING_META: Record<
+  ChemicalReadingKey,
+  { label: string; unit: string; min: number; max: number; step: number }
+> = {
   free_chlorine: { label: "Free Chlorine", unit: "ppm", min: 2, max: 4, step: 0.1 },
   ph: { label: "pH", unit: "", min: 7.2, max: 7.6, step: 0.1 },
   total_alkalinity: { label: "Total Alkalinity", unit: "ppm", min: 80, max: 120, step: 1 },
@@ -553,7 +622,11 @@ export function isReadingInRange(key: ChemicalReadingKey, value: number) {
 }
 
 export async function getStopChemicals(stopId: string) {
-  const { data, error } = await supabase.from("stop_chemicals").select("*").eq("route_stop_id", stopId).maybeSingle();
+  const { data, error } = await supabase
+    .from("stop_chemicals")
+    .select("*")
+    .eq("route_stop_id", stopId)
+    .maybeSingle();
   if (error) throw error;
   if (!data) return null;
   return { ...data, products: (data.products as unknown as Product[]) ?? [] } as StopChemicals;
@@ -617,6 +690,64 @@ export async function getClientChemicalsHistory(clientId: string) {
     .sort((a, b) => b.route_date.localeCompare(a.route_date)) as ChemicalHistoryEntry[];
 }
 
+export type ChemicalVisitEntry = {
+  route_stop_id: string;
+  route_date: string;
+  client_id: string;
+  client_name: string;
+  chemicals: StopChemicals;
+};
+
+// Every chemicals entry logged across ALL clients (not scoped to one), newest
+// first — used by the Químicos page to compute the product cost of each visit.
+export async function listAllChemicalsHistory(): Promise<ChemicalVisitEntry[]> {
+  const { data: stops, error: stopsErr } = await supabase
+    .from("route_stops")
+    .select("id, client_id, client:clients(name), route:routes(route_date)");
+  if (stopsErr) throw stopsErr;
+
+  const { data: chem, error: chemErr } = await supabase.from("stop_chemicals").select("*");
+  if (chemErr) throw chemErr;
+
+  const stopById = new Map((stops ?? []).map((s) => [s.id, s]));
+
+  return (chem ?? [])
+    .map((c) => {
+      const stop = stopById.get(c.route_stop_id);
+      return {
+        route_stop_id: c.route_stop_id,
+        route_date: (stop?.route as { route_date: string } | null)?.route_date ?? "",
+        client_id: stop?.client_id ?? "",
+        client_name: (stop?.client as { name: string } | null)?.name ?? "—",
+        chemicals: { ...c, products: (c.products as unknown as Product[]) ?? [] } as StopChemicals,
+      };
+    })
+    .filter((e) => e.route_date)
+    .sort((a, b) => b.route_date.localeCompare(a.route_date));
+}
+
+export type ProductCost = { product_name: string; cost_per_unit: number };
+
+export async function listProductCosts(): Promise<ProductCost[]> {
+  const { data, error } = await supabase
+    .from("product_costs")
+    .select("product_name, cost_per_unit");
+  if (error) throw error;
+  return (data ?? []) as ProductCost[];
+}
+
+export async function upsertProductCost(productName: string, costPerUnit: number) {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) throw new Error("Not authenticated");
+  const { error } = await supabase
+    .from("product_costs")
+    .upsert(
+      { user_id: u.user.id, product_name: productName, cost_per_unit: costPerUnit },
+      { onConflict: "user_id,product_name" },
+    );
+  if (error) throw error;
+}
+
 export function fmt(n: number) {
   return `$${(n ?? 0).toFixed(2)}`;
 }
@@ -639,5 +770,10 @@ export function nextNumber(prefix: string, existing: string[]) {
 }
 
 export function initials(name: string) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0]?.toUpperCase()).join("");
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase())
+    .join("");
 }
