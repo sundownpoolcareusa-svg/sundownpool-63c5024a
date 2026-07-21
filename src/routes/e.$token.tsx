@@ -15,7 +15,7 @@ export const Route = createFileRoute("/e/$token")({
 type PublicEstimate = {
   estimate: {
     id: string; number: string; title: string | null; estimate_date: string; valid_until: string | null;
-    status: string; subtotal: number; discount: number; total: number; notes: string | null;
+    status: string; subtotal: number; discount: number; total: number; billing_type: string; notes: string | null;
   };
   client: { name: string; email: string | null; phone: string | null; address: string | null; city: string | null; state: string | null; zip: string | null };
   items: Array<{ name: string; description: string; qty: number; unit_price: number; total: number; position: number }>;
@@ -127,7 +127,10 @@ function PublicEstimatePage() {
             <div className="w-72 space-y-2 text-sm">
               <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(Number(estimate.subtotal))}</span></div>
               {Number(estimate.discount) > 0 && <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums">-{fmt(Number(estimate.discount))}</span></div>}
-              <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base"><span className="font-semibold">Total</span><span className="font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(estimate.total))}</span></div>
+              <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base">
+                <span className="font-semibold">{estimate.billing_type === "monthly" ? "Monthly Payment" : "Total"}</span>
+                <span className="font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(estimate.total))}{estimate.billing_type === "monthly" && "/mo"}</span>
+              </div>
             </div>
           </div>
           {estimate.notes && (

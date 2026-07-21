@@ -10,7 +10,7 @@ export const getPublicEstimate = createServerFn({ method: "GET" })
 
     const { data: estimate, error: eErr } = await supabaseAdmin
       .from("estimates")
-      .select("id, number, title, estimate_date, valid_until, status, subtotal, discount, total, notes, client_id")
+      .select("id, number, title, estimate_date, valid_until, status, subtotal, discount, total, billing_type, notes, client_id")
       .eq("public_token", data.token)
       .maybeSingle();
     if (eErr) throw eErr;

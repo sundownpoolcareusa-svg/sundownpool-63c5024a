@@ -41,6 +41,8 @@ export type EstimateItem = {
   position: number;
 };
 
+export type BillingType = "total" | "monthly";
+
 export type Estimate = {
   id: string;
   client_id: string;
@@ -52,6 +54,7 @@ export type Estimate = {
   subtotal: number;
   discount: number;
   total: number;
+  billing_type: BillingType;
   notes: string | null;
   created_at: string;
   public_token: string;

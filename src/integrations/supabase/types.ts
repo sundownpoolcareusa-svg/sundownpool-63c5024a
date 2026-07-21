@@ -170,6 +170,7 @@ export type Database = {
       }
       estimates: {
         Row: {
+          billing_type: string
           client_id: string
           created_at: string
           discount: number
@@ -187,6 +188,7 @@ export type Database = {
           valid_until: string | null
         }
         Insert: {
+          billing_type?: string
           client_id: string
           created_at?: string
           discount?: number
@@ -204,6 +206,7 @@ export type Database = {
           valid_until?: string | null
         }
         Update: {
+          billing_type?: string
           client_id?: string
           created_at?: string
           discount?: number
