@@ -376,6 +376,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           id: string
+          manual: boolean
           notes: string | null
           position: number
           route_id: string
@@ -389,6 +390,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          manual?: boolean
           notes?: string | null
           position?: number
           route_id: string
@@ -402,6 +404,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          manual?: boolean
           notes?: string | null
           position?: number
           route_id?: string
