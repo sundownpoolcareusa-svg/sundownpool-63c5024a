@@ -391,6 +391,13 @@ function TecnicoPage() {
                       </div>
                     </div>
 
+                    {stop.stop_notes && (
+                      <div className="mt-2 flex items-start gap-1.5 rounded-[10px] bg-[#FEF3C7] px-2.5 py-1.5 text-[12px] text-[#92400E]">
+                        <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        {stop.stop_notes}
+                      </div>
+                    )}
+
                     <div className="mt-2 flex flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       <span
                         className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-1 text-[11px] font-bold"
