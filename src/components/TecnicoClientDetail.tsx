@@ -2,14 +2,14 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
-  X, MapPin, Phone, Clock, FlaskConical, TestTube, FileText, Camera, Wrench, CheckCircle2, Filter, CalendarDays, CalendarPlus,
+  X, MapPin, Phone, Clock, FlaskConical, TestTube, FileText, Camera, Wrench, CheckCircle2, Filter, CalendarDays, CalendarPlus, Droplet, PlusCircle,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import {
-  getMyClientInvoices, getMyClientVisitHistory, updateMyClientPoolPhotos, updateMyClientEquipment,
-  fmt, fmtDate, initials,
-  type TechnicianClient, type ClientVisitHistoryEntry,
+  getMyClientInvoices, getMyClientVisitHistory, getMyClientChemicalsHistory, updateMyClientPoolPhotos, updateMyClientEquipment,
+  fmt, fmtDate, initials, CHEMICAL_READING_META,
+  type TechnicianClient, type ClientVisitHistoryEntry, type ChemicalReadingKey,
 } from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
 import { toast } from "sonner";
@@ -29,7 +29,7 @@ function clientFullAddress(c: TechnicianClient) {
   return [c.address, c.city, c.state, c.zip].filter(Boolean).join(", ");
 }
 
-type SubView = "history" | "invoices" | "photos" | "equipment" | null;
+type SubView = "history" | "chemicals" | "invoices" | "photos" | "equipment" | null;
 
 export function TecnicoClientDetail({
   client, onClose, todayStopId, onCompleteService,
@@ -106,20 +106,11 @@ export function TecnicoClientDetail({
               onClick={() => setSubView("history")}
             />
 
-            {todayStopId ? (
-              <Link to="/tecnico/chemicals/$stopId" params={{ stopId: todayStopId }} onClick={onClose}>
-                <DetailRow
-                  icon={FlaskConical} bg="#EDE4FB" fg="#7C3AED"
-                  title="Chemistry Readings" subtitle="View and add pool chemical readings"
-                />
-              </Link>
-            ) : (
-              <DetailRow
-                icon={FlaskConical} bg="#EDE4FB" fg="#7C3AED"
-                title="Chemistry Readings" subtitle="View and add pool chemical readings"
-                onClick={needsTodayStop}
-              />
-            )}
+            <DetailRow
+              icon={FlaskConical} bg="#EDE4FB" fg="#7C3AED"
+              title="Chemistry Readings" subtitle="View and add pool chemical readings"
+              onClick={() => setSubView("chemicals")}
+            />
 
             {todayStopId ? (
               <Link to="/tecnico/chemicals/$stopId" params={{ stopId: todayStopId }} onClick={onClose}>
@@ -163,6 +154,9 @@ export function TecnicoClientDetail({
 
       <Modal open={subView === "history"} onClose={() => setSubView(null)} title="Visit History">
         <ClientHistoryList client={client} />
+      </Modal>
+      <Modal open={subView === "chemicals"} onClose={() => setSubView(null)} title="Chemistry Readings" maxWidth="max-w-lg">
+        <ChemistryReadingsView client={client} todayStopId={todayStopId} onClose={onClose} />
       </Modal>
       <Modal open={subView === "invoices"} onClose={() => setSubView(null)} title="Invoices" maxWidth="max-w-lg">
         <ClientInvoicesList clientId={client.client_id} />
@@ -339,6 +333,251 @@ function ClientHistoryList({ client }: { client: TechnicianClient }) {
       >
         <CalendarPlus className="h-4 w-4" /> Add New Visit
       </button>
+    </div>
+  );
+}
+
+const READING_KEYS: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer"];
+
+const READING_BADGE: Record<ChemicalReadingKey, { abbr: string; bg: string; fg: string }> = {
+  free_chlorine: { abbr: "Cl", bg: "#DCFCE7", fg: "#16A34A" },
+  ph: { abbr: "pH", bg: "#DBEAFE", fg: "#2563EB" },
+  total_alkalinity: { abbr: "Alk", bg: "#FEF3C7", fg: "#B45309" },
+  calcium_hardness: { abbr: "Ca", bg: "#EDE4FB", fg: "#7C3AED" },
+  stabilizer: { abbr: "CYA", bg: "#FFE4E6", fg: "#E11D48" },
+};
+
+const READING_RECOMMENDATIONS: Record<ChemicalReadingKey, { high: string; low: string }> = {
+  free_chlorine: { high: "Free Chlorine is high. Let it settle before adding more.", low: "Free Chlorine is low. Add chlorine to bring it into range." },
+  ph: { high: "pH is high. Add pH decreaser (muriatic acid).", low: "pH is low. Add pH increaser (soda ash)." },
+  total_alkalinity: { high: "Total Alkalinity is high. Add pH decreaser to lower it.", low: "Total Alkalinity is low. Add baking soda to raise it." },
+  calcium_hardness: { high: "Calcium Hardness is high. Consider partial water replacement.", low: "Calcium Hardness is low. Add calcium increaser." },
+  stabilizer: { high: "Stabilizer (CYA) is high. Consider partial water replacement.", low: "Stabilizer (CYA) is low. Add stabilizer/conditioner." },
+};
+
+function readingStatus(key: ChemicalReadingKey, value: number | null): "good" | "high" | "low" | null {
+  if (value == null) return null;
+  const meta = CHEMICAL_READING_META[key];
+  if (value > meta.max) return "high";
+  if (value < meta.min) return "low";
+  return "good";
+}
+
+function ChemistryReadingsView({
+  client, todayStopId, onClose,
+}: { client: TechnicianClient; todayStopId: string | null; onClose: () => void }) {
+  const { data: history = [], isLoading } = useQuery({
+    queryKey: ["my-client-chemicals-history", client.client_id],
+    queryFn: () => getMyClientChemicalsHistory(client.client_id),
+  });
+  const { data: visits = [] } = useQuery({
+    queryKey: ["my-client-visit-history", client.client_id],
+    queryFn: () => getMyClientVisitHistory(client.client_id),
+  });
+  const [showAll, setShowAll] = useState(false);
+
+  if (isLoading) return <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">Loading...</p>;
+
+  function needsTodayStop() {
+    toast.info("Só disponível no dia da visita agendada");
+  }
+
+  const address = clientFullAddress(client);
+  const completedVisits = visits.filter((v) => v.status === "Concluído").length;
+  const latest = history[0] ?? null;
+  const latestVisit = latest ? visits.find((v) => v.route_stop_id === latest.route_stop_id) : null;
+  const latestTime = latestVisit?.completed_at ?? latestVisit?.started_at ?? null;
+  const latestTimeLabel = latestTime
+    ? new Date(latestTime).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    : null;
+
+  const outOfRange = latest
+    ? READING_KEYS.map((k) => ({ key: k, status: readingStatus(k, latest[k]) })).filter(
+        (r): r is { key: ChemicalReadingKey; status: "high" | "low" } => r.status === "high" || r.status === "low",
+      )
+    : [];
+
+  const visible = showAll ? history : history.slice(0, 4);
+
+  const addReadingsButton = todayStopId ? (
+    <Link to="/tecnico/chemicals/$stopId" params={{ stopId: todayStopId }} onClick={onClose}>
+      <button className="flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white" style={{ background: "#4F46E5" }}>
+        <PlusCircle className="h-4 w-4" /> Add New Readings
+      </button>
+    </Link>
+  ) : (
+    <button onClick={needsTodayStop} className="flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white" style={{ background: "#4F46E5" }}>
+      <PlusCircle className="h-4 w-4" /> Add New Readings
+    </button>
+  );
+
+  const productsUsedButton = todayStopId ? (
+    <Link to="/tecnico/chemicals/$stopId" params={{ stopId: todayStopId }} onClick={onClose}>
+      <button className="flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold" style={{ background: "#EEF2FF", color: "#4F46E5" }}>
+        <TestTube className="h-4 w-4" /> Products Used
+      </button>
+    </Link>
+  ) : (
+    <button onClick={needsTodayStop} className="flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold" style={{ background: "#EEF2FF", color: "#4F46E5" }}>
+      <TestTube className="h-4 w-4" /> Products Used
+    </button>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-base font-bold ${avatarColors[nameHash(client.name) % avatarColors.length]}`}>
+          {initials(client.name)}
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[var(--dash-text)]">{client.name}</span>
+            <span className="rounded-full bg-[#DBEAFE] px-2 py-0.5 text-[10px] font-bold text-[#2563EB]">{client.client_type}</span>
+          </div>
+          {address && (
+            <div className="mt-1 flex items-start gap-1 text-[12px] text-[var(--dash-text-secondary)]">
+              <MapPin className="mt-0.5 h-3 w-3 shrink-0" style={{ color: "var(--dash-navy)" }} /> {address}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 divide-x divide-[var(--dash-border)] rounded-[14px] border border-[var(--dash-border)] bg-white py-3">
+        <StatCell icon={FlaskConical} bg="#EDE4FB" fg="#7C3AED" value={READING_KEYS.length} label="Chemicals Tracked" />
+        <StatCell icon={CheckCircle2} bg="#DCFCE7" fg="#16A34A" value={completedVisits} label="Completed Visits" />
+        <div className="flex flex-col items-center gap-1 px-2 text-center">
+          <div className="grid h-9 w-9 place-items-center rounded-full" style={{ background: "#FFEDD5", color: "#C2410C" }}>
+            <CalendarDays className="h-4 w-4" />
+          </div>
+          <div className="text-[13px] font-extrabold leading-tight text-[var(--dash-text)]">{latest ? fmtDate(latest.route_date) : "—"}</div>
+          <div className="text-[11px] text-[var(--dash-text-muted)]">Last Updated</div>
+          {latestTimeLabel && <div className="text-[10.5px] text-[var(--dash-text-muted)]">{latestTimeLabel}</div>}
+        </div>
+      </div>
+
+      {!latest ? (
+        <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">No readings logged yet.</p>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <h3 className="text-[15px] font-bold text-[var(--dash-text)]">Latest Readings</h3>
+            <div className="flex items-center gap-1.5">
+              <span className="rounded-full bg-[var(--dash-badge-paid-bg)] px-2 py-0.5 text-[10px] font-bold text-[var(--dash-badge-paid-text)]">Completed</span>
+              {latestTimeLabel && (
+                <span className="rounded-full bg-[var(--dash-border)] px-2 py-0.5 text-[10px] font-bold text-[var(--dash-text-muted)]">{latestTimeLabel}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[14px] border border-[var(--dash-border)]">
+            <table className="w-full text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-[var(--dash-border)] text-[10.5px] uppercase tracking-wide text-[var(--dash-text-muted)]">
+                  <th className="px-3 py-2 font-bold">Chemical</th>
+                  <th className="px-3 py-2 font-bold">Your Reading</th>
+                  <th className="px-3 py-2 font-bold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {READING_KEYS.map((k) => {
+                  const value = latest[k];
+                  const status = readingStatus(k, value);
+                  const badge = READING_BADGE[k];
+                  const color = status === "good" ? "var(--dash-green)" : status ? "#C2410C" : "var(--dash-text-muted)";
+                  return (
+                    <tr key={k} className="border-b border-[var(--dash-border)] last:border-0">
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[9px] font-bold" style={{ background: badge.bg, color: badge.fg }}>
+                            {badge.abbr}
+                          </span>
+                          <span className="font-semibold text-[var(--dash-text)]">{CHEMICAL_READING_META[k].label}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 font-bold text-[var(--dash-text)]">
+                        {value != null ? `${value}${CHEMICAL_READING_META[k].unit ? ` ${CHEMICAL_READING_META[k].unit}` : ""}` : "—"}
+                      </td>
+                      <td className="px-3 py-2">
+                        {status && (
+                          <span className="flex items-center gap-1.5 font-bold" style={{ color }}>
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
+                            {status === "good" ? "Good" : status === "high" ? "High" : "Low"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {outOfRange.length > 0 && (
+            <div className="flex items-start gap-2 rounded-[14px] bg-[#EFF6FF] p-3 text-[12.5px] text-[#1D4ED8]">
+              <Droplet className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="space-y-0.5">
+                <div className="font-bold">Recommendation</div>
+                {outOfRange.map((r) => (
+                  <div key={r.key}>{READING_RECOMMENDATIONS[r.key][r.status]}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {addReadingsButton}
+
+      {history.length > 0 && (
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-[15px] font-bold text-[var(--dash-text)]">Reading History</h3>
+            {history.length > 4 && (
+              <button onClick={() => setShowAll((s) => !s)} className="text-[12.5px] font-bold" style={{ color: "#4F46E5" }}>
+                {showAll ? "Show Less" : "View All ›"}
+              </button>
+            )}
+          </div>
+          <div className="overflow-x-auto rounded-[14px] border border-[var(--dash-border)]">
+            <table className="w-full min-w-[480px] text-left text-[12px]">
+              <thead>
+                <tr className="border-b border-[var(--dash-border)] text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)]">
+                  <th className="px-2.5 py-2 font-bold">Date</th>
+                  {READING_KEYS.map((k) => (
+                    <th key={k} className="px-2 py-2 font-bold">{READING_BADGE[k].abbr}</th>
+                  ))}
+                  <th className="px-2.5 py-2 font-bold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((entry) => {
+                  const statuses = READING_KEYS.map((k) => readingStatus(k, entry[k]));
+                  const anyOut = statuses.some((s) => s === "high" || s === "low");
+                  return (
+                    <tr key={entry.route_stop_id} className="border-b border-[var(--dash-border)] last:border-0">
+                      <td className="px-2.5 py-2 font-semibold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</td>
+                      {READING_KEYS.map((k) => {
+                        const status = readingStatus(k, entry[k]);
+                        const color = status === "good" ? "var(--dash-green)" : status ? "#C2410C" : "var(--dash-text-muted)";
+                        return (
+                          <td key={k} className="px-2 py-2 font-bold" style={{ color }}>
+                            {entry[k] ?? "—"}
+                          </td>
+                        );
+                      })}
+                      <td className="px-2.5 py-2">
+                        <span className="inline-block h-2 w-2 rounded-full" style={{ background: anyOut ? "#C2410C" : "var(--dash-green)" }} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {productsUsedButton}
     </div>
   );
 }
