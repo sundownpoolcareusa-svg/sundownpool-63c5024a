@@ -8,7 +8,7 @@ import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users, Map,
 } from "lucide-react";
-import { listClients, listTechnicians, removeStaleClientStops, getOrCreateRoute, addStopToRoute, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
+import { listClients, listTechnicians, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -487,8 +487,7 @@ function ClientFormModal({
       }
 
       if (visitMode === "unica" && clientId && values.technician_id) {
-        const route = await getOrCreateRoute(values.technician_id, oneTimeDate);
-        await addStopToRoute(route.id, clientId, undefined, oneTimeNote);
+        await scheduleOneTimeVisit(values.technician_id, oneTimeDate, clientId, oneTimeNote);
       }
     },
     onSuccess: () => {

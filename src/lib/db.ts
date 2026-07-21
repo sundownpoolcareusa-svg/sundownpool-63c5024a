@@ -378,6 +378,28 @@ export async function addStopToRoute(routeId: string, clientId: string, schedule
   }
 }
 
+// A one-time visit is often for a client already on that day's route (e.g. a
+// recurring Wednesday client who also needs an extra note for tomorrow) —
+// addStopToRoute would just fail on the route_id+client_id unique constraint
+// in that case. Attaches the note to the existing stop instead of failing.
+export async function scheduleOneTimeVisit(technicianId: string, date: string, clientId: string, notes: string) {
+  const route = await getOrCreateRoute(technicianId, date);
+  const { data: existing, error: findErr } = await supabase
+    .from("route_stops")
+    .select("id")
+    .eq("route_id", route.id)
+    .eq("client_id", clientId)
+    .maybeSingle();
+  if (findErr) throw findErr;
+
+  if (existing) {
+    const { error } = await supabase.from("route_stops").update({ notes: notes || null }).eq("id", existing.id);
+    if (error) throw error;
+  } else {
+    await addStopToRoute(route.id, clientId, undefined, notes);
+  }
+}
+
 export async function updateStopStatus(stopId: string, status: StopStatus, clientId?: string) {
   const now = new Date().toISOString();
   const patch: { status: StopStatus; started_at?: string; completed_at?: string } = { status };
@@ -663,8 +685,17 @@ export async function getMyStopChemicalsHistory(stopId: string): Promise<Chemica
 }
 
 export async function deleteStop(stopId: string) {
+  const { data: stop, error: findErr } = await supabase
+    .from("route_stops")
+    .select("route_id")
+    .eq("id", stopId)
+    .single();
+  if (findErr) throw findErr;
+
   const { error } = await supabase.from("route_stops").delete().eq("id", stopId);
   if (error) throw error;
+
+  await compactStopPositions(stop.route_id);
 }
 
 const WEEKDAY_ABBR = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -681,24 +712,39 @@ function localDateStr(d: Date) {
 export async function removeStaleClientStops(clientId: string, serviceDays: string[]) {
   const { data, error } = await supabase
     .from("route_stops")
-    .select("id, route:routes(route_date)")
+    .select("id, route_id, route:routes(route_date)")
     .eq("client_id", clientId)
     .eq("status", "Pendente");
   if (error) throw error;
 
   const todayStr = localDateStr(new Date());
-  const staleIds = (data ?? [])
-    .filter((s) => {
-      const routeDate = (s.route as { route_date: string } | null)?.route_date;
-      if (!routeDate || routeDate < todayStr) return false;
-      const abbr = WEEKDAY_ABBR[new Date(`${routeDate}T00:00:00`).getDay()];
-      return !serviceDays.includes(abbr);
-    })
-    .map((s) => s.id);
+  const stale = (data ?? []).filter((s) => {
+    const routeDate = (s.route as { route_date: string } | null)?.route_date;
+    if (!routeDate || routeDate < todayStr) return false;
+    const abbr = WEEKDAY_ABBR[new Date(`${routeDate}T00:00:00`).getDay()];
+    return !serviceDays.includes(abbr);
+  });
+  if (stale.length === 0) return;
 
-  if (staleIds.length === 0) return;
+  const staleIds = stale.map((s) => s.id);
   const { error: delErr } = await supabase.from("route_stops").delete().in("id", staleIds);
   if (delErr) throw delErr;
+
+  const affectedRouteIds = [...new Set(stale.map((s) => s.route_id))];
+  await Promise.all(affectedRouteIds.map((routeId) => compactStopPositions(routeId)));
+}
+
+// Deleting a stop never renumbers the ones left behind, so gaps (e.g. "2, 3"
+// instead of "1, 2") build up on the stop-number badges shown to the
+// technician. Re-packs remaining stops on a route to sequential positions.
+async function compactStopPositions(routeId: string) {
+  const { data, error } = await supabase
+    .from("route_stops")
+    .select("id")
+    .eq("route_id", routeId)
+    .order("position");
+  if (error) throw error;
+  await reorderStops((data ?? []).map((s) => s.id));
 }
 
 // ---- Pool chemicals (readings + products logged per stop) ----
