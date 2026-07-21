@@ -702,9 +702,9 @@ function TecnicoHomeDashboard({
             <div className="text-[12px] text-white/85">Receita estimada da rota</div>
             <div className="text-2xl font-extrabold tabular-nums">{fmt(stats.estimated_route_revenue)}</div>
             <div className="text-[11px] text-white/85">
-              Média por pool: <span className="font-bold">{fmt(stats.avg_revenue_per_pool)}</span>
+              Média por visita: <span className="font-bold">{fmt(stats.avg_revenue_per_pool)}</span>
             </div>
-            <div className="text-[10px] text-white/70">valor mensal ÷ total de pools</div>
+            <div className="text-[10px] text-white/70">valor mensal ÷ visitas por semana</div>
           </div>
         </div>
       </div>
