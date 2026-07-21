@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLogo } from "@/components/AppLogo";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 import { Modal } from "@/components/Modal";
+import { TecnicoClientDetail } from "@/components/TecnicoClientDetail";
 import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Waves, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
@@ -159,6 +160,7 @@ function TecnicoPage() {
   const [view, setView] = useState<"inicio" | "rota" | "clientes">("inicio");
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<TechnicianClient | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -282,7 +284,7 @@ function TecnicoPage() {
             onJumpToday={() => setDate(new Date())}
           />
         ) : view === "clientes" ? (
-          <TecnicoClientsList clients={myClients} isLoading={isLoadingClients} />
+          <TecnicoClientsList clients={myClients} isLoading={isLoadingClients} onSelectClient={setSelectedClient} />
         ) : (
           <>
         <div className="flex items-center justify-between rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
@@ -495,6 +497,18 @@ function TecnicoPage() {
           Mais
         </button>
       </nav>
+
+      {selectedClient && (
+        <TecnicoClientDetail
+          client={selectedClient}
+          onClose={() => setSelectedClient(null)}
+          todayStopId={sorted.find((s) => s.client_id === selectedClient.client_id)?.stop_id ?? null}
+          onCompleteService={() => {
+            const stop = sorted.find((s) => s.client_id === selectedClient.client_id);
+            if (stop) statusMut.mutate({ stopId: stop.stop_id, status: "Concluído" });
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -521,7 +535,7 @@ function clientFullAddress(c: TechnicianClient) {
 // Read-only client list for the technician's own assigned clients — no
 // edit/delete (technicians have no write access to the clients table) and
 // no drill-down into a detail page, so no chevron either.
-function TecnicoClientsList({ clients, isLoading }: { clients: TechnicianClient[]; isLoading: boolean }) {
+function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: TechnicianClient[]; isLoading: boolean; onSelectClient: (c: TechnicianClient) => void }) {
   return (
     <div className="space-y-3">
       <div>
@@ -549,7 +563,9 @@ function TecnicoClientsList({ clients, isLoading }: { clients: TechnicianClient[
                     {initials(c.name)}
                   </div>
                   <div>
-                    <div className="text-[14px] font-bold text-[var(--dash-text)]">{c.name}</div>
+                    <button type="button" onClick={() => onSelectClient(c)} className="block text-[14px] font-bold text-[var(--dash-text)] underline decoration-dotted underline-offset-2">
+                      {c.name}
+                    </button>
                     <span
                       className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
                       style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}

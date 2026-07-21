@@ -21,6 +21,7 @@ export type Database = {
           client_type: string
           created_at: string
           email: string | null
+          equipment_notes: string | null
           equipment_photos: string[]
           filter_cleaning_count: number
           filter_last_cleaned_at: string | null
@@ -51,6 +52,7 @@ export type Database = {
           client_type?: string
           created_at?: string
           email?: string | null
+          equipment_notes?: string | null
           equipment_photos?: string[]
           filter_cleaning_count?: number
           filter_last_cleaned_at?: string | null
@@ -81,6 +83,7 @@ export type Database = {
           client_type?: string
           created_at?: string
           email?: string | null
+          equipment_notes?: string | null
           equipment_photos?: string[]
           filter_cleaning_count?: number
           filter_last_cleaned_at?: string | null
@@ -581,6 +584,31 @@ export type Database = {
         Args: { p_date: string }
         Returns: undefined
       }
+      get_my_client_chemicals_history: {
+        Args: { p_client_id: string }
+        Returns: {
+          calcium_hardness: number
+          free_chlorine: number
+          notes: string
+          ph: number
+          products: Json
+          route_date: string
+          route_stop_id: string
+          stabilizer: number
+          total_alkalinity: number
+        }[]
+      }
+      get_my_client_invoices: {
+        Args: { p_client_id: string }
+        Returns: {
+          due_date: string
+          id: string
+          invoice_date: string
+          number: string
+          status: string
+          total: number
+        }[]
+      }
       get_my_stop_chemicals: {
         Args: { p_stop_id: string }
         Returns: {
@@ -639,9 +667,12 @@ export type Database = {
           client_id: string
           client_type: string
           email: string
+          equipment_notes: string
+          equipment_photos: string[]
           monthly_value: number
           name: string
           phone: string
+          pool_photos: string[]
           service_days: string[]
           state: string
           status: string
@@ -709,6 +740,14 @@ export type Database = {
           p_stop_id: string
           p_total_alkalinity: number
         }
+        Returns: undefined
+      }
+      update_my_client_equipment: {
+        Args: { p_client_id: string; p_notes: string; p_photos: string[] }
+        Returns: undefined
+      }
+      update_my_client_pool_photos: {
+        Args: { p_client_id: string; p_photos: string[] }
         Returns: undefined
       }
       update_my_stop_status: {

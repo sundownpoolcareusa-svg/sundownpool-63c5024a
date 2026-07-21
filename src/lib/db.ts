@@ -474,6 +474,9 @@ export type TechnicianClient = {
   status: string;
   service_days: string[] | null;
   monthly_value: number | null;
+  pool_photos: string[] | null;
+  equipment_photos: string[] | null;
+  equipment_notes: string | null;
 };
 
 // Every client assigned to the signed-in technician (technician_id on the
@@ -482,6 +485,57 @@ export async function getMyTechnicianClients() {
   const { data, error } = await supabase.rpc("get_my_technician_clients");
   if (error) throw error;
   return (data ?? []) as TechnicianClient[];
+}
+
+export type ClientChemicalsHistoryEntry = {
+  route_stop_id: string;
+  route_date: string;
+  free_chlorine: number | null;
+  ph: number | null;
+  total_alkalinity: number | null;
+  calcium_hardness: number | null;
+  stabilizer: number | null;
+  products: Product[];
+  notes: string | null;
+};
+
+// Every chemicals/products entry logged for one client, across all of their
+// stops — works even for clients with no visit scheduled today, since it's
+// authorized via the client's own technician_id, not a specific stop.
+export async function getMyClientChemicalsHistory(clientId: string) {
+  const { data, error } = await supabase.rpc("get_my_client_chemicals_history", { p_client_id: clientId });
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    ...row,
+    products: (row.products as unknown as Product[]) ?? [],
+  })) as ClientChemicalsHistoryEntry[];
+}
+
+export type ClientInvoiceSummary = {
+  id: string;
+  number: string;
+  invoice_date: string;
+  due_date: string | null;
+  status: string;
+  total: number;
+};
+
+// Read-only invoice list for a client — technician can see billing status,
+// no create/edit access.
+export async function getMyClientInvoices(clientId: string) {
+  const { data, error } = await supabase.rpc("get_my_client_invoices", { p_client_id: clientId });
+  if (error) throw error;
+  return (data ?? []) as ClientInvoiceSummary[];
+}
+
+export async function updateMyClientPoolPhotos(clientId: string, photos: string[]) {
+  const { error } = await supabase.rpc("update_my_client_pool_photos", { p_client_id: clientId, p_photos: photos });
+  if (error) throw error;
+}
+
+export async function updateMyClientEquipment(clientId: string, photos: string[], notes: string) {
+  const { error } = await supabase.rpc("update_my_client_equipment", { p_client_id: clientId, p_photos: photos, p_notes: notes });
+  if (error) throw error;
 }
 
 export type TechnicianDashboardStats = {
