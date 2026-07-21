@@ -428,6 +428,7 @@ function ClientFormModal({
   const [visitMode, setVisitMode] = useState<"recorrente" | "unica">("recorrente");
   const [oneTimeDate, setOneTimeDate] = useState(tomorrowStr());
   const [oneTimeNote, setOneTimeNote] = useState("");
+  const [oneTimeTechnicianId, setOneTimeTechnicianId] = useState<string | null>(null);
   const [showVisitSchedule, setShowVisitSchedule] = useState(false);
   const [userId, setUserId] = useState<string>("anon");
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUserId(data.user.id); }); }, []);
@@ -465,6 +466,7 @@ function ClientFormModal({
     setVisitMode("recorrente");
     setOneTimeDate(tomorrowStr());
     setOneTimeNote("");
+    setOneTimeTechnicianId(editing?.technician_id ?? null);
     setLoadedId(editingId);
   }
   if (!open && loadedId !== null) setLoadedId(null);
@@ -487,8 +489,8 @@ function ClientFormModal({
         clientId = data.id;
       }
 
-      if (visitMode === "unica" && clientId && values.technician_id) {
-        await scheduleOneTimeVisit(values.technician_id, oneTimeDate, clientId, oneTimeNote);
+      if (visitMode === "unica" && clientId && oneTimeTechnicianId) {
+        await scheduleOneTimeVisit(oneTimeTechnicianId, oneTimeDate, clientId, oneTimeNote);
       }
     },
     onSuccess: () => {
@@ -503,8 +505,8 @@ function ClientFormModal({
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (visitMode === "unica" && !form.technician_id) {
-      toast.error("Choose an assigned technician for this one-time visit");
+    if (visitMode === "unica" && !oneTimeTechnicianId) {
+      toast.error("Choose a technician for this one-time visit");
       return;
     }
     mut.mutate(form);
@@ -651,7 +653,7 @@ function ClientFormModal({
             </>
           ) : (
             <div className="mt-2 space-y-2">
-              <p className="text-xs text-[var(--dash-text-muted)]">Doesn't change the client's recurring days — just adds one extra visit on the technician's route</p>
+              <p className="text-xs text-[var(--dash-text-muted)]">Doesn't change the client's recurring days — just adds one extra visit. Add as many as you need, even more than one on the same day with a different technician.</p>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Date</label>
@@ -661,6 +663,17 @@ function ClientFormModal({
                     onChange={(e) => setOneTimeDate(e.target.value)}
                     className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
                   />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Technician</label>
+                  <select
+                    value={oneTimeTechnicianId ?? ""}
+                    onChange={(e) => setOneTimeTechnicianId(e.target.value || null)}
+                    className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                  >
+                    <option value="">Select...</option>
+                    {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
                 </div>
               </div>
               <div>
@@ -688,7 +701,7 @@ function ClientFormModal({
         </div>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Assigned Technician</label>
-          <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring/one-time scheduling</p>
+          <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring days to auto-schedule</p>
           <select
             value={form.technician_id ?? ""}
             onChange={(e) => setForm({ ...form, technician_id: e.target.value || null })}
