@@ -111,7 +111,7 @@ function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; show
     mapRef.current.fitBounds(bounds, 48);
   }, [points]);
 
-  const wrapperClass = "relative h-72 w-full overflow-hidden rounded-2xl border border-[var(--dash-border)]";
+  const wrapperClass = "relative h-[58vh] w-full overflow-hidden rounded-2xl border border-[var(--dash-border)]";
 
   if (!GOOGLE_MAPS_KEY || loadError) {
     return (
