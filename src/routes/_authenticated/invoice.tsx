@@ -269,7 +269,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
           <button className="grid h-9 w-9 place-items-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary)]"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
       </div>
-      <EditInvoiceModal invoice={invoice} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => { onChanged(); setEditOpen(false); }} />
+      <EditInvoiceModal key={invoice.id} invoice={invoice} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => { onChanged(); setEditOpen(false); }} />
       <div ref={pdfRef} className="pdf-print rounded-[20px] border border-[var(--dash-border)] bg-white px-[26px] pb-[26px] pt-1 print:border-0 print:shadow-none" style={cardShadow}>
         <DocCardHeader title="INVOICE" number={invoice.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
@@ -545,6 +545,12 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
     <>
     <Modal open={open} onClose={onClose} title={`Edit ${invoice.number}`} maxWidth="max-w-3xl">
       <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-4">
+        <div className="rounded-[10px] bg-[var(--dash-bg)] px-3 py-2.5">
+          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Client</div>
+          <div className="text-base font-extrabold text-[var(--dash-text)]">{invoice.client?.name || "—"}</div>
+          {invoice.client?.address && <div className="text-sm text-[var(--dash-text-secondary)]">{invoice.client.address}{invoice.client.city ? `, ${invoice.client.city}` : ""}</div>}
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Due Date</label>
