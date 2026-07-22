@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
-  getMyTechnicianDashboard, getMyTechnicianAlerts,
+  getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops,
   initials, fmt, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
 } from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
@@ -166,6 +166,7 @@ function TecnicoPage() {
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [selectedClient, setSelectedClient] = useState<TechnicianClient | null>(null);
+  const { isLoaded: mapsLoaded } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY });
 
   useEffect(() => {
     (async () => {
@@ -216,6 +217,42 @@ function TecnicoPage() {
     mutationFn: ({ stopId, status }: { stopId: string; status: StopStatus }) => updateMyStopStatus(stopId, status),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-technician-stops", dateStr] }),
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  // No fixed route origin — the first stop (by current order) anchors the
+  // route, the last stop anchors the end, and Directions reorders whatever
+  // falls in between into the most efficient driving order.
+  const optimizeMut = useMutation({
+    mutationFn: async () => {
+      if (!mapsLoaded) throw new Error("Mapa ainda carregando, tente novamente em instantes");
+      const orderedStops = stops.slice().sort((a, b) => a.position - b.position);
+      const withCoords = orderedStops.filter((s) => s.client_lat != null && s.client_lng != null);
+      const withoutCoords = orderedStops.filter((s) => s.client_lat == null || s.client_lng == null);
+      if (withCoords.length < 3) throw new Error("Precisa de pelo menos 3 paradas com endereço para otimizar");
+
+      const first = withCoords[0];
+      const last = withCoords[withCoords.length - 1];
+      const middle = withCoords.slice(1, -1);
+
+      const directionsService = new google.maps.DirectionsService();
+      const result = await directionsService.route({
+        origin: { lat: first.client_lat!, lng: first.client_lng! },
+        destination: { lat: last.client_lat!, lng: last.client_lng! },
+        waypoints: middle.map((s) => ({ location: { lat: s.client_lat!, lng: s.client_lng! } })),
+        optimizeWaypoints: true,
+        travelMode: google.maps.TravelMode.DRIVING,
+      });
+
+      const order = result.routes[0]?.waypoint_order ?? middle.map((_, i) => i);
+      const optimizedMiddle = order.map((i) => middle[i]);
+      const newOrder = [first, ...optimizedMiddle, last, ...withoutCoords];
+      await reorderStops(newOrder.map((s) => s.stop_id));
+    },
+    onSuccess: () => {
+      toast.success("Rota otimizada!");
+      qc.invalidateQueries({ queryKey: ["my-technician-stops", dateStr] });
+    },
+    onError: (e: Error) => toast.error(e.message || "Não foi possível otimizar a rota"),
   });
 
   async function signOut() {
@@ -330,10 +367,11 @@ function TecnicoPage() {
             <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">Ver mapa</span>
           </button>
           <button
-            onClick={() => toast.info("Rota otimizada — em breve")}
-            className="flex items-center justify-center gap-1 rounded-full border border-[var(--dash-border)] bg-white px-1.5 py-2 text-[11px] font-bold text-[var(--dash-text-secondary)]"
+            onClick={() => optimizeMut.mutate()}
+            disabled={optimizeMut.isPending}
+            className="flex items-center justify-center gap-1 rounded-full border border-[var(--dash-border)] bg-white px-1.5 py-2 text-[11px] font-bold text-[var(--dash-text-secondary)] disabled:opacity-50"
           >
-            <RouteIcon className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">Otimizar</span>
+            <RouteIcon className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">{optimizeMut.isPending ? "Otimizando..." : "Otimizar"}</span>
           </button>
           <button
             onClick={() => { setShowTraffic((v) => !v); setMapOpen(true); }}
