@@ -86,10 +86,10 @@ const PIN_PATH = "M 12 0 C 7.03 0 3 4.03 3 9 c 0 6.75 9 15 9 15 s 9 -8.25 9 -15 
 
 type LatLng = { lat: number; lng: number };
 
-function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; showTraffic: boolean }) {
+function TecnicoRouteMap({ stops, showTraffic, onToggleTraffic }: { stops: TechnicianStop[]; showTraffic: boolean; onToggleTraffic: () => void }) {
   const { isLoaded, loadError } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY });
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
+  const [mapType, setMapType] = useState<"roadmap" | "satellite">("satellite");
   const points = stops
     .map((s) => ({ s, pos: (s.client_lat != null && s.client_lng != null ? { lat: s.client_lat, lng: s.client_lng } : null) as LatLng | null }))
     .filter((p): p is { s: TechnicianStop; pos: LatLng } => !!p.pos);
@@ -141,6 +141,7 @@ function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; show
           mapTypeControl: false,
           zoomControl: false,
           fullscreenControl: false,
+          mapTypeId: mapType,
         }}
       >
         {showTraffic && <TrafficLayer />}
@@ -164,23 +165,34 @@ function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; show
         ))}
       </GoogleMap>
 
-      <div className="absolute right-3 top-3 z-10 flex overflow-hidden rounded-full bg-white text-[13px] font-bold shadow-md">
+      <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
         <button
           type="button"
-          onClick={() => switchMapType("roadmap")}
-          className="px-3.5 py-1.5"
-          style={{ color: mapType === "roadmap" ? "#2563EB" : "var(--dash-text-muted)" }}
+          onClick={onToggleTraffic}
+          className="grid h-9 w-9 place-items-center rounded-full bg-white shadow-md"
+          style={{ color: showTraffic ? "#2563EB" : "var(--dash-text-muted)" }}
+          aria-label="Alternar tráfego"
         >
-          Street
+          <Car className="h-4 w-4" />
         </button>
-        <button
-          type="button"
-          onClick={() => switchMapType("satellite")}
-          className="px-3.5 py-1.5"
-          style={{ color: mapType === "satellite" ? "#2563EB" : "var(--dash-text-muted)" }}
-        >
-          Satélite
-        </button>
+        <div className="flex overflow-hidden rounded-full bg-white text-[13px] font-bold shadow-md">
+          <button
+            type="button"
+            onClick={() => switchMapType("roadmap")}
+            className="px-3.5 py-1.5"
+            style={{ color: mapType === "roadmap" ? "#2563EB" : "var(--dash-text-muted)" }}
+          >
+            Street
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMapType("satellite")}
+            className="px-3.5 py-1.5"
+            style={{ color: mapType === "satellite" ? "#2563EB" : "var(--dash-text-muted)" }}
+          >
+            Satélite
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -443,7 +455,7 @@ function TecnicoPage() {
                 </div>
 
                 <MapErrorBoundary key={dateStr}>
-                  <TecnicoRouteMap key={dateStr} stops={sorted} showTraffic={showTraffic} />
+                  <TecnicoRouteMap key={dateStr} stops={sorted} showTraffic={showTraffic} onToggleTraffic={() => setShowTraffic((v) => !v)} />
                 </MapErrorBoundary>
 
                 <button
