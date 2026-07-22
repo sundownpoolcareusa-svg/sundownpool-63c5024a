@@ -77,6 +77,7 @@ function PublicEstimatePage() {
           <DocCardHeader title="ESTIMATE" number={estimate.number} />
           <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
             <div className="space-y-1 text-[var(--dash-text-secondary)]">
+              <div className="font-bold text-[var(--dash-text)]">Effect Up LLC</div>
               <div>4008 Destination Dr</div>
               <div>Osprey, FL 34229</div>
               <div>(561) 376-2428</div>
