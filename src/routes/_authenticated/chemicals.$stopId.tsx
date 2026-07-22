@@ -13,6 +13,21 @@ import {
   CHEMICAL_READING_META, DEFAULT_READINGS, DEFAULT_PRODUCTS, isReadingInRange,
   type ChemicalReadingKey, type ChemicalReadings, type Product,
 } from "@/lib/db";
+import iconLiquidChlorine from "@/assets/products/liquid-chlorine.png";
+import iconChlorineTabs from "@/assets/products/chlorine-tabs.png";
+import iconMuriaticAcid from "@/assets/products/muriatic-acid.png";
+import iconBakingSoda from "@/assets/products/baking-soda.png";
+import iconCalcium from "@/assets/products/calcium.png";
+import iconStabilizer from "@/assets/products/stabilizer.png";
+
+const PRODUCT_ICONS: Record<string, string> = {
+  "Liquid Chlorine": iconLiquidChlorine,
+  "Chlorine Tabs": iconChlorineTabs,
+  "Muriatic Acid": iconMuriaticAcid,
+  "Baking Soda": iconBakingSoda,
+  "Calcium": iconCalcium,
+  "Stabilizer": iconStabilizer,
+};
 
 export const Route = createFileRoute("/_authenticated/chemicals/$stopId")({
   component: PoolChemicalsPage,
@@ -306,20 +321,25 @@ function PoolChemicalsPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3">
             {products.map((p) => (
-              <div key={p.name} className="rounded-xl border border-[var(--dash-border)] p-3">
-                <div className="text-[13px] font-bold text-[var(--dash-text)]">
-                  {p.name} {p.unit && <span className="font-normal text-[var(--dash-text-muted-2)]">({p.unit})</span>}
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-1">
-                  <button onClick={() => adjustProduct(p.name, -1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-                    <Minus className="h-3.5 w-3.5" />
-                  </button>
-                  <span className="text-xl font-extrabold text-[var(--dash-text)]">{formatProductQty(p.qty)}</span>
-                  <button onClick={() => adjustProduct(p.name, 1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-                    <Plus className="h-3.5 w-3.5" />
-                  </button>
+              <div key={p.name} className="flex items-center gap-3 rounded-xl border border-[var(--dash-border)] p-3">
+                {PRODUCT_ICONS[p.name] && (
+                  <img src={PRODUCT_ICONS[p.name]} alt="" className="h-14 w-auto shrink-0 object-contain" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-bold text-[var(--dash-text)]">
+                    {p.name} {p.unit && <span className="font-normal text-[var(--dash-text-muted-2)]">({p.unit})</span>}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-1">
+                    <button onClick={() => adjustProduct(p.name, -1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                      <Minus className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="text-xl font-extrabold text-[var(--dash-text)]">{formatProductQty(p.qty)}</span>
+                    <button onClick={() => adjustProduct(p.name, 1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
