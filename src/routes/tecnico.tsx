@@ -89,12 +89,12 @@ type LatLng = { lat: number; lng: number };
 function TecnicoRouteMap({ stops, showTraffic, onToggleTraffic }: { stops: TechnicianStop[]; showTraffic: boolean; onToggleTraffic: () => void }) {
   const { isLoaded, loadError } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY });
   const mapRef = useRef<google.maps.Map | null>(null);
-  const [mapType, setMapType] = useState<"roadmap" | "satellite">("satellite");
+  const [mapType, setMapType] = useState<"roadmap" | "hybrid">("hybrid");
   const points = stops
     .map((s) => ({ s, pos: (s.client_lat != null && s.client_lng != null ? { lat: s.client_lat, lng: s.client_lng } : null) as LatLng | null }))
     .filter((p): p is { s: TechnicianStop; pos: LatLng } => !!p.pos);
 
-  function switchMapType(type: "roadmap" | "satellite") {
+  function switchMapType(type: "roadmap" | "hybrid") {
     setMapType(type);
     mapRef.current?.setMapTypeId(type);
   }
@@ -186,9 +186,9 @@ function TecnicoRouteMap({ stops, showTraffic, onToggleTraffic }: { stops: Techn
           </button>
           <button
             type="button"
-            onClick={() => switchMapType("satellite")}
+            onClick={() => switchMapType("hybrid")}
             className="px-3.5 py-1.5"
-            style={{ color: mapType === "satellite" ? "#2563EB" : "var(--dash-text-muted)" }}
+            style={{ color: mapType === "hybrid" ? "#2563EB" : "var(--dash-text-muted)" }}
           >
             Satélite
           </button>
