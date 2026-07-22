@@ -726,7 +726,8 @@ export async function removeStaleClientStops(clientId: string, serviceDays: stri
     .from("route_stops")
     .select("id, route_id, manual, notes, route:routes(route_date)")
     .eq("client_id", clientId)
-    .eq("status", "Pendente");
+    .eq("status", "Pendente")
+    .eq("manual", false);
   if (error) throw error;
 
   const todayStr = localDateStr(new Date());
