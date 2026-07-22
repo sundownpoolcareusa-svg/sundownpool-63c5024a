@@ -318,23 +318,23 @@ function TechnicianChemicalsPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {products.map((p) => (
-              <div key={p.name} className="flex items-center gap-3 rounded-xl border border-[var(--dash-border)] p-3">
+              <div key={p.name} className="flex flex-col items-center gap-1 rounded-xl border border-[var(--dash-border)] p-2 text-center">
                 {PRODUCT_ICONS[p.name] && (
-                  <img src={PRODUCT_ICONS[p.name]} alt="" className="h-14 w-auto shrink-0 object-contain" />
+                  <img src={PRODUCT_ICONS[p.name]} alt="" className="h-12 w-auto shrink-0 object-contain" />
                 )}
-                <div className="min-w-0 flex-1">
-                  <div className="text-[13px] font-bold text-[var(--dash-text)]">
+                <div className="min-w-0 w-full">
+                  <div className="truncate text-[11px] font-bold text-[var(--dash-text)]">
                     {p.name} {p.unit && <span className="font-normal text-[var(--dash-text-muted-2)]">({p.unit})</span>}
                   </div>
-                  <div className="mt-2 flex items-center justify-between gap-1">
-                    <button onClick={() => adjustProduct(p.name, -1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-                      <Minus className="h-3.5 w-3.5" />
+                  <div className="mt-1.5 flex items-center justify-between gap-0.5">
+                    <button onClick={() => adjustProduct(p.name, -1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                      <Minus className="h-3 w-3" />
                     </button>
-                    <span className="text-xl font-extrabold text-[var(--dash-text)]">{formatProductQty(p.qty)}</span>
-                    <button onClick={() => adjustProduct(p.name, 1)} className="grid h-7 w-7 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-                      <Plus className="h-3.5 w-3.5" />
+                    <span className="text-base font-extrabold text-[var(--dash-text)]">{formatProductQty(p.qty)}</span>
+                    <button onClick={() => adjustProduct(p.name, 1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                      <Plus className="h-3 w-3" />
                     </button>
                   </div>
                 </div>
