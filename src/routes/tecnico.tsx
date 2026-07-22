@@ -5,12 +5,11 @@ import { GoogleMap, Marker, TrafficLayer, useJsApiLoader } from "@react-google-m
 import { supabase } from "@/integrations/supabase/client";
 import { AppLogo } from "@/components/AppLogo";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
-import { Modal } from "@/components/Modal";
 import { TecnicoClientDetail } from "@/components/TecnicoClientDetail";
 import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Waves, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
-  AlertTriangle, DollarSign, Filter, FileText,
+  AlertTriangle, DollarSign, Filter, FileText, X,
 } from "lucide-react";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
@@ -81,14 +80,24 @@ const SARASOTA_CENTER = { lat: 27.3364, lng: -82.5307 };
 const mapContainerStyle = { width: "100%", height: "100%" };
 const AVG_MINUTES_PER_STOP = 30;
 
+// Classic teardrop pin, traced in a 24x24 box (point at the bottom, so the
+// marker's anchor sits exactly where the address is).
+const PIN_PATH = "M 12 0 C 7.03 0 3 4.03 3 9 c 0 6.75 9 15 9 15 s 9 -8.25 9 -15 c 0 -4.97 -4.03 -9 -9 -9 Z";
+
 type LatLng = { lat: number; lng: number };
 
 function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; showTraffic: boolean }) {
   const { isLoaded, loadError } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY });
   const mapRef = useRef<google.maps.Map | null>(null);
+  const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const points = stops
     .map((s) => ({ s, pos: (s.client_lat != null && s.client_lng != null ? { lat: s.client_lat, lng: s.client_lng } : null) as LatLng | null }))
     .filter((p): p is { s: TechnicianStop; pos: LatLng } => !!p.pos);
+
+  function switchMapType(type: "roadmap" | "satellite") {
+    setMapType(type);
+    mapRef.current?.setMapTypeId(type);
+  }
 
   useEffect(() => {
     if (!mapRef.current || points.length === 0) return;
@@ -128,9 +137,9 @@ function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; show
         zoom={11}
         onLoad={(m) => { mapRef.current = m; }}
         options={{
-          streetViewControl: true,
-          mapTypeControl: true,
-          mapTypeControlOptions: { position: google.maps.ControlPosition.TOP_LEFT },
+          streetViewControl: false,
+          mapTypeControl: false,
+          zoomControl: false,
           fullscreenControl: false,
         }}
       >
@@ -142,16 +151,37 @@ function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; show
             title={p.s.client_name}
             label={{ text: String(stops.findIndex((s) => s.stop_id === p.s.stop_id) + 1), color: "#fff", fontWeight: "bold", fontSize: "12px" }}
             icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 14,
+              path: PIN_PATH,
+              scale: 1.5,
               fillColor: statusMarkerColor(p.s.status),
               fillOpacity: 1,
               strokeColor: "#fff",
-              strokeWeight: 2,
+              strokeWeight: 1.5,
+              anchor: new google.maps.Point(12, 24),
+              labelOrigin: new google.maps.Point(12, 9),
             }}
           />
         ))}
       </GoogleMap>
+
+      <div className="absolute right-3 top-3 z-10 flex overflow-hidden rounded-full bg-white text-[13px] font-bold shadow-md">
+        <button
+          type="button"
+          onClick={() => switchMapType("roadmap")}
+          className="px-3.5 py-1.5"
+          style={{ color: mapType === "roadmap" ? "#2563EB" : "var(--dash-text-muted)" }}
+        >
+          Street
+        </button>
+        <button
+          type="button"
+          onClick={() => switchMapType("satellite")}
+          className="px-3.5 py-1.5"
+          style={{ color: mapType === "satellite" ? "#2563EB" : "var(--dash-text-muted)" }}
+        >
+          Satélite
+        </button>
+      </div>
     </div>
   );
 }
@@ -381,11 +411,58 @@ function TecnicoPage() {
           </button>
         </div>
 
-        <Modal open={mapOpen} onClose={() => setMapOpen(false)} title="Mapa da rota">
-          <MapErrorBoundary key={dateStr}>
-            <TecnicoRouteMap key={dateStr} stops={sorted} showTraffic={showTraffic} />
-          </MapErrorBoundary>
-        </Modal>
+        {mapOpen && (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setMapOpen(false)} />
+            <div className="fixed inset-x-0 bottom-0 z-50 max-h-[92vh] overflow-y-auto rounded-t-3xl bg-white shadow-2xl">
+              <div className="relative pt-2.5">
+                <div className="mx-auto h-1.5 w-10 rounded-full bg-[var(--dash-border)]" />
+                <button onClick={() => setMapOpen(false)} className="absolute right-4 top-3 grid h-9 w-9 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-4 px-5 pb-6 pt-3">
+                <div>
+                  <div className="text-xl font-extrabold text-[var(--dash-text)]">Mapa da rota</div>
+                  <p className="text-[13px] text-[var(--dash-text-muted)]">Visualize o percurso e as paradas do dia.</p>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {statCards.map((c) => {
+                    const Icon = c.icon;
+                    return (
+                      <div key={c.label} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+                        <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: `${c.tint}1A`, color: c.tint }}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{c.value}</div>
+                        <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">{c.label}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <MapErrorBoundary key={dateStr}>
+                  <TecnicoRouteMap key={dateStr} stops={sorted} showTraffic={showTraffic} />
+                </MapErrorBoundary>
+
+                <button
+                  onClick={() => {
+                    const next = sorted.find((s) => s.status !== "Concluído");
+                    if (!next) { toast.success("Todas as paradas concluídas!"); return; }
+                    const address = stopAddress(next);
+                    if (!address) { toast.info("Sem endereço para essa parada"); return; }
+                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`, "_blank");
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-bold text-white"
+                  style={{ background: "#2563EB" }}
+                >
+                  <Navigation className="h-4 w-4" /> Iniciar rota
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="space-y-0">
           {isLoading ? (
