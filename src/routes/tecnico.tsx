@@ -127,7 +127,12 @@ function TecnicoRouteMap({ stops, showTraffic }: { stops: TechnicianStop[]; show
         center={SARASOTA_CENTER}
         zoom={11}
         onLoad={(m) => { mapRef.current = m; }}
-        options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false }}
+        options={{
+          streetViewControl: true,
+          mapTypeControl: true,
+          mapTypeControlOptions: { position: google.maps.ControlPosition.TOP_LEFT },
+          fullscreenControl: false,
+        }}
       >
         {showTraffic && <TrafficLayer />}
         {points.map((p) => (
