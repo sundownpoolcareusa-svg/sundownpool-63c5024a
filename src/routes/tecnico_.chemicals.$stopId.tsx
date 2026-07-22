@@ -29,6 +29,12 @@ const PRODUCT_ICONS: Record<string, string> = {
   "Stabilizer": iconStabilizer,
 };
 
+const PRODUCT_SHORT_NAMES: Record<string, string> = {
+  "Liquid Chlorine": "Chlorine",
+  "Chlorine Tabs": "Tabs",
+  "Muriatic Acid": "Acid",
+};
+
 export const Route = createFileRoute("/tecnico_/chemicals/$stopId")({
   component: TechnicianChemicalsPage,
 });
@@ -325,8 +331,8 @@ function TechnicianChemicalsPage() {
                   <img src={PRODUCT_ICONS[p.name]} alt="" className="h-12 w-auto shrink-0 object-contain" />
                 )}
                 <div className="min-w-0 w-full">
-                  <div className="truncate text-[11px] font-bold text-[var(--dash-text)]">
-                    {p.name} {p.unit && <span className="font-normal text-[var(--dash-text-muted-2)]">({p.unit})</span>}
+                  <div className="truncate text-[10px] font-bold text-[var(--dash-text)]">
+                    {PRODUCT_SHORT_NAMES[p.name] ?? p.name} {p.unit && <span className="font-normal text-[var(--dash-text-muted-2)]">({p.unit})</span>}
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-0.5">
                     <button onClick={() => adjustProduct(p.name, -1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
