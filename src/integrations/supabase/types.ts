@@ -557,6 +557,9 @@ export type Database = {
           auth_user_id: string | null
           color: string
           created_at: string
+          home_address: string | null
+          home_lat: number | null
+          home_lng: number | null
           id: string
           name: string
           phone: string | null
@@ -568,6 +571,9 @@ export type Database = {
           auth_user_id?: string | null
           color?: string
           created_at?: string
+          home_address?: string | null
+          home_lat?: number | null
+          home_lng?: number | null
           id?: string
           name: string
           phone?: string | null
@@ -579,6 +585,9 @@ export type Database = {
           auth_user_id?: string | null
           color?: string
           created_at?: string
+          home_address?: string | null
+          home_lat?: number | null
+          home_lng?: number | null
           id?: string
           name?: string
           phone?: string | null
@@ -775,6 +784,15 @@ export type Database = {
       }
       update_my_stop_status: {
         Args: { p_status: string; p_stop_id: string }
+        Returns: undefined
+      }
+      update_my_technician_profile: {
+        Args: {
+          p_home_address: string | null
+          p_home_lat: number | null
+          p_home_lng: number | null
+          p_phone: string | null
+        }
         Returns: undefined
       }
     }

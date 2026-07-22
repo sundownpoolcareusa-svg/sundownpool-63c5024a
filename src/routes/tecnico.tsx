@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLogo } from "@/components/AppLogo";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 import { TecnicoClientDetail } from "@/components/TecnicoClientDetail";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Waves, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
-  getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops,
+  getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
   initials, fmt, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
 } from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
@@ -79,6 +80,12 @@ const GOOGLE_MAPS_KEY = (import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROW
 const SARASOTA_CENTER = { lat: 27.3364, lng: -82.5307 };
 const mapContainerStyle = { width: "100%", height: "100%" };
 const AVG_MINUTES_PER_STOP = 30;
+// Stable array reference — @react-google-maps/api warns and reloads the
+// script if a new array literal is passed on every render, and both
+// useJsApiLoader calls below share the "sundown-google-maps" id so their
+// options must match exactly (places is needed for the profile's home
+// address autocomplete).
+const MAP_LIBRARIES: ("places")[] = ["places"];
 
 // Classic teardrop pin, traced in a 24x24 box (point at the bottom, so the
 // marker's anchor sits exactly where the address is).
@@ -87,7 +94,7 @@ const PIN_PATH = "M 12 0 C 7.03 0 3 4.03 3 9 c 0 6.75 9 15 9 15 s 9 -8.25 9 -15 
 type LatLng = { lat: number; lng: number };
 
 function TecnicoRouteMap({ stops, showTraffic, onToggleTraffic }: { stops: TechnicianStop[]; showTraffic: boolean; onToggleTraffic: () => void }) {
-  const { isLoaded, loadError } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY });
+  const { isLoaded, loadError } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY, libraries: MAP_LIBRARIES });
   const mapRef = useRef<google.maps.Map | null>(null);
   const [mapType, setMapType] = useState<"roadmap" | "hybrid">("hybrid");
   const points = stops
@@ -208,7 +215,13 @@ function TecnicoPage() {
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [selectedClient, setSelectedClient] = useState<TechnicianClient | null>(null);
-  const { isLoaded: mapsLoaded } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY });
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [myEmail, setMyEmail] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileHomeAddress, setProfileHomeAddress] = useState("");
+  const [profileHomeLat, setProfileHomeLat] = useState<number | null>(null);
+  const [profileHomeLng, setProfileHomeLng] = useState<number | null>(null);
+  const { isLoaded: mapsLoaded } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY, libraries: MAP_LIBRARIES });
 
   useEffect(() => {
     (async () => {
@@ -217,6 +230,7 @@ function TecnicoPage() {
         navigate({ to: "/auth" });
         return;
       }
+      setMyEmail(data.user.email ?? "");
       const technician = await getMyTechnician();
       if (!technician) {
         navigate({ to: "/invoice" });
@@ -261,9 +275,12 @@ function TecnicoPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  // No fixed route origin — the first stop (by current order) anchors the
-  // route, the last stop anchors the end, and Directions reorders whatever
-  // falls in between into the most efficient driving order.
+  // When the technician has a home address on file, anchor the whole day
+  // there (origin = destination = home) so Directions' optimizer picks
+  // whichever shape is actually shortest — start close to home and finish
+  // far, or start far and finish close to home — instead of ignoring where
+  // the route begins and ends. Without a home address, fall back to
+  // anchoring on the current first/last stop as before.
   const optimizeMut = useMutation({
     mutationFn: async () => {
       if (!mapsLoaded) throw new Error("Mapa ainda carregando, tente novamente em instantes");
@@ -272,11 +289,28 @@ function TecnicoPage() {
       const withoutCoords = orderedStops.filter((s) => s.client_lat == null || s.client_lng == null);
       if (withCoords.length < 3) throw new Error("Precisa de pelo menos 3 paradas com endereço para otimizar");
 
+      const directionsService = new google.maps.DirectionsService();
+      const home = technician?.home_lat != null && technician?.home_lng != null
+        ? { lat: technician.home_lat, lng: technician.home_lng }
+        : null;
+
+      if (home) {
+        const result = await directionsService.route({
+          origin: home,
+          destination: home,
+          waypoints: withCoords.map((s) => ({ location: { lat: s.client_lat!, lng: s.client_lng! } })),
+          optimizeWaypoints: true,
+          travelMode: google.maps.TravelMode.DRIVING,
+        });
+        const order = result.routes[0]?.waypoint_order ?? withCoords.map((_, i) => i);
+        const newOrder = [...order.map((i) => withCoords[i]), ...withoutCoords];
+        await reorderStops(newOrder.map((s) => s.stop_id));
+        return;
+      }
+
       const first = withCoords[0];
       const last = withCoords[withCoords.length - 1];
       const middle = withCoords.slice(1, -1);
-
-      const directionsService = new google.maps.DirectionsService();
       const result = await directionsService.route({
         origin: { lat: first.client_lat!, lng: first.client_lng! },
         destination: { lat: last.client_lat!, lng: last.client_lng! },
@@ -296,6 +330,29 @@ function TecnicoPage() {
     },
     onError: (e: Error) => toast.error(e.message || "Não foi possível otimizar a rota"),
   });
+
+  const updateProfileMut = useMutation({
+    mutationFn: () => updateMyTechnicianProfile({
+      phone: profilePhone.trim() || null,
+      home_address: profileHomeAddress.trim() || null,
+      home_lat: profileHomeLat,
+      home_lng: profileHomeLng,
+    }),
+    onSuccess: () => {
+      toast.success("Perfil atualizado!");
+      qc.invalidateQueries({ queryKey: ["my-technician"] });
+      setProfileOpen(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function openProfile() {
+    setProfilePhone(technician?.phone ?? "");
+    setProfileHomeAddress(technician?.home_address ?? "");
+    setProfileHomeLat(technician?.home_lat ?? null);
+    setProfileHomeLng(technician?.home_lng ?? null);
+    setProfileOpen(true);
+  }
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -338,19 +395,21 @@ function TecnicoPage() {
           <AppLogo style={{ width: 124, height: 32 }} />
         </button>
         <div className="flex items-center gap-2.5">
-          <div className="text-right leading-tight">
-            <div className="text-[13px] font-bold text-[var(--dash-text)]">{technician?.name}</div>
-            <div className="text-[11px] text-[var(--dash-text-muted)]">Pool Technician</div>
-          </div>
-          <div className="relative">
-            <div
-              className="grid h-10 w-10 place-items-center rounded-full text-[13px] font-bold text-white"
-              style={{ background: technician?.color || "var(--dash-navy)" }}
-            >
-              {technician ? initials(technician.name) : ""}
+          <button onClick={openProfile} className="flex items-center gap-2.5">
+            <div className="text-right leading-tight">
+              <div className="text-[13px] font-bold text-[var(--dash-text)]">{technician?.name}</div>
+              <div className="text-[11px] text-[var(--dash-text-muted)]">Pool Technician</div>
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[var(--dash-green)]" />
-          </div>
+            <div className="relative">
+              <div
+                className="grid h-10 w-10 place-items-center rounded-full text-[13px] font-bold text-white"
+                style={{ background: technician?.color || "var(--dash-navy)" }}
+              >
+                {technician ? initials(technician.name) : ""}
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[var(--dash-green)]" />
+            </div>
+          </button>
           <button onClick={signOut} title="Sair" className="grid h-9 w-9 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
             <LogOut className="h-4 w-4" />
           </button>
@@ -470,6 +529,74 @@ function TecnicoPage() {
                   style={{ background: "#2563EB" }}
                 >
                   <Navigation className="h-4 w-4" /> Iniciar rota
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {profileOpen && (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setProfileOpen(false)} />
+            <div className="fixed inset-x-0 bottom-0 z-50 max-h-[92vh] overflow-y-auto rounded-t-3xl bg-white shadow-2xl">
+              <div className="relative pt-2.5">
+                <div className="mx-auto h-1.5 w-10 rounded-full bg-[var(--dash-border)]" />
+                <button onClick={() => setProfileOpen(false)} className="absolute right-4 top-3 grid h-9 w-9 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-4 px-5 pb-6 pt-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-[15px] font-bold text-white"
+                    style={{ background: technician?.color || "var(--dash-navy)" }}
+                  >
+                    {technician ? initials(technician.name) : ""}
+                  </div>
+                  <div>
+                    <div className="text-xl font-extrabold text-[var(--dash-text)]">{technician?.name}</div>
+                    <p className="text-[13px] text-[var(--dash-text-muted)]">Meu perfil</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-xl border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2.5">
+                  <Mail className="h-4 w-4 shrink-0" style={{ color: "var(--dash-navy)" }} />
+                  <span className="truncate text-sm text-[var(--dash-text-secondary)]">{myEmail || "—"}</span>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Telefone</label>
+                  <input
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    placeholder="(555) 555-5555"
+                    className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <AddressAutocomplete
+                    value={profileHomeAddress}
+                    onChange={setProfileHomeAddress}
+                    onSelectPlace={(p) => {
+                      setProfileHomeAddress([p.address, p.city, p.state, p.zip].filter(Boolean).join(", "));
+                      setProfileHomeLat(p.lat ?? null);
+                      setProfileHomeLng(p.lng ?? null);
+                    }}
+                    label="Endereço de casa"
+                  />
+                  <p className="mt-1.5 text-[11px] text-[var(--dash-text-muted)]">
+                    Usado para otimizar a rota a partir de onde você sai e volta.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => updateProfileMut.mutate()}
+                  disabled={updateProfileMut.isPending}
+                  className="flex w-full items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-bold text-white disabled:opacity-50"
+                  style={{ background: "var(--dash-navy)" }}
+                >
+                  {updateProfileMut.isPending ? "Salvando..." : "Salvar"}
                 </button>
               </div>
             </div>

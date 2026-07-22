@@ -199,6 +199,9 @@ export type Technician = {
   color: string;
   active: boolean;
   auth_user_id?: string | null;
+  home_address?: string | null;
+  home_lat?: number | null;
+  home_lng?: number | null;
   created_at: string;
 };
 
@@ -478,6 +481,24 @@ export async function getMyTechnician() {
   } catch {
     return null;
   }
+}
+
+// Lets a technician update their own phone and home address (used to anchor
+// route optimization). SECURITY DEFINER RPC, not a direct table update — see
+// the technician_profile migration for why.
+export async function updateMyTechnicianProfile(values: {
+  phone: string | null;
+  home_address: string | null;
+  home_lat: number | null;
+  home_lng: number | null;
+}) {
+  const { error } = await supabase.rpc("update_my_technician_profile", {
+    p_phone: values.phone,
+    p_home_address: values.home_address,
+    p_home_lat: values.home_lat,
+    p_home_lng: values.home_lng,
+  });
+  if (error) throw error;
 }
 
 // Creates any missing recurring stops for the technician's own day before
