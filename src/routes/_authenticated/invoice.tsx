@@ -275,7 +275,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
           <div className="space-y-1 text-[var(--dash-text-secondary)]">
             <div className="font-bold text-[var(--dash-text)]">Effect Up LLC</div>
-            <div>4008 Destination Dr</div>
+            <div>4008 Destination Dr Apt 2208</div>
             <div>Osprey, FL 34229</div>
             <div>(561) 376-2428</div>
           </div>
