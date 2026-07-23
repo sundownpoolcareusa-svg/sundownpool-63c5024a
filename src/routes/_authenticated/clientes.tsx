@@ -138,12 +138,12 @@ function ClientCard({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <button type="button" onClick={onView} className="text-left">
-                <span className="text-xl font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
+                <span className="text-[18px] font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
               </button>
               <Star className="h-5 w-5 shrink-0" style={{ color: "#F59E0B" }} fill="#F59E0B" />
             </div>
-            <div className="mt-1.5 truncate text-[15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
-            <div className="truncate text-[15px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
+            <div className="mt-1.5 truncate text-[13.5px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
+            <div className="truncate text-[13.5px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               {dayLabel ? (
