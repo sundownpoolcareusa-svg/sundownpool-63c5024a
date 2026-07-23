@@ -233,20 +233,20 @@ function SummaryStat({
 }) {
   const Comp = onClick ? "button" : "div";
   return (
-    <Comp onClick={onClick} className="rounded-[20px] border border-[#E9EDF5] bg-white p-7 text-left" style={cardShadow}>
-      <div className="flex items-center gap-5">
-        <div className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
-          <Icon className="h-9 w-9" />
+    <Comp onClick={onClick} className="rounded-[20px] border border-[#E9EDF5] bg-white p-6 text-left" style={cardShadow}>
+      <div className="flex items-center gap-4">
+        <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
+          <Icon className="h-7 w-7" />
         </div>
         <div className="min-w-0">
-          <div className="text-[44px] font-extrabold leading-none tracking-tight text-[var(--dash-text)]">{value}</div>
-          <div className="mt-2 text-[21px] font-bold leading-tight text-[var(--dash-text)]">{label}</div>
-          <div className="mt-1 flex items-center gap-1.5 text-[15px] font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>
+          <div className="text-[32px] font-extrabold leading-none tracking-tight text-[var(--dash-text)]">{value}</div>
+          <div className="mt-1.5 text-[17px] font-bold leading-tight text-[var(--dash-text)]">{label}</div>
+          <div className="mt-1 flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>
             {sub}{subArrow && <span aria-hidden="true">→</span>}
           </div>
         </div>
       </div>
-      {footer && <div className="mt-5 border-t border-[#E9EDF5] pt-5">{footer}</div>}
+      {footer && <div className="mt-4 border-t border-[#E9EDF5] pt-4">{footer}</div>}
     </Comp>
   );
 }
@@ -254,9 +254,9 @@ function SummaryStat({
 function StatFooterSplit({ text, iconColor, iconBg }: { text: string; iconColor: string; iconBg: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[15px] text-[var(--dash-text-secondary)]">{text}</span>
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: iconBg, color: iconColor }}>
-        <TrendingUp className="h-5 w-5" />
+      <span className="text-[13px] text-[var(--dash-text-secondary)]">{text}</span>
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: iconBg, color: iconColor }}>
+        <TrendingUp className="h-4 w-4" />
       </span>
     </div>
   );
@@ -266,7 +266,7 @@ function StatFooterProgress({ completed, remaining }: { completed: number; remai
   const total = completed + remaining;
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-3 text-[15px]">
+    <div className="flex items-center gap-2.5 text-[13px]">
       <span className="shrink-0 font-semibold" style={{ color: "var(--dash-green)" }}>{completed} completed</span>
       <div className="h-2 flex-1 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
@@ -590,11 +590,13 @@ function ClientesPage() {
   });
 
   const total = clients.length;
-  const ativos = clients.filter((c) => c.status === "Ativo").length;
+  const ativos = clients.filter((c) => c.status === "Ativo" && c.stage !== "Prospecção").length;
   const prospectCount = clients.filter((c) => c.stage === "Prospecção").length;
   const inactiveCount = clients.filter((c) => c.status !== "Ativo").length;
   const countByDay = (d: string) => clients.filter((c) => (c.service_days ?? []).includes(d)).length;
-  const monthlyRevenue = clients.filter((c) => c.status === "Ativo").reduce((s, c) => s + Number((c as ClientFull).monthly_value || 0), 0);
+  const monthlyRevenue = clients
+    .filter((c) => c.status === "Ativo" && c.stage !== "Prospecção")
+    .reduce((s, c) => s + Number((c as ClientFull).monthly_value || 0), 0);
   const overdueInvoices = invoices.filter((i) => i.status !== "PAID" && i.due_date && i.due_date < todayStr);
   const invoicesDueCount = overdueInvoices.length;
   const invoicesDueAmount = overdueInvoices.reduce((s, i) => s + Number(i.total || 0), 0);
