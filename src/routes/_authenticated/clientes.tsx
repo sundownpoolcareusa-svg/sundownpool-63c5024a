@@ -233,18 +233,20 @@ function SummaryStat({
 }) {
   const Comp = onClick ? "button" : "div";
   return (
-    <Comp onClick={onClick} className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4 text-left" style={cardShadow}>
-      <div className="flex items-center gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
-          <Icon className="h-6 w-6" />
+    <Comp onClick={onClick} className="rounded-[20px] border border-[#E9EDF5] bg-white p-7 text-left" style={cardShadow}>
+      <div className="flex items-center gap-5">
+        <div className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
+          <Icon className="h-9 w-9" />
         </div>
-        <div className="text-2xl font-extrabold leading-tight text-[var(--dash-text)]">{value}</div>
+        <div className="min-w-0">
+          <div className="text-[44px] font-extrabold leading-none tracking-tight text-[var(--dash-text)]">{value}</div>
+          <div className="mt-2 text-[21px] font-bold leading-tight text-[var(--dash-text)]">{label}</div>
+          <div className="mt-1 flex items-center gap-1.5 text-[15px] font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>
+            {sub}{subArrow && <span aria-hidden="true">→</span>}
+          </div>
+        </div>
       </div>
-      <div className="mt-2 text-sm text-[var(--dash-text-secondary)]">{label}</div>
-      <div className="mt-0.5 flex items-center gap-1 text-sm font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>
-        {sub}{subArrow && <span aria-hidden="true">→</span>}
-      </div>
-      {footer && <div className="mt-3 border-t border-[var(--dash-border)] pt-3">{footer}</div>}
+      {footer && <div className="mt-5 border-t border-[#E9EDF5] pt-5">{footer}</div>}
     </Comp>
   );
 }
@@ -252,9 +254,9 @@ function SummaryStat({
 function StatFooterSplit({ text, iconColor, iconBg }: { text: string; iconColor: string; iconBg: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-sm text-[var(--dash-text-secondary)]">{text}</span>
-      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg" style={{ background: iconBg, color: iconColor }}>
-        <TrendingUp className="h-4 w-4" />
+      <span className="text-[15px] text-[var(--dash-text-secondary)]">{text}</span>
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: iconBg, color: iconColor }}>
+        <TrendingUp className="h-5 w-5" />
       </span>
     </div>
   );
@@ -264,9 +266,9 @@ function StatFooterProgress({ completed, remaining }: { completed: number; remai
   const total = completed + remaining;
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-2.5 text-sm">
+    <div className="flex items-center gap-3 text-[15px]">
       <span className="shrink-0 font-semibold" style={{ color: "var(--dash-green)" }}>{completed} completed</span>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
+      <div className="h-2 flex-1 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
       </div>
       <span className="shrink-0 font-semibold text-[var(--dash-text-muted)]">{remaining} remaining</span>
