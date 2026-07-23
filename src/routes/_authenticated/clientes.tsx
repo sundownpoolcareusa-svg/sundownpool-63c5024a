@@ -609,7 +609,7 @@ function ClientesPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--dash-border)] bg-white p-3" style={cardShadow}>
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <FilterChip active={dayFilter === "all"} onClick={() => setDayFilter("all")} label="All" count={total} />
             {WEEKDAY_FILTERS.map((d) => (
               <FilterChip key={d.v} active={dayFilter === d.v} onClick={() => setDayFilter(d.v as DayFilter)} label={d.label} count={countByDay(d.v)} />
