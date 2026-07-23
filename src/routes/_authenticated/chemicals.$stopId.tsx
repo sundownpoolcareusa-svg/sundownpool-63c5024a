@@ -101,6 +101,7 @@ function PoolChemicalsPage() {
   });
 
   const [readings, setReadings] = useState<ChemicalReadings>(DEFAULT_READINGS);
+  const [readingDrafts, setReadingDrafts] = useState<Partial<Record<ChemicalReadingKey, string>>>({});
   const [products, setProducts] = useState<Product[]>(DEFAULT_PRODUCTS);
   const [notes, setNotes] = useState("");
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
@@ -179,12 +180,22 @@ function PoolChemicalsPage() {
     });
   }
 
-  function setReadingValue(key: ChemicalReadingKey, raw: string) {
-    const meta = CHEMICAL_READING_META[key];
+  function handleReadingInput(key: ChemicalReadingKey, raw: string) {
+    setReadingDrafts((d) => ({ ...d, [key]: raw }));
     const parsed = parseFloat(raw);
-    const clamped = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    if (!Number.isFinite(parsed)) return;
+    const meta = CHEMICAL_READING_META[key];
     const factor = 10 ** decimals(meta.step);
+    const clamped = Math.max(0, parsed);
     setReadings((r) => ({ ...r, [key]: Math.round(clamped * factor) / factor }));
+  }
+
+  function handleReadingBlur(key: ChemicalReadingKey) {
+    setReadingDrafts((d) => {
+      const next = { ...d };
+      delete next[key];
+      return next;
+    });
   }
 
   function adjustProduct(name: string, dir: 1 | -1) {
@@ -297,9 +308,10 @@ function PoolChemicalsPage() {
                       inputMode="decimal"
                       step={meta.step}
                       min={0}
-                      value={value}
-                      onChange={(e) => setReadingValue(key, e.target.value)}
+                      value={readingDrafts[key] ?? value}
+                      onChange={(e) => handleReadingInput(key, e.target.value)}
                       onFocus={(e) => e.target.select()}
+                      onBlur={() => handleReadingBlur(key)}
                       className="w-11 shrink-0 bg-transparent text-center text-[16px] font-extrabold text-[var(--dash-text)] outline-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button onClick={() => adjustReading(key, 1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
