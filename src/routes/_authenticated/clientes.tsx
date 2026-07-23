@@ -60,9 +60,13 @@ const dayColors: Record<string, { bg: string; text: string }> = {
   "Dom": { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" },
 };
 
+const dayLabelsEn: Record<string, string> = {
+  "Seg": "Mon", "Ter": "Tue", "Qua": "Wed", "Qui": "Thu", "Sex": "Fri", "Sáb": "Sat", "Dom": "Sun",
+};
+
 function dayBadgeLabel(days?: string[] | null) {
   if (!days || days.length === 0) return null;
-  return days.join(", ");
+  return days.map((d) => dayLabelsEn[d] ?? d).join(", ");
 }
 
 function statusInfo(c: Client) {
@@ -131,43 +135,42 @@ function ClientCard({
             </>
           )}
 
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <button type="button" onClick={onView} className="text-left">
-                  <span className="text-xl font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
-                </button>
-                <Star className="h-5 w-5 shrink-0" style={{ color: "#F59E0B" }} fill="#F59E0B" />
-              </div>
-              <div className="mt-1.5 truncate text-[15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
-              <div className="truncate text-[15px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={onView} className="text-left">
+                <span className="text-xl font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
+              </button>
+              <Star className="h-5 w-5 shrink-0" style={{ color: "#F59E0B" }} fill="#F59E0B" />
+            </div>
+            <div className="mt-1.5 truncate text-[15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
+            <div className="truncate text-[15px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
 
-              <div className="mt-3 flex items-center gap-2">
-                {dayLabel ? (
-                  <span className="flex shrink-0 items-center gap-1.5 truncate rounded-full px-3.5 py-2 text-sm font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
-                    <CalendarDays className="h-4 w-4 shrink-0" /> {dayLabel}
-                  </span>
-                ) : (
-                  <span className="text-sm font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
-                )}
-                <span className="shrink-0 whitespace-nowrap text-xl font-extrabold tabular-nums" style={{ color: "#0B63F6" }}>
-                  {hasMonthly ? fmt(Number(client.monthly_value)) : "—"}
-                  <span className="text-sm font-semibold text-[var(--dash-text-muted)]">/mo</span>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {dayLabel ? (
+                <span className="flex shrink-0 items-center gap-1.5 truncate rounded-full px-3.5 py-2 text-sm font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
+                  <CalendarDays className="h-4 w-4 shrink-0" /> {dayLabel}
                 </span>
-              </div>
-
-              <div className="mt-2 flex items-center gap-1.5 text-sm font-bold" style={{ color: status.dot }}>
-                <span className="h-2 w-2 rounded-full" style={{ background: status.dot }} /> {status.label}
-              </div>
+              ) : (
+                <span className="text-sm font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
+              )}
+              <span className="shrink-0 whitespace-nowrap text-xl font-extrabold tabular-nums" style={{ color: "#0B63F6" }}>
+                {hasMonthly ? fmt(Number(client.monthly_value)) : "—"}
+                <span className="text-sm font-semibold text-[var(--dash-text-muted)]">/mo</span>
+              </span>
             </div>
 
-            <button
-              type="button"
-              onClick={onView}
-              className="flex shrink-0 items-center gap-1 rounded-xl border border-[var(--dash-border)] px-4 py-2.5 text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
-            >
-              View <ChevronRight className="h-4 w-4" />
-            </button>
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-sm font-bold" style={{ color: status.dot }}>
+                <span className="h-2 w-2 rounded-full" style={{ background: status.dot }} /> {status.label}
+              </div>
+              <button
+                type="button"
+                onClick={onView}
+                className="flex shrink-0 items-center gap-1 rounded-xl border border-[var(--dash-border)] px-4 py-2.5 text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+              >
+                View <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
