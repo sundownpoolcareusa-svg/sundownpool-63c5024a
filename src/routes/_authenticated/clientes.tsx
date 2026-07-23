@@ -608,8 +608,8 @@ function ClientesPage() {
           />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--dash-border)] bg-white p-3" style={cardShadow}>
-          <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="rounded-[18px] border border-[var(--dash-border)] bg-white p-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-3" style={cardShadow}>
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:min-w-0 sm:flex-1 sm:pb-0">
             <FilterChip active={dayFilter === "all"} onClick={() => setDayFilter("all")} label="All" count={total} />
             {WEEKDAY_FILTERS.map((d) => (
               <FilterChip key={d.v} active={dayFilter === d.v} onClick={() => setDayFilter(d.v as DayFilter)} label={d.label} count={countByDay(d.v)} />
@@ -617,7 +617,7 @@ function ClientesPage() {
             <FilterChip active={dayFilter === "prospects"} onClick={() => setDayFilter("prospects")} label="Prospects" count={prospectCount} tint={{ bg: "#FEF3C7", text: "#B45309" }} />
             <FilterChip active={dayFilter === "inactive"} onClick={() => setDayFilter("inactive")} label="Inactive" count={inactiveCount} tint={{ bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" }} />
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="mt-2 flex shrink-0 items-center gap-2 sm:mt-0">
             <div className="relative">
               <select
                 value={sortBy}
