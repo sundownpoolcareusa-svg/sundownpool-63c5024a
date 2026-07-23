@@ -429,6 +429,10 @@ function RotasPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["route-stops", activeRoute?.id] }); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); },
     onError: (e: Error) => toast.error(e.message),
   });
+  function handleStatusChange(stop: RouteStop, status: StopStatus) {
+    if (status === "Concluído" && !confirm(`Mark ${stop.client?.name ?? "this stop"}'s visit as completed?`)) return;
+    statusMut.mutate({ stop, status });
+  }
   const reorderMut = useMutation({
     mutationFn: (ids: string[]) => reorderStops(ids),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["route-stops", activeRoute?.id] }),
@@ -545,10 +549,10 @@ function RotasPage() {
                 </button>
               </div>
               {currentStop && (
-                <NextStopRow stop={currentStop} highlighted onStatus={(stop, status) => statusMut.mutate({ stop, status })} pending={statusMut.isPending} />
+                <NextStopRow stop={currentStop} highlighted onStatus={handleStatusChange} pending={statusMut.isPending} />
               )}
               {nextStop && (
-                <NextStopRow stop={nextStop} onStatus={(stop, status) => statusMut.mutate({ stop, status })} pending={statusMut.isPending} />
+                <NextStopRow stop={nextStop} onStatus={handleStatusChange} pending={statusMut.isPending} />
               )}
               {!currentStop && !nextStop && (
                 <p className="text-sm text-[var(--dash-text-muted)]">All stops completed for this route.</p>
@@ -560,7 +564,7 @@ function RotasPage() {
                 route={activeRoute}
                 stops={stops}
                 onMove={move}
-                onStatus={(stop, status) => statusMut.mutate({ stop, status })}
+                onStatus={handleStatusChange}
                 onRemove={(id) => removeMut.mutate(id)}
                 onAddStop={() => setAddOpen(true)}
                 pending={statusMut.isPending}
@@ -647,7 +651,7 @@ function RotasPage() {
                 route={activeRoute}
                 stops={stops}
                 onMove={move}
-                onStatus={(stop, status) => statusMut.mutate({ stop, status })}
+                onStatus={handleStatusChange}
                 onRemove={(id) => removeMut.mutate(id)}
                 onAddStop={() => setAddOpen(true)}
                 pending={statusMut.isPending}
