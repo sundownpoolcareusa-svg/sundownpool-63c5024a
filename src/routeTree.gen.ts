@@ -24,6 +24,7 @@ import { Route as AuthenticatedRotasRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedQuimicosRouteImport } from './routes/_authenticated/quimicos'
 import { Route as AuthenticatedInvoiceRouteImport } from './routes/_authenticated/invoice'
 import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authenticated/estimativa'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as TecnicoChemicalsStopIdRouteImport } from './routes/tecnico_.chemicals.$stopId'
 import { Route as AuthenticatedChemicalsStopIdRouteImport } from './routes/_authenticated/chemicals.$stopId'
@@ -102,6 +103,11 @@ const AuthenticatedEstimativaRoute = AuthenticatedEstimativaRouteImport.update({
   path: '/estimativa',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/services': typeof ServicesRoute
   '/tecnico': typeof TecnicoRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
   '/quimicos': typeof AuthenticatedQuimicosRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/services': typeof ServicesRoute
   '/tecnico': typeof TecnicoRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
   '/invoice': typeof AuthenticatedInvoiceRoute
   '/quimicos': typeof AuthenticatedQuimicosRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/services': typeof ServicesRoute
   '/tecnico': typeof TecnicoRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/estimativa': typeof AuthenticatedEstimativaRoute
   '/_authenticated/invoice': typeof AuthenticatedInvoiceRoute
   '/_authenticated/quimicos': typeof AuthenticatedQuimicosRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/tecnico'
     | '/clientes'
+    | '/dashboard'
     | '/estimativa'
     | '/invoice'
     | '/quimicos'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/tecnico'
     | '/clientes'
+    | '/dashboard'
     | '/estimativa'
     | '/invoice'
     | '/quimicos'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/tecnico'
     | '/_authenticated/clientes'
+    | '/_authenticated/dashboard'
     | '/_authenticated/estimativa'
     | '/_authenticated/invoice'
     | '/_authenticated/quimicos'
@@ -360,6 +372,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEstimativaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/clientes': {
       id: '/_authenticated/clientes'
       path: '/clientes'
@@ -386,6 +405,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEstimativaRoute: typeof AuthenticatedEstimativaRoute
   AuthenticatedInvoiceRoute: typeof AuthenticatedInvoiceRoute
   AuthenticatedQuimicosRoute: typeof AuthenticatedQuimicosRoute
@@ -396,6 +416,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEstimativaRoute: AuthenticatedEstimativaRoute,
   AuthenticatedInvoiceRoute: AuthenticatedInvoiceRoute,
   AuthenticatedQuimicosRoute: AuthenticatedQuimicosRoute,
