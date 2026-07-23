@@ -141,7 +141,7 @@ function ClientCard({
                 <span className="text-[16.2px] font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
               </button>
             </div>
-            <div className="mt-1.5 truncate text-[12.15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
+            <div className="truncate text-[12.15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
             <div className="truncate text-[12.15px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
