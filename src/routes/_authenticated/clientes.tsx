@@ -92,13 +92,12 @@ function ClientCardPhoto({ client }: { client: ClientFull }) {
 }
 
 function ClientCard({
-  client, idx, onView, onEdit, onDelete,
-}: { client: ClientFull; idx: number; onView: () => void; onEdit: () => void; onDelete: () => void }) {
+  client, onView, onEdit, onDelete,
+}: { client: ClientFull; onView: () => void; onEdit: () => void; onDelete: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const status = statusInfo(client);
   const dayLabel = dayBadgeLabel(client.service_days);
   const dayColor = dayColors[client.service_days?.[0] ?? ""] ?? { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
-  const addr = fullAddress(client);
   const hasMonthly = client.monthly_value != null && Number(client.monthly_value) > 0;
   const cityLine = [client.city, [client.state, client.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ");
 
@@ -107,9 +106,6 @@ function ClientCard({
       <div className="flex">
         <div className="relative h-44 w-[38%] shrink-0 bg-[var(--dash-bg)]">
           <ClientCardPhoto client={client} />
-          <div className={`absolute left-3 top-3 grid h-11 w-11 place-items-center rounded-full text-sm font-bold ring-2 ring-white ${avatarColors[idx % avatarColors.length]}`}>
-            {initials(client.name)}
-          </div>
         </div>
 
         <div className="relative flex-1 p-4 pr-11">
@@ -135,72 +131,45 @@ function ClientCard({
             </>
           )}
 
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={onView} className="text-left">
-              <span className="text-xl font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={onView} className="text-left">
+                  <span className="text-xl font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
+                </button>
+                <Star className="h-5 w-5 shrink-0" style={{ color: "#F59E0B" }} fill="#F59E0B" />
+              </div>
+              <div className="mt-1.5 truncate text-[15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
+              <div className="truncate text-[15px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
+
+              <div className="mt-3 flex items-center gap-2">
+                {dayLabel ? (
+                  <span className="flex shrink-0 items-center gap-1.5 truncate rounded-full px-3.5 py-2 text-sm font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
+                    <CalendarDays className="h-4 w-4 shrink-0" /> {dayLabel}
+                  </span>
+                ) : (
+                  <span className="text-sm font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
+                )}
+                <span className="shrink-0 whitespace-nowrap text-xl font-extrabold tabular-nums" style={{ color: "#0B63F6" }}>
+                  {hasMonthly ? fmt(Number(client.monthly_value)) : "—"}
+                  <span className="text-sm font-semibold text-[var(--dash-text-muted)]">/mo</span>
+                </span>
+              </div>
+
+              <div className="mt-2 flex items-center gap-1.5 text-sm font-bold" style={{ color: status.dot }}>
+                <span className="h-2 w-2 rounded-full" style={{ background: status.dot }} /> {status.label}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onView}
+              className="flex shrink-0 items-center gap-1 rounded-xl border border-[var(--dash-border)] px-4 py-2.5 text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+            >
+              View <ChevronRight className="h-4 w-4" />
             </button>
-            <Star className="h-5 w-5 shrink-0" style={{ color: "#F59E0B" }} fill="#F59E0B" />
-          </div>
-          <div className="mt-1.5 truncate text-[15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
-          <div className="truncate text-[15px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
-
-          <div className="mt-3 flex items-center justify-between gap-2">
-            {dayLabel ? (
-              <span className="flex shrink-0 items-center gap-1.5 truncate rounded-full px-3.5 py-2 text-sm font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
-                <CalendarDays className="h-4 w-4 shrink-0" /> {dayLabel}
-              </span>
-            ) : (
-              <span className="text-sm font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
-            )}
-            <span className="shrink-0 whitespace-nowrap text-xl font-extrabold tabular-nums" style={{ color: "#0B63F6" }}>
-              {hasMonthly ? fmt(Number(client.monthly_value)) : "—"}
-              <span className="text-sm font-semibold text-[var(--dash-text-muted)]">/mo</span>
-            </span>
-          </div>
-
-          <div className="mt-2 flex items-center gap-1.5 text-sm font-bold" style={{ color: status.dot }}>
-            <span className="h-2 w-2 rounded-full" style={{ background: status.dot }} /> {status.label}
           </div>
         </div>
-      </div>
-
-      <div className="flex items-center gap-2 border-t border-[var(--dash-border)] p-3">
-        <a
-          href={client.phone ? `tel:${client.phone}` : undefined}
-          aria-label="Call"
-          title="Call"
-          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--dash-border)] ${client.phone ? "text-[var(--dash-text)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
-        >
-          <Phone className="h-[18px] w-[18px]" />
-        </a>
-        <a
-          href={client.phone ? `sms:${client.phone}` : undefined}
-          aria-label="Text"
-          title="Text"
-          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--dash-border)] ${client.phone ? "text-[var(--dash-text)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
-        >
-          <MessageSquare className="h-[18px] w-[18px]" />
-        </a>
-        <Link to="/invoice" aria-label="Invoice" title="Invoice" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
-          <FileText className="h-[18px] w-[18px]" />
-        </Link>
-        <a
-          href={addr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}` : undefined}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Map"
-          title="Map"
-          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--dash-border)] ${addr ? "text-[var(--dash-text)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
-        >
-          <MapPin className="h-[18px] w-[18px]" />
-        </a>
-        <button
-          type="button"
-          onClick={onView}
-          className="ml-auto flex h-11 items-center gap-1.5 rounded-xl border border-[var(--dash-border)] px-5 text-[15px] font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
-        >
-          View <ChevronRight className="h-4 w-4" />
-        </button>
       </div>
     </div>
   );
@@ -738,11 +707,10 @@ function ClientesPage() {
             </div>
           ) : viewMode === "grid" ? (
             <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {sorted.map((c, idx) => (
+              {sorted.map((c) => (
                 <ClientCard
                   key={c.id}
                   client={c as ClientFull}
-                  idx={idx}
                   onView={() => setViewClient(c as ClientFull)}
                   onEdit={() => setEditClient(c as ClientFull)}
                   onDelete={() => setDeleteClient(c as ClientFull)}
