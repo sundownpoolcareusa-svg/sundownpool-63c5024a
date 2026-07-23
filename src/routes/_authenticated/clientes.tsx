@@ -176,11 +176,11 @@ function ClientCard({
 }
 
 const WEEKDAY_FILTERS = [
-  { v: "Seg", label: "Monday" },
-  { v: "Ter", label: "Tuesday" },
-  { v: "Qua", label: "Wednesday" },
-  { v: "Qui", label: "Thursday" },
-  { v: "Sex", label: "Friday" },
+  { v: "Seg", label: "Mon" },
+  { v: "Ter", label: "Tue" },
+  { v: "Qua", label: "Wed" },
+  { v: "Qui", label: "Thu" },
+  { v: "Sex", label: "Fri" },
 ];
 
 type DayFilter = "all" | "Seg" | "Ter" | "Qua" | "Qui" | "Sex" | "prospects" | "inactive";
@@ -595,7 +595,6 @@ function ClientesPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-[22px] font-extrabold text-[var(--dash-text)]">Clients</h1>
-            <p className="text-sm text-[var(--dash-text-muted)]">Manage your pool care clients</p>
           </div>
           <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90">
             <Plus className="h-4 w-4" /> New Client
@@ -646,7 +645,7 @@ function ClientesPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--dash-border)] bg-white p-3" style={cardShadow}>
           <div className="flex flex-wrap items-center gap-1">
-            <FilterChip active={dayFilter === "all"} onClick={() => setDayFilter("all")} label="All Clients" count={total} />
+            <FilterChip active={dayFilter === "all"} onClick={() => setDayFilter("all")} label="All" count={total} />
             {WEEKDAY_FILTERS.map((d) => (
               <FilterChip key={d.v} active={dayFilter === d.v} onClick={() => setDayFilter(d.v as DayFilter)} label={d.label} count={countByDay(d.v)} />
             ))}
