@@ -483,7 +483,11 @@ function TodayServicesSection({ routes, todayStr }: { routes: RouteRow[]; todayS
                   {next && (
                     <button
                       type="button"
-                      onClick={() => client && advance.mutate({ stopId: stop.id, status: next, clientId: client.id })}
+                      onClick={() => {
+                        if (!client) return;
+                        if (next === "Concluído" && !confirm(`Mark ${client.name}'s visit as completed?`)) return;
+                        advance.mutate({ stopId: stop.id, status: next, clientId: client.id });
+                      }}
                       disabled={advance.isPending}
                       className="grid h-7 w-7 place-items-center rounded-[8px] text-white disabled:opacity-60"
                       style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
