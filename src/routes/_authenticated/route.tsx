@@ -7,7 +7,8 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   head: () => ({
     meta: [
-      { name: "apple-mobile-web-app-title", content: "Sundown" },
+      { title: "André - Sundown" },
+      { name: "apple-mobile-web-app-title", content: "André - Sundown" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
     ],
