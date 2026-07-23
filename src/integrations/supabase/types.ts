@@ -27,6 +27,7 @@ export type Database = {
           filter_cleaning_count: number
           filter_last_cleaned_at: string | null
           gate_code: string | null
+          has_spa: boolean
           id: string
           last_service_date: string | null
           lat: number | null
@@ -60,6 +61,7 @@ export type Database = {
           filter_cleaning_count?: number
           filter_last_cleaned_at?: string | null
           gate_code?: string | null
+          has_spa?: boolean
           id?: string
           last_service_date?: string | null
           lat?: number | null
@@ -93,6 +95,7 @@ export type Database = {
           filter_cleaning_count?: number
           filter_last_cleaned_at?: string | null
           gate_code?: string | null
+          has_spa?: boolean
           id?: string
           last_service_date?: string | null
           lat?: number | null
@@ -503,6 +506,7 @@ export type Database = {
       }
       stop_chemicals: {
         Row: {
+          body_type: string
           calcium_hardness: number | null
           created_at: string
           free_chlorine: number | null
@@ -516,6 +520,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          body_type?: string
           calcium_hardness?: number | null
           created_at?: string
           free_chlorine?: number | null
@@ -529,6 +534,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          body_type?: string
           calcium_hardness?: number | null
           created_at?: string
           free_chlorine?: number | null
@@ -545,7 +551,7 @@ export type Database = {
           {
             foreignKeyName: "stop_chemicals_route_stop_id_fkey"
             columns: ["route_stop_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "route_stops"
             referencedColumns: ["id"]
           },
@@ -608,6 +614,7 @@ export type Database = {
       get_my_client_chemicals_history: {
         Args: { p_client_id: string }
         Returns: {
+          body_type: string
           calcium_hardness: number
           free_chlorine: number
           notes: string
@@ -642,7 +649,7 @@ export type Database = {
         }[]
       }
       get_my_stop_chemicals: {
-        Args: { p_stop_id: string }
+        Args: { p_body_type?: string; p_stop_id: string }
         Returns: {
           calcium_hardness: number
           free_chlorine: number
@@ -656,6 +663,7 @@ export type Database = {
       get_my_stop_chemicals_history: {
         Args: { p_stop_id: string }
         Returns: {
+          body_type: string
           calcium_hardness: number
           free_chlorine: number
           notes: string
@@ -678,6 +686,7 @@ export type Database = {
           client_zip: string
           filter_cleaning_count: number
           filter_last_cleaned_at: string
+          has_spa: boolean
           position: number
           status: string
           stop_id: string
@@ -701,6 +710,7 @@ export type Database = {
           email: string
           equipment_notes: string
           equipment_photos: string[]
+          has_spa: boolean
           monthly_value: number
           name: string
           phone: string
@@ -763,6 +773,7 @@ export type Database = {
       }
       save_my_stop_chemicals: {
         Args: {
+          p_body_type?: string
           p_calcium_hardness: number
           p_free_chlorine: number
           p_notes: string

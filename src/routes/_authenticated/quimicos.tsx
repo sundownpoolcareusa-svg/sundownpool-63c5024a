@@ -192,10 +192,17 @@ function QuimicosPage() {
                     const used = h.chemicals.products.filter((p) => p.qty > 0);
                     return (
                       <tr
-                        key={h.route_stop_id}
+                        key={h.chemicals.id}
                         className="border-b border-[var(--dash-border-table)]"
                       >
-                        <td className="py-4 font-bold text-[var(--dash-text)]">{h.client_name}</td>
+                        <td className="py-4 font-bold text-[var(--dash-text)]">
+                          {h.client_name}
+                          {h.chemicals.body_type === "spa" && (
+                            <span className="ml-1.5 rounded-full bg-[var(--dash-water-bg)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--dash-water-icon)]">
+                              Spa
+                            </span>
+                          )}
+                        </td>
                         <td className="py-4 text-[var(--dash-text-secondary)]">
                           {fmtDate(h.route_date)}
                         </td>

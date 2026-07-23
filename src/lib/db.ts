@@ -20,8 +20,11 @@ export type Client = {
   lng?: number | null;
   filter_last_cleaned_at?: string | null;
   filter_cleaning_count?: number;
+  has_spa?: boolean;
   created_at: string;
 };
+
+export type BodyType = "pool" | "spa";
 
 export type ClientContact = { name: string; phone: string };
 
@@ -532,6 +535,7 @@ export type TechnicianClient = {
   pool_photos: string[] | null;
   equipment_photos: string[] | null;
   equipment_notes: string | null;
+  has_spa: boolean;
 };
 
 // Every client assigned to the signed-in technician (technician_id on the
@@ -545,6 +549,7 @@ export async function getMyTechnicianClients() {
 export type ClientChemicalsHistoryEntry = {
   route_stop_id: string;
   route_date: string;
+  body_type: BodyType;
   free_chlorine: number | null;
   ph: number | null;
   total_alkalinity: number | null;
@@ -665,8 +670,8 @@ export async function logMyStopFilterCleaning(stopId: string) {
   return data?.[0] ?? null;
 }
 
-export async function getMyStopChemicals(stopId: string) {
-  const { data, error } = await supabase.rpc("get_my_stop_chemicals", { p_stop_id: stopId });
+export async function getMyStopChemicals(stopId: string, bodyType: BodyType = "pool") {
+  const { data, error } = await supabase.rpc("get_my_stop_chemicals", { p_stop_id: stopId, p_body_type: bodyType });
   if (error) throw error;
   const row = data?.[0];
   if (!row) return null;
@@ -676,6 +681,7 @@ export async function getMyStopChemicals(stopId: string) {
 export async function saveMyStopChemicals(
   stopId: string,
   values: { readings: ChemicalReadings; products: Product[]; notes: string },
+  bodyType: BodyType = "pool",
 ) {
   const { error } = await supabase.rpc("save_my_stop_chemicals", {
     p_stop_id: stopId,
@@ -686,6 +692,7 @@ export async function saveMyStopChemicals(
     p_stabilizer: values.readings.stabilizer,
     p_products: values.products as unknown as Json,
     p_notes: values.notes,
+    p_body_type: bodyType,
   });
   if (error) throw error;
 }
@@ -701,8 +708,9 @@ export async function getMyStopChemicalsHistory(stopId: string): Promise<Chemica
     route_stop_id: row.route_stop_id,
     route_date: row.route_date,
     chemicals: {
-      id: row.route_stop_id,
+      id: `${row.route_stop_id}-${row.body_type}`,
       route_stop_id: row.route_stop_id,
+      body_type: row.body_type as BodyType,
       free_chlorine: row.free_chlorine,
       ph: row.ph,
       total_alkalinity: row.total_alkalinity,
@@ -806,6 +814,7 @@ export type Product = { name: string; unit: string; qty: number; step?: number }
 export type StopChemicals = {
   id: string;
   route_stop_id: string;
+  body_type: BodyType;
   free_chlorine: number | null;
   ph: number | null;
   total_alkalinity: number | null;
@@ -876,11 +885,12 @@ export function isReadingInRange(key: ChemicalReadingKey, value: number) {
   return value >= meta.min && value <= meta.max;
 }
 
-export async function getStopChemicals(stopId: string) {
+export async function getStopChemicals(stopId: string, bodyType: BodyType = "pool") {
   const { data, error } = await supabase
     .from("stop_chemicals")
     .select("*")
     .eq("route_stop_id", stopId)
+    .eq("body_type", bodyType)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
@@ -890,10 +900,12 @@ export async function getStopChemicals(stopId: string) {
 export async function saveStopChemicals(
   stopId: string,
   values: { readings: ChemicalReadings; products: Product[]; notes: string },
+  bodyType: BodyType = "pool",
 ) {
   const { error } = await supabase.from("stop_chemicals").upsert(
     {
       route_stop_id: stopId,
+      body_type: bodyType,
       free_chlorine: values.readings.free_chlorine,
       ph: values.readings.ph,
       total_alkalinity: values.readings.total_alkalinity,
@@ -902,7 +914,7 @@ export async function saveStopChemicals(
       products: values.products,
       notes: values.notes || null,
     },
-    { onConflict: "route_stop_id" },
+    { onConflict: "route_stop_id,body_type" },
   );
   if (error) throw error;
 }

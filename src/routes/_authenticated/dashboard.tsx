@@ -538,10 +538,11 @@ function buildChemicalAlerts(chemHistory: ChemicalVisitEntry[]): FeedItem[] {
       const meta = CHEMICAL_READING_META[key];
       const direction = value > meta.max ? "High" : "Low";
       const unitSuffix = meta.unit ? ` ${meta.unit}` : "";
+      const bodyLabel = entry.chemicals.body_type === "spa" ? " (Spa)" : "";
       items.push({
-        id: `${entry.route_stop_id}-${key}`,
+        id: `${entry.chemicals.id}-${key}`,
         icon: AlertTriangle, iconColor: "var(--dash-orange)", iconBg: "#FFEDD5",
-        title: `${direction} ${meta.label}`,
+        title: `${direction} ${meta.label}${bodyLabel}`,
         subtitle: `${entry.client_name} · ${value}${unitSuffix} (target ${meta.min}-${meta.max}${unitSuffix})`,
         whenMs: new Date(`${entry.route_date}T12:00:00`).getTime(),
       });

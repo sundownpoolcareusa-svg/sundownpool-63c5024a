@@ -4,14 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft, Droplet, FlaskConical, Diamond, ShieldCheck, Minus, Plus, Filter,
-  CheckCircle2, AlertTriangle, History, Info, Camera, Check, ChevronRight, StickyNote, X,
+  CheckCircle2, AlertTriangle, History, Info, Camera, Check, ChevronRight, StickyNote, X, Waves, Droplets,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getRouteStop, getStopChemicals, saveStopChemicals, updateStopStatus, getClientChemicalsHistory, fmtDate,
   logFilterCleaning, formatProductQty, mergeSavedProducts,
   CHEMICAL_READING_META, DEFAULT_READINGS, DEFAULT_PRODUCTS, isReadingInRange,
-  type ChemicalReadingKey, type ChemicalReadings, type Product,
+  type ChemicalReadingKey, type ChemicalReadings, type Product, type BodyType,
 } from "@/lib/db";
 import iconLiquidChlorine from "@/assets/products/liquid-chlorine.png";
 import iconChlorineTabs from "@/assets/products/chlorine-tabs.png";
@@ -85,12 +85,16 @@ function PoolChemicalsPage() {
   }, []);
 
   const { data: stop } = useQuery({ queryKey: ["route-stop", stopId], queryFn: () => getRouteStop(stopId) });
-  const { data: existing, isLoading } = useQuery({ queryKey: ["stop-chemicals", stopId], queryFn: () => getStopChemicals(stopId) });
+  const [bodyType, setBodyType] = useState<BodyType>("pool");
+  const { data: existing, isLoading } = useQuery({
+    queryKey: ["stop-chemicals", stopId, bodyType],
+    queryFn: () => getStopChemicals(stopId, bodyType),
+  });
 
   const [readings, setReadings] = useState<ChemicalReadings>(DEFAULT_READINGS);
   const [products, setProducts] = useState<Product[]>(DEFAULT_PRODUCTS);
   const [notes, setNotes] = useState("");
-  const [loaded, setLoaded] = useState(false);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [newProductName, setNewProductName] = useState("");
   const [newProductUnit, setNewProductUnit] = useState("");
@@ -102,9 +106,10 @@ function PoolChemicalsPage() {
     queryFn: () => getClientChemicalsHistory(stop!.client_id),
     enabled: historyOpen && !!stop,
   });
+  const historyForBody = (history ?? []).filter((h) => h.chemicals.body_type === bodyType);
 
   useEffect(() => {
-    if (isLoading || loaded) return;
+    if (isLoading || loadedKey === bodyType) return;
     if (existing) {
       setReadings({
         free_chlorine: existing.free_chlorine ?? DEFAULT_READINGS.free_chlorine,
@@ -115,13 +120,17 @@ function PoolChemicalsPage() {
       });
       setProducts(existing.products.length > 0 ? mergeSavedProducts(existing.products) : DEFAULT_PRODUCTS);
       setNotes(existing.notes ?? "");
+    } else {
+      setReadings(DEFAULT_READINGS);
+      setProducts(DEFAULT_PRODUCTS);
+      setNotes("");
     }
-    setLoaded(true);
-  }, [existing, isLoading, loaded]);
+    setLoadedKey(bodyType);
+  }, [existing, isLoading, loadedKey, bodyType]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
-      await saveStopChemicals(stopId, { readings, products, notes });
+      await saveStopChemicals(stopId, { readings, products, notes }, bodyType);
       if (stop) await updateStopStatus(stopId, "Concluído", stop.client_id);
     },
     onSuccess: () => {
@@ -171,7 +180,7 @@ function PoolChemicalsPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="text-center">
-          <h1 className="text-lg font-extrabold text-[var(--dash-text)]">Pool Chemicals</h1>
+          <h1 className="text-lg font-extrabold capitalize text-[var(--dash-text)]">{bodyType} Chemicals</h1>
           <p className="text-[12px] text-[var(--dash-text-muted-2)]">Add chemical readings and products used</p>
         </div>
         <div className="absolute right-4 grid h-9 w-9 place-items-center rounded-[10px] text-[13px] font-bold text-white" style={{ background: "var(--dash-navy)" }}>
@@ -198,6 +207,25 @@ function PoolChemicalsPage() {
               </span>
               <ChevronRight className="h-4 w-4 text-white/70" />
             </div>
+          </div>
+        )}
+
+        {stop?.client?.has_spa && (
+          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[var(--dash-border)] bg-white p-1.5">
+            {(["pool", "spa"] as BodyType[]).map((bt) => (
+              <button
+                key={bt}
+                onClick={() => setBodyType(bt)}
+                className="flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-bold capitalize"
+                style={{
+                  background: bodyType === bt ? "var(--dash-navy)" : "transparent",
+                  color: bodyType === bt ? "#fff" : "var(--dash-text-secondary)",
+                }}
+              >
+                {bt === "pool" ? <Waves className="h-4 w-4" /> : <Droplets className="h-4 w-4" />}
+                {bt}
+              </button>
+            ))}
           </div>
         )}
 
@@ -413,13 +441,13 @@ function PoolChemicalsPage() {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {historyLoading ? (
                 <p className="py-8 text-center text-sm text-[var(--dash-text-muted-2)]">Loading...</p>
-              ) : !history || history.length === 0 ? (
+              ) : historyForBody.length === 0 ? (
                 <p className="py-8 text-center text-sm text-[var(--dash-text-muted-2)]">
                   {historyMode === "chemicals" ? "No previous readings for this client yet." : "No products logged for this client yet."}
                 </p>
               ) : historyMode === "chemicals" ? (
-                history.map((entry) => (
-                  <div key={entry.route_stop_id} className="rounded-xl border border-[var(--dash-border)] p-3">
+                historyForBody.map((entry) => (
+                  <div key={entry.chemicals.id} className="rounded-xl border border-[var(--dash-border)] p-3">
                     <div className="text-[13px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</div>
                     <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {READING_ORDER.map((key) => {
@@ -440,10 +468,10 @@ function PoolChemicalsPage() {
                   </div>
                 ))
               ) : (
-                history.map((entry) => {
+                historyForBody.map((entry) => {
                   const usedProducts = entry.chemicals.products.filter((p) => p.qty > 0);
                   return (
-                    <div key={entry.route_stop_id} className="rounded-xl border border-[var(--dash-border)] p-3">
+                    <div key={entry.chemicals.id} className="rounded-xl border border-[var(--dash-border)] p-3">
                       <div className="text-[13px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</div>
                       {usedProducts.length > 0 ? (
                         <div className="mt-2 flex flex-wrap gap-1.5">
