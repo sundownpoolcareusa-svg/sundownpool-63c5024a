@@ -161,7 +161,7 @@ function TechnicianChemicalsPage() {
     onSuccess: () => {
       toast.success("Químicos salvos e parada concluída!");
       qc.invalidateQueries({ queryKey: ["my-technician-stops"] });
-      navigate({ to: "/tecnico" });
+      navigate({ to: "/tecnico", search: { view: "rota" } });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -200,7 +200,7 @@ function TechnicianChemicalsPage() {
   return (
     <div className="dash min-h-screen bg-[var(--dash-bg)] pb-28">
       <header className="relative flex items-center justify-center border-b border-[var(--dash-border)] bg-[var(--dash-surface)] px-4 py-4">
-        <button onClick={() => navigate({ to: "/tecnico" })} className="absolute left-4 text-[var(--dash-text-secondary)]">
+        <button onClick={() => navigate({ to: "/tecnico", search: { view: "rota" } })} className="absolute left-4 text-[var(--dash-text-secondary)]">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="text-center">
@@ -374,14 +374,14 @@ function TechnicianChemicalsPage() {
                   <img src={PRODUCT_ICONS[p.name]} alt="" className="h-12 w-auto shrink-0 object-contain" />
                 )}
                 <div className="min-w-0 w-full">
-                  <div className="truncate text-[10px] font-bold text-[var(--dash-text)]">
+                  <div className="truncate text-[14px] font-bold text-[var(--dash-text)]">
                     {PRODUCT_SHORT_NAMES[p.name] ?? p.name} {p.unit && <span className="font-normal text-[var(--dash-text-muted-2)]">({p.unit})</span>}
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-0.5">
                     <button onClick={() => adjustProduct(p.name, -1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
                       <Minus className="h-3 w-3" />
                     </button>
-                    <span className="text-base font-extrabold text-[var(--dash-text)]">{formatProductQty(p.qty)}</span>
+                    <span className="text-xl font-extrabold text-[var(--dash-text)]">{formatProductQty(p.qty)}</span>
                     <button onClick={() => adjustProduct(p.name, 1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
                       <Plus className="h-3 w-3" />
                     </button>
@@ -411,7 +411,7 @@ function TechnicianChemicalsPage() {
       <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--dash-border)] bg-[var(--dash-surface)] p-3">
         <div className="mx-auto flex max-w-3xl gap-3">
           <button
-            onClick={() => navigate({ to: "/tecnico" })}
+            onClick={() => navigate({ to: "/tecnico", search: { view: "rota" } })}
             className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-3 text-sm font-bold text-[var(--dash-text-secondary)]"
           >
             Cancelar
@@ -470,38 +470,52 @@ function TechnicianChemicalsPage() {
                   {historyMode === "chemicals" ? "Nenhuma leitura anterior para este cliente ainda." : "Nenhum produto registrado para este cliente ainda."}
                 </p>
               ) : historyMode === "chemicals" ? (
-                historyForBody.map((entry) => (
-                  <div key={entry.chemicals.id} className="rounded-xl border border-[var(--dash-border)] p-3">
-                    <div className="mb-2 flex items-center gap-2">
-                      <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#DBEAFE] text-[#0B63F6]">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="text-[14px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</div>
-                    </div>
-                    <div className="divide-y divide-[var(--dash-border-table)]">
-                      {READING_ORDER.map((key) => {
-                        const meta = CHEMICAL_READING_META[key];
-                        const value = entry.chemicals[key];
-                        if (value === null) return null;
-                        const { icon: Icon, bg, fg } = READING_FLAT_COLORS[key];
-                        return (
-                          <div key={key} className="flex items-center justify-between gap-2 py-1.5">
-                            <div className="flex min-w-0 items-center gap-2">
-                              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full" style={{ background: bg, color: fg }}>
-                                <Icon className="h-3.5 w-3.5" />
-                              </div>
-                              <span className="truncate text-[13px] text-[var(--dash-text-secondary)]">{meta.label}</span>
-                            </div>
-                            <span className="shrink-0 text-[15px] font-extrabold text-[var(--dash-text)]">{value.toFixed(decimals(meta.step))}</span>
+                historyForBody.map((entry) => {
+                  const expanded = !collapsedEntries.has(entry.chemicals.id);
+                  return (
+                    <div key={entry.chemicals.id} className="rounded-xl border border-[var(--dash-border)] p-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleEntryCollapsed(entry.chemicals.id)}
+                        className="flex w-full items-center justify-between gap-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#DBEAFE] text-[#0B63F6]">
+                            <CalendarDays className="h-3.5 w-3.5" />
                           </div>
-                        );
-                      })}
+                          <span className="text-[14px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</span>
+                        </div>
+                        <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--dash-text-muted-2)] transition-transform ${expanded ? "rotate-180" : ""}`} />
+                      </button>
+                      {expanded && (
+                        <>
+                          <div className="mt-2 divide-y divide-[var(--dash-border-table)]">
+                            {READING_ORDER.map((key) => {
+                              const meta = CHEMICAL_READING_META[key];
+                              const value = entry.chemicals[key];
+                              if (value === null) return null;
+                              const { icon: Icon, bg, fg } = READING_FLAT_COLORS[key];
+                              return (
+                                <div key={key} className="flex items-center justify-between gap-2 py-1.5">
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full" style={{ background: bg, color: fg }}>
+                                      <Icon className="h-3.5 w-3.5" />
+                                    </div>
+                                    <span className="truncate text-[13px] text-[var(--dash-text-secondary)]">{meta.label}</span>
+                                  </div>
+                                  <span className="shrink-0 text-[15px] font-extrabold text-[var(--dash-text)]">{value.toFixed(decimals(meta.step))}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {entry.chemicals.notes && (
+                            <div className="mt-2 text-[12px] text-[var(--dash-text-muted-2)]">{entry.chemicals.notes}</div>
+                          )}
+                        </>
+                      )}
                     </div>
-                    {entry.chemicals.notes && (
-                      <div className="mt-2 text-[12px] text-[var(--dash-text-muted-2)]">{entry.chemicals.notes}</div>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 historyForBody.map((entry) => {
                   const usedProducts = entry.chemicals.products.filter((p) => p.qty > 0);

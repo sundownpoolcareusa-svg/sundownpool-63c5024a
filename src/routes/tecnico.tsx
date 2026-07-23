@@ -22,6 +22,9 @@ import { toast } from "sonner";
 import tecnicoIcon from "@/assets/tecnico-apple-touch-icon.png";
 
 export const Route = createFileRoute("/tecnico")({
+  validateSearch: (search: Record<string, unknown>): { view?: "inicio" | "rota" | "clientes" } => ({
+    view: search.view === "rota" || search.view === "clientes" ? search.view : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Route - Sundown" },
@@ -208,10 +211,11 @@ function TecnicoRouteMap({ stops, showTraffic, onToggleTraffic }: { stops: Techn
 function TecnicoPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const search = Route.useSearch();
   const [checkedSession, setCheckedSession] = useState(false);
   const [date, setDate] = useState(() => new Date());
   const dateStr = toDateStr(date);
-  const [view, setView] = useState<"inicio" | "rota" | "clientes">("inicio");
+  const [view, setView] = useState<"inicio" | "rota" | "clientes">(search.view ?? "inicio");
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [selectedClient, setSelectedClient] = useState<TechnicianClient | null>(null);
