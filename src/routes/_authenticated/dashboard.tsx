@@ -9,11 +9,13 @@ import { AppSidebar } from "@/components/AppSidebar";
 import {
   Award, Users, DollarSign, BarChart3, FileText, ChevronDown, ChevronLeft, ChevronRight,
   Download, Plus, Bell, CalendarDays, FlaskConical, Phone, MessageSquare, MapPin, Play, Check,
+  User, Zap, AlertTriangle, CheckCircle2,
 } from "lucide-react";
 import {
   listClients, listInvoices, listEstimates, listRoutesForDate, listAllChemicalsHistory, listProductCosts,
-  updateStopStatus, clientFullAddress, fmt, initials,
-  type RouteRow, type StopStatus, type Client,
+  listTechnicians, updateStopStatus, clientFullAddress, fmt, fmtDate, initials, isReadingInRange,
+  CHEMICAL_READING_META, type RouteRow, type StopStatus, type Client, type ChemicalReadingKey,
+  type ChemicalVisitEntry,
 } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -480,6 +482,241 @@ function TodayServicesSection({ routes, todayStr }: { routes: RouteRow[]; todayS
   );
 }
 
+type FeedItem = {
+  id: string; icon: typeof AlertTriangle; iconColor: string; iconBg: string;
+  title: string; subtitle: string; whenMs: number;
+};
+
+function timeAgo(ms: number) {
+  const diff = Date.now() - ms;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+const CHEMICAL_KEYS: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer"];
+
+// Out-of-range chemical readings are a real, defensible source of "alerts" —
+// no fabricated weather/equipment/schedule events, only what the tech actually logged.
+function buildChemicalAlerts(chemHistory: ChemicalVisitEntry[]): FeedItem[] {
+  const items: FeedItem[] = [];
+  for (const entry of chemHistory) {
+    for (const key of CHEMICAL_KEYS) {
+      const value = entry.chemicals[key];
+      if (value == null || isReadingInRange(key, value)) continue;
+      const meta = CHEMICAL_READING_META[key];
+      const direction = value > meta.max ? "High" : "Low";
+      const unitSuffix = meta.unit ? ` ${meta.unit}` : "";
+      items.push({
+        id: `${entry.route_stop_id}-${key}`,
+        icon: AlertTriangle, iconColor: "var(--dash-orange)", iconBg: "#FFEDD5",
+        title: `${direction} ${meta.label}`,
+        subtitle: `${entry.client_name} · ${value}${unitSuffix} (target ${meta.min}-${meta.max}${unitSuffix})`,
+        whenMs: new Date(`${entry.route_date}T12:00:00`).getTime(),
+      });
+    }
+  }
+  return items;
+}
+
+function FeedList({ items, emptyLabel }: { items: FeedItem[]; emptyLabel: string }) {
+  if (items.length === 0) return <p className="mt-4 text-sm text-[var(--dash-text-muted)]">{emptyLabel}</p>;
+  return (
+    <div className="mt-3 flex-1 space-y-3">
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <div key={item.id} className="flex items-start gap-3 border-b border-[var(--dash-border)] pb-3 last:border-0 last:pb-0">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: item.iconBg, color: item.iconColor }}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate text-sm font-bold text-[var(--dash-text)]">{item.title}</span>
+                <span className="shrink-0 text-[11px] text-[var(--dash-text-muted)]">{timeAgo(item.whenMs)}</span>
+              </div>
+              <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{item.subtitle}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RecentAlertsSection() {
+  const { data: chemHistory = [] } = useQuery({ queryKey: ["chemicals-history-all"], queryFn: listAllChemicalsHistory });
+  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices });
+
+  const todayStr = todayDateStr();
+  const invoiceAlerts: FeedItem[] = invoices
+    .filter((i) => i.status !== "PAID" && i.due_date && i.due_date < todayStr)
+    .map((i) => ({
+      id: `inv-${i.id}`, icon: DollarSign, iconColor: "var(--dash-red)", iconBg: "#FEE2E2",
+      title: "Invoice Overdue",
+      subtitle: `${i.client?.name ?? "Client"} · ${fmt(Number(i.total))} due ${fmtDate(i.due_date)}`,
+      whenMs: new Date(`${i.due_date}T12:00:00`).getTime(),
+    }));
+
+  const alerts = [...invoiceAlerts, ...buildChemicalAlerts(chemHistory)]
+    .sort((a, b) => b.whenMs - a.whenMs)
+    .slice(0, 4);
+
+  return (
+    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bell className="h-5 w-5" style={{ color: "var(--dash-navy)" }} />
+          <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Recent Alerts</h2>
+        </div>
+        <Link to="/quimicos" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+      </div>
+      <FeedList items={alerts} emptyLabel="No active alerts — everything looks good." />
+      <Link to="/quimicos" className="mt-4 block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
+        View All Alerts
+      </Link>
+    </div>
+  );
+}
+
+function TopTechniciansSection() {
+  const { data: technicians = [] } = useQuery({ queryKey: ["technicians"], queryFn: listTechnicians });
+
+  const now = new Date();
+  const monthStart = dateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+  const monthEnd = dateStr(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+  const { data: monthRoutes = [] } = useQuery({
+    queryKey: ["routes-month-tech", monthStart],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("routes")
+        .select("technician_id, route_stops(id, status)")
+        .gte("route_date", monthStart)
+        .lte("route_date", monthEnd);
+      if (error) throw error;
+      return (data ?? []) as { technician_id: string; route_stops: { id: string; status: string }[] | null }[];
+    },
+  });
+
+  const stats = technicians
+    .map((t) => {
+      const stops = monthRoutes.filter((r) => r.technician_id === t.id).flatMap((r) => r.route_stops ?? []);
+      const total = stops.length;
+      const completed = stops.filter((s) => s.status === "Concluído").length;
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+      return { technician: t, total, completed, pct };
+    })
+    .filter((s) => s.total > 0)
+    .sort((a, b) => b.pct - a.pct || b.total - a.total)
+    .slice(0, 2);
+
+  return (
+    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <User className="h-5 w-5" style={{ color: "var(--dash-navy)" }} />
+          <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Top Technicians</h2>
+        </div>
+        <Link to="/tecnicos" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+      </div>
+      {stats.length === 0 ? (
+        <p className="mt-4 text-sm text-[var(--dash-text-muted)]">No completed stops yet this month.</p>
+      ) : (
+        <div className="mt-3 flex-1 space-y-4">
+          {stats.map((s, i) => (
+            <div key={s.technician.id}>
+              <div className="flex items-center gap-3">
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: s.technician.color }}>
+                  {initials(s.technician.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-sm font-bold text-[var(--dash-text)]">{s.technician.name}</span>
+                    <span className="shrink-0 rounded-full bg-[var(--dash-water-bg)] px-2 py-0.5 text-[11px] font-bold text-[var(--dash-navy)]">#{i + 1}</span>
+                  </div>
+                  <div className="text-[12px] text-[var(--dash-text-muted)]">{s.total} pools · {s.pct}% completion</div>
+                </div>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
+                <div className="h-full rounded-full" style={{ width: `${s.pct}%`, background: "var(--dash-green)" }} />
+              </div>
+              <div className="mt-1 flex items-center justify-between text-[12px] font-semibold">
+                <span style={{ color: "var(--dash-green)" }}>{s.completed} / {s.total} pools completed</span>
+                <span className="text-[var(--dash-text-muted)]">{s.pct}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <Link to="/tecnicos" className="mt-4 block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
+        View All Technicians
+      </Link>
+    </div>
+  );
+}
+
+function RecentActivitySection() {
+  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices });
+  const { data: chemHistory = [] } = useQuery({ queryKey: ["chemicals-history-all"], queryFn: listAllChemicalsHistory });
+  const { data: recentRoutes = [] } = useQuery({
+    queryKey: ["routes-recent-activity"],
+    queryFn: async () => {
+      const since = dateStr(new Date(Date.now() - 14 * 86400000));
+      const { data, error } = await supabase
+        .from("routes")
+        .select("id, technician:technicians(id,name,color), route_stops(id,status,completed_at)")
+        .gte("route_date", since);
+      if (error) throw error;
+      return (data ?? []) as {
+        id: string; technician: { id: string; name: string; color: string } | null;
+        route_stops: { id: string; status: string; completed_at: string | null }[] | null;
+      }[];
+    },
+  });
+
+  const routeEvents: FeedItem[] = [];
+  for (const r of recentRoutes) {
+    const stops = r.route_stops ?? [];
+    if (stops.length === 0 || !stops.every((s) => s.status === "Concluído")) continue;
+    const last = stops.reduce((max, s) => (s.completed_at && s.completed_at > max ? s.completed_at : max), "");
+    if (!last) continue;
+    routeEvents.push({
+      id: `route-${r.id}`, icon: CheckCircle2, iconColor: "var(--dash-green)", iconBg: "#DCFCE7",
+      title: "Route completed",
+      subtitle: `${r.technician?.name ?? "Technician"} completed ${stops.length} pool${stops.length === 1 ? "" : "s"}`,
+      whenMs: new Date(last).getTime(),
+    });
+  }
+
+  const invoiceEvents: FeedItem[] = invoices.map((i) => ({
+    id: `inv-${i.id}`, icon: FileText, iconColor: "var(--dash-link)", iconBg: "#DBEAFE",
+    title: "Invoice created",
+    subtitle: `#${i.number} · ${i.client?.name ?? "Client"} · ${fmt(Number(i.total))}`,
+    whenMs: new Date(i.created_at).getTime(),
+  }));
+
+  const events = [...routeEvents, ...invoiceEvents, ...buildChemicalAlerts(chemHistory)]
+    .sort((a, b) => b.whenMs - a.whenMs)
+    .slice(0, 5);
+
+  return (
+    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Zap className="h-5 w-5" style={{ color: "var(--dash-navy)" }} />
+          <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Recent Activity</h2>
+        </div>
+        <Link to="/rotas" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+      </div>
+      <FeedList items={events} emptyLabel="No recent activity." />
+    </div>
+  );
+}
+
 function DashboardPage() {
   const [email, setEmail] = useState("");
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? "")); }, []);
@@ -614,6 +851,12 @@ function DashboardPage() {
         </div>
 
         <WeeklyRouteSection />
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <RecentAlertsSection />
+          <TopTechniciansSection />
+          <RecentActivitySection />
+        </div>
 
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
           <FinancialOverviewSection />
