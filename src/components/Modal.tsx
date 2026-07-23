@@ -8,7 +8,7 @@ export function Modal({
   return (
     <div className="dash fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={closeOnOverlayClick ? onClose : undefined}>
       <div
-        className={`w-full ${maxWidth} rounded-[22px] bg-white`}
+        className={`w-full min-w-0 ${maxWidth} rounded-[22px] bg-white`}
         style={{ boxShadow: "0 30px 90px rgba(10,20,40,.4)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -16,7 +16,7 @@ export function Modal({
           <h2 className="text-lg font-bold text-[var(--dash-text)]">{title}</h2>
           <button onClick={onClose} className="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"><X className="h-5 w-5" /></button>
         </div>
-        <div className="max-h-[75vh] overflow-y-auto p-6">{children}</div>
+        <div className="max-h-[75vh] min-w-0 overflow-y-auto overflow-x-hidden p-6">{children}</div>
       </div>
     </div>
   );
