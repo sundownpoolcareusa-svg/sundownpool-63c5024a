@@ -8,7 +8,7 @@ import {
   Plus, Search, Filter, ChevronDown,
   ChevronRight, Pencil, Trash2, Users, CalendarDays,
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
-  CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail,
+  CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, Waves, User,
 } from "lucide-react";
 import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -859,6 +859,13 @@ const WEEKDAYS = [
   { v: "Dom", label: "Domingo" },
 ];
 
+const CLIENT_FORM_TABS = [
+  { key: "client" as const, label: "Client Info", icon: User },
+  { key: "pool" as const, label: "Pool Info", icon: Waves },
+  { key: "service" as const, label: "Service Plan", icon: CalendarDays },
+  { key: "notes" as const, label: "Notes", icon: FileText },
+];
+
 function ClientFormModal({
   open, onClose, onSaved, editing,
 }: { open: boolean; onClose: () => void; onSaved: () => void; editing?: ClientFull | null }) {
@@ -874,8 +881,10 @@ function ClientFormModal({
     gate_code: "",
     contacts: [] as ClientContact[],
     has_spa: false,
+    notes: "",
   };
   const [form, setForm] = useState(empty);
+  const [formTab, setFormTab] = useState<"client" | "pool" | "service" | "notes">("client");
   const [visitMode, setVisitMode] = useState<"recorrente" | "unica">("recorrente");
   const [oneTimeDate, setOneTimeDate] = useState(tomorrowStr());
   const [oneTimeNote, setOneTimeNote] = useState("");
@@ -911,6 +920,7 @@ function ClientFormModal({
         gate_code: editing.gate_code || "",
         contacts: editing.contacts || [],
         has_spa: editing.has_spa ?? false,
+        notes: editing.notes || "",
       });
     } else {
       setForm(empty);
@@ -919,6 +929,7 @@ function ClientFormModal({
     setOneTimeDate(tomorrowStr());
     setOneTimeNote("");
     setOneTimeTechnicianId(editing?.technician_id ?? null);
+    setFormTab("client");
     setLoadedId(editingId);
   }
   if (!open && loadedId !== null) setLoadedId(null);
@@ -967,236 +978,282 @@ function ClientFormModal({
   return (
     <Modal open={open} onClose={onClose} title={editing ? "Edit Client" : "New Client"}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} />
+        <div className="-mt-1 flex items-center gap-1 overflow-x-auto border-b border-[var(--dash-border)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {CLIENT_FORM_TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setFormTab(t.key)}
+              className="flex shrink-0 flex-col items-center gap-1 border-b-2 px-4 pb-2.5 text-[12px] font-bold"
+              style={{
+                borderColor: formTab === t.key ? "var(--dash-navy)" : "transparent",
+                color: formTab === t.key ? "var(--dash-navy)" : "var(--dash-text-muted)",
+              }}
+            >
+              <t.icon className="h-5 w-5" />
+              {t.label}
+            </button>
+          ))}
         </div>
-        <div>
-          {form.contacts.map((c, i) => (
-            <div key={i} className="mb-2 flex items-center gap-2">
-              <input
-                value={c.name}
-                onChange={(e) => setForm((f) => ({
-                  ...f,
-                  contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, name: e.target.value } : x)),
-                }))}
-                placeholder="Contact name"
-                className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-              />
-              <input
-                value={formatPhone(c.phone)}
-                onChange={(e) => setForm((f) => ({
-                  ...f,
-                  contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, phone: formatPhone(e.target.value) } : x)),
-                }))}
-                placeholder="Contact phone"
-                className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-              />
+
+        {formTab === "client" && (
+          <>
+            <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+              <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} />
+            </div>
+            <div>
+              {form.contacts.map((c, i) => (
+                <div key={i} className="mb-2 flex items-center gap-2">
+                  <input
+                    value={c.name}
+                    onChange={(e) => setForm((f) => ({
+                      ...f,
+                      contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, name: e.target.value } : x)),
+                    }))}
+                    placeholder="Contact name"
+                    className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={formatPhone(c.phone)}
+                    onChange={(e) => setForm((f) => ({
+                      ...f,
+                      contacts: f.contacts.map((x, xi) => (xi === i ? { ...x, phone: formatPhone(e.target.value) } : x)),
+                    }))}
+                    placeholder="Contact phone"
+                    className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, contacts: f.contacts.filter((_, xi) => xi !== i) }))}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-red)]"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
               <button
                 type="button"
-                onClick={() => setForm((f) => ({ ...f, contacts: f.contacts.filter((_, xi) => xi !== i) }))}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-red)]"
+                onClick={() => setForm((f) => ({ ...f, contacts: [...f.contacts, { name: "", phone: "" }] }))}
+                className="flex items-center gap-1 text-xs font-semibold"
+                style={{ color: "var(--dash-link)" }}
               >
-                <Trash2 className="h-4 w-4" />
+                <Plus className="h-3 w-3" /> Add contact
               </button>
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => setForm((f) => ({ ...f, contacts: [...f.contacts, { name: "", phone: "" }] }))}
-            className="flex items-center gap-1 text-xs font-semibold"
-            style={{ color: "var(--dash-link)" }}
-          >
-            <Plus className="h-3 w-3" /> Add contact
-          </button>
-        </div>
-        <AddressAutocomplete
-          value={form.address}
-          onChange={(v) => setForm((f) => ({ ...f, address: v }))}
-          onSelectPlace={(p) => setForm((f) => ({
-            ...f,
-            address: p.address,
-            city: p.city || f.city,
-            state: p.state || f.state,
-            zip: p.zip || f.zip,
-            lat: p.lat ?? f.lat,
-            lng: p.lng ?? f.lng,
-          }))}
-        />
-        <div className="grid grid-cols-3 gap-4">
-          <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
-          <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
-          <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
-        </div>
-        <Field label="Gate code" value={form.gate_code} onChange={(v) => setForm({ ...form, gate_code: v })} />
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Type</label>
-            <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
-              <option>Residential</option><option>Commercial</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Status</label>
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
-              <option>Ativo</option><option>Inativo</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Stage</label>
-            <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
-              <option>Cliente</option><option>Prospecção</option>
-            </select>
-          </div>
-        </div>
-        <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
-          <input
-            type="checkbox"
-            checked={form.has_spa}
-            onChange={(e) => setForm({ ...form, has_spa: e.target.checked })}
-            className="h-4 w-4"
-          />
-          This client has a Spa (tracked independently from the Pool)
-        </label>
-        <div>
-          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Schedule</label>
-          <div className="mt-1.5 grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setVisitMode("recorrente")}
-              className="rounded-[10px] border px-3 py-2 text-sm font-semibold transition"
-              style={{
-                borderColor: visitMode === "recorrente" ? "var(--dash-navy)" : "var(--dash-border)",
-                background: visitMode === "recorrente" ? "var(--dash-navy)" : "#fff",
-                color: visitMode === "recorrente" ? "#fff" : "var(--dash-text-secondary)",
-              }}
-            >
-              Recorrente
-            </button>
-            <button
-              type="button"
-              onClick={() => setVisitMode("unica")}
-              className="rounded-[10px] border px-3 py-2 text-sm font-semibold transition"
-              style={{
-                borderColor: visitMode === "unica" ? "var(--dash-navy)" : "var(--dash-border)",
-                background: visitMode === "unica" ? "var(--dash-navy)" : "#fff",
-                color: visitMode === "unica" ? "#fff" : "var(--dash-text-secondary)",
-              }}
-            >
-              Visita única
-            </button>
-          </div>
+            <AddressAutocomplete
+              value={form.address}
+              onChange={(v) => setForm((f) => ({ ...f, address: v }))}
+              onSelectPlace={(p) => setForm((f) => ({
+                ...f,
+                address: p.address,
+                city: p.city || f.city,
+                state: p.state || f.state,
+                zip: p.zip || f.zip,
+                lat: p.lat ?? f.lat,
+                lng: p.lng ?? f.lng,
+              }))}
+            />
+            <div className="grid grid-cols-3 gap-4">
+              <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+              <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
+              <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
+            </div>
+          </>
+        )}
 
-          {visitMode === "recorrente" ? (
-            <>
-              <p className="mt-2 text-xs text-[var(--dash-text-muted)]">Select one or more days of the week</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {WEEKDAYS.map((d) => {
-                  const active = form.service_days.includes(d.v);
-                  return (
-                    <button
-                      type="button"
-                      key={d.v}
-                      onClick={() => toggleDay(d.v)}
-                      className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                      style={{
-                        borderColor: active ? "var(--dash-navy)" : "var(--dash-border)",
-                        background: active ? "var(--dash-navy)" : "#fff",
-                        color: active ? "#fff" : "var(--dash-text-secondary)",
-                      }}
-                    >
-                      {d.v}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <div className="mt-2 space-y-2">
-              <p className="text-xs text-[var(--dash-text-muted)]">Doesn't change the client's recurring days — just adds one extra visit. Add as many as you need, even more than one on the same day with a different technician.</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Date</label>
-                  <input
-                    type="date"
-                    value={oneTimeDate}
-                    onChange={(e) => setOneTimeDate(e.target.value)}
-                    className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Technician</label>
-                  <select
-                    value={oneTimeTechnicianId ?? ""}
-                    onChange={(e) => setOneTimeTechnicianId(e.target.value || null)}
-                    className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-                  >
-                    <option value="">Select...</option>
-                    {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
-                </div>
+        {formTab === "pool" && (
+          <>
+            <Field label="Gate code" value={form.gate_code} onChange={(v) => setForm({ ...form, gate_code: v })} />
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Type</label>
+              <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
+                <option>Residential</option><option>Commercial</option>
+              </select>
+            </div>
+            <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+              <input
+                type="checkbox"
+                checked={form.has_spa}
+                onChange={(e) => setForm({ ...form, has_spa: e.target.checked })}
+                className="h-4 w-4"
+              />
+              This client has a Spa (tracked independently from the Pool)
+            </label>
+            <PhotoUploader
+              label="Pool photos"
+              value={form.pool_photos}
+              onChange={(v) => setForm({ ...form, pool_photos: v })}
+              folder={`${userId}/pool`}
+            />
+            <PhotoUploader
+              label="Equipment photos"
+              value={form.equipment_photos}
+              onChange={(v) => setForm({ ...form, equipment_photos: v })}
+              folder={`${userId}/equipment`}
+            />
+          </>
+        )}
+
+        {formTab === "service" && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Status</label>
+                <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
+                  <option>Ativo</option><option>Inativo</option>
+                </select>
               </div>
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Service note</label>
-                <textarea
-                  value={oneTimeNote}
-                  onChange={(e) => setOneTimeNote(e.target.value)}
-                  rows={2}
-                  placeholder="e.g. replace filter sand, check for leak..."
-                  className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-                />
+                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Stage</label>
+                <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
+                  <option>Cliente</option><option>Prospecção</option>
+                </select>
               </div>
-              {editing && (
+            </div>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Schedule</label>
+              <div className="mt-1.5 grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowVisitSchedule(true)}
-                  className="flex items-center gap-1 text-xs font-semibold"
-                  style={{ color: "var(--dash-link)" }}
+                  onClick={() => setVisitMode("recorrente")}
+                  className="rounded-[10px] border px-3 py-2 text-sm font-semibold transition"
+                  style={{
+                    borderColor: visitMode === "recorrente" ? "var(--dash-navy)" : "var(--dash-border)",
+                    background: visitMode === "recorrente" ? "var(--dash-navy)" : "#fff",
+                    color: visitMode === "recorrente" ? "#fff" : "var(--dash-text-secondary)",
+                  }}
                 >
-                  <CalendarDays className="h-3.5 w-3.5" /> Ver visitas agendadas
+                  Recorrente
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setVisitMode("unica")}
+                  className="rounded-[10px] border px-3 py-2 text-sm font-semibold transition"
+                  style={{
+                    borderColor: visitMode === "unica" ? "var(--dash-navy)" : "var(--dash-border)",
+                    background: visitMode === "unica" ? "var(--dash-navy)" : "#fff",
+                    color: visitMode === "unica" ? "#fff" : "var(--dash-text-secondary)",
+                  }}
+                >
+                  Visita única
+                </button>
+              </div>
+
+              {visitMode === "recorrente" ? (
+                <>
+                  <p className="mt-2 text-xs text-[var(--dash-text-muted)]">Select one or more days of the week</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {WEEKDAYS.map((d) => {
+                      const active = form.service_days.includes(d.v);
+                      return (
+                        <button
+                          type="button"
+                          key={d.v}
+                          onClick={() => toggleDay(d.v)}
+                          className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+                          style={{
+                            borderColor: active ? "var(--dash-navy)" : "var(--dash-border)",
+                            background: active ? "var(--dash-navy)" : "#fff",
+                            color: active ? "#fff" : "var(--dash-text-secondary)",
+                          }}
+                        >
+                          {d.v}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  <p className="text-xs text-[var(--dash-text-muted)]">Doesn't change the client's recurring days — just adds one extra visit. Add as many as you need, even more than one on the same day with a different technician.</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Date</label>
+                      <input
+                        type="date"
+                        value={oneTimeDate}
+                        onChange={(e) => setOneTimeDate(e.target.value)}
+                        className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Technician</label>
+                      <select
+                        value={oneTimeTechnicianId ?? ""}
+                        onChange={(e) => setOneTimeTechnicianId(e.target.value || null)}
+                        className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                      >
+                        <option value="">Select...</option>
+                        {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Service note</label>
+                    <textarea
+                      value={oneTimeNote}
+                      onChange={(e) => setOneTimeNote(e.target.value)}
+                      rows={2}
+                      placeholder="e.g. replace filter sand, check for leak..."
+                      className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                    />
+                  </div>
+                  {editing && (
+                    <button
+                      type="button"
+                      onClick={() => setShowVisitSchedule(true)}
+                      className="flex items-center gap-1 text-xs font-semibold"
+                      style={{ color: "var(--dash-link)" }}
+                    >
+                      <CalendarDays className="h-3.5 w-3.5" /> Ver visitas agendadas
+                    </button>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
-        <div>
-          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Assigned Technician</label>
-          <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring days to auto-schedule</p>
-          <select
-            value={form.technician_id ?? ""}
-            onChange={(e) => setForm({ ...form, technician_id: e.target.value || null })}
-            className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-          >
-            <option value="">None</option>
-            {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Monthly pool value (USD)</label>
-          <div className="relative mt-1">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[var(--dash-text-muted)]">$</span>
-            <input
-              type="number" min="0" step="0.01"
-              value={form.monthly_value}
-              onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
-              className="w-full rounded-[10px] border border-[var(--dash-border-input)] py-2 pl-7 pr-3 text-sm"
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Assigned Technician</label>
+              <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring days to auto-schedule</p>
+              <select
+                value={form.technician_id ?? ""}
+                onChange={(e) => setForm({ ...form, technician_id: e.target.value || null })}
+                className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+              >
+                <option value="">None</option>
+                {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Monthly pool value (USD)</label>
+              <div className="relative mt-1">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[var(--dash-text-muted)]">$</span>
+                <input
+                  type="number" min="0" step="0.01"
+                  value={form.monthly_value}
+                  onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
+                  className="w-full rounded-[10px] border border-[var(--dash-border-input)] py-2 pl-7 pr-3 text-sm"
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {formTab === "notes" && (
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              rows={8}
+              placeholder="Add any notes about this client..."
+              className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
             />
           </div>
-        </div>
-        <PhotoUploader
-          label="Pool photos"
-          value={form.pool_photos}
-          onChange={(v) => setForm({ ...form, pool_photos: v })}
-          folder={`${userId}/pool`}
-        />
-        <PhotoUploader
-          label="Equipment photos"
-          value={form.equipment_photos}
-          onChange={(v) => setForm({ ...form, equipment_photos: v })}
-          folder={`${userId}/equipment`}
-        />
-        <div className="flex justify-end gap-2 pt-2">
+        )}
+
+        <div className="flex justify-end gap-2 border-t border-[var(--dash-border)] pt-4">
           <button type="button" onClick={onClose} className="rounded-[10px] border border-[var(--dash-border)] px-4 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">Cancel</button>
           <button disabled={mut.isPending} className="rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
             {mut.isPending ? "Saving..." : editing ? "Update Client" : "Save Client"}
