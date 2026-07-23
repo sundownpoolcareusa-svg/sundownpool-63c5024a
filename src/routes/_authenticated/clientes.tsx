@@ -234,13 +234,13 @@ function SummaryStat({
   const Comp = onClick ? "button" : "div";
   return (
     <Comp onClick={onClick} className="rounded-[20px] border border-[#E9EDF5] bg-white p-6 text-left" style={cardShadow}>
-      <div className="flex items-center gap-4">
-        <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
-          <Icon className="h-7 w-7" />
+      <div className="flex items-center gap-3.5">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
+          <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <div className="text-[32px] font-extrabold leading-none tracking-tight text-[var(--dash-text)]">{value}</div>
-          <div className="mt-1.5 text-[17px] font-bold leading-tight text-[var(--dash-text)]">{label}</div>
+          <div className="text-[26px] font-extrabold leading-none tracking-tight text-[var(--dash-text)]">{value}</div>
+          <div className="mt-1.5 text-[15px] font-bold leading-tight text-[var(--dash-text)]">{label}</div>
           <div className="mt-1 flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>
             {sub}{subArrow && <span aria-hidden="true">→</span>}
           </div>
