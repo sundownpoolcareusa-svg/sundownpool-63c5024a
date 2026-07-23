@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import {
-  Award, Users, DollarSign, BarChart3, FileText, ChevronDown, Download, Plus, Bell,
+  Award, Users, DollarSign, BarChart3, FileText, ChevronDown, ChevronLeft, ChevronRight, Download, Plus, Bell, CalendarDays,
 } from "lucide-react";
-import { listClients, listInvoices, listRoutesForDate, fmt } from "@/lib/db";
+import { listClients, listInvoices, listRoutesForDate, fmt, initials } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -82,6 +82,131 @@ function ProgressFooter({ completed, remaining }: { completed: number; remaining
       <div className="mt-1.5 flex items-center justify-between text-[13px] font-semibold">
         <span style={{ color: "var(--dash-green)" }}>{completed} completed</span>
         <span className="text-[var(--dash-text-muted)]">{remaining} remaining</span>
+      </div>
+    </div>
+  );
+}
+
+const WEEKDAY_COLORS = [
+  { name: "Monday", accent: "#2563EB", iconBg: "#DBEAFE" },
+  { name: "Tuesday", accent: "#16A34A", iconBg: "#DCFCE7" },
+  { name: "Wednesday", accent: "#F59E0B", iconBg: "#FFEDD5" },
+  { name: "Thursday", accent: "#EF4444", iconBg: "#FEE2E2" },
+  { name: "Friday", accent: "#7C3AED", iconBg: "#EDE4FB" },
+];
+
+type RouteStopAgg = { id: string; status: string; client: { monthly_value: number | null; service_days: string[] | null } | null };
+type RouteAgg = { route_date: string; technician_id: string; technician: { id: string; name: string; color: string } | null; route_stops: RouteStopAgg[] | null };
+
+type DayAgg = { pools: number; value: number; completed: number; remaining: number; tech: { name: string; color: string } | null };
+
+function buildDayAgg(routes: RouteAgg[], dateForDay: string): DayAgg {
+  const dayRoutes = routes.filter((r) => r.route_date === dateForDay);
+  let pools = 0;
+  let value = 0;
+  let completed = 0;
+  let bestTech: { name: string; color: string } | null = null;
+  let bestCount = -1;
+  for (const r of dayRoutes) {
+    const stops = r.route_stops ?? [];
+    pools += stops.length;
+    for (const s of stops) {
+      const days = s.client?.service_days?.length || 1;
+      value += Number(s.client?.monthly_value || 0) / days;
+      if (s.status === "Concluído") completed += 1;
+    }
+    if (stops.length > bestCount) {
+      bestCount = stops.length;
+      bestTech = r.technician ? { name: r.technician.name, color: r.technician.color } : null;
+    }
+  }
+  return { pools, value, completed, remaining: Math.max(0, pools - completed), tech: bestTech };
+}
+
+function WeeklyRouteSection() {
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekMondayDate = (() => { const m = mondayOf(new Date()); m.setDate(m.getDate() + weekOffset * 7); return m; })();
+  const weekMonday = dateStr(weekMondayDate);
+  const weekFriday = dateStr((() => { const f = new Date(weekMondayDate); f.setDate(f.getDate() + 4); return f; })());
+
+  const { data: weekDetailRoutes = [] } = useQuery({
+    queryKey: ["routes-week-detail", weekMonday],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("routes")
+        .select("route_date, technician_id, technician:technicians(id,name,color), route_stops(id, status, client:clients(monthly_value, service_days))")
+        .gte("route_date", weekMonday)
+        .lte("route_date", weekFriday);
+      if (error) throw error;
+      return (data ?? []) as unknown as RouteAgg[];
+    },
+  });
+
+  const weekDays = WEEKDAY_COLORS.map((c, i) => {
+    const d = new Date(weekMondayDate);
+    d.setDate(d.getDate() + i);
+    return { ...c, dateForDay: dateStr(d) };
+  });
+
+  return (
+    <div className="rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-extrabold text-[var(--dash-text)]">Weekly Route</h2>
+        <div className="flex items-center gap-3">
+          <Link to="/rotas" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View Full Schedule</Link>
+          <div className="flex items-center gap-1.5">
+            <button type="button" onClick={() => setWeekOffset((v) => v - 1)} aria-label="Previous week" className="grid h-8 w-8 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button type="button" onClick={() => setWeekOffset((v) => v + 1)} aria-label="Next week" className="grid h-8 w-8 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {weekDays.map((d) => {
+          const agg = buildDayAgg(weekDetailRoutes, d.dateForDay);
+          return (
+            <div key={d.dateForDay} className="overflow-hidden rounded-[14px] border border-[var(--dash-border)]">
+              <div className="h-[3px]" style={{ background: d.accent }} />
+              <div className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full" style={{ background: d.iconBg, color: d.accent }}>
+                    <CalendarDays className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-extrabold" style={{ color: d.accent }}>{d.name}</div>
+                    <div className="text-lg font-extrabold text-[var(--dash-text)]">{agg.pools} Pools</div>
+                  </div>
+                </div>
+                <div className="mt-1 text-sm text-[var(--dash-text-secondary)]">{fmt(agg.value)} Route Value</div>
+
+                <div className="mt-4 flex min-h-8 items-center gap-2">
+                  {agg.tech ? (
+                    <>
+                      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white" style={{ background: agg.tech.color }}>
+                        {initials(agg.tech.name)}
+                      </div>
+                      <span className="truncate text-sm font-bold text-[var(--dash-text)]">{agg.tech.name}</span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-[var(--dash-text-muted)]">No technician assigned</span>
+                  )}
+                </div>
+
+                <div className="mt-4">
+                  <ProgressFooter completed={agg.completed} remaining={agg.remaining} />
+                </div>
+
+                <Link to="/rotas" className="mt-4 block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-bold hover:bg-[var(--dash-bg)]" style={{ color: d.accent }}>
+                  View Route
+                </Link>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -219,6 +344,8 @@ function DashboardPage() {
             }
           />
         </div>
+
+        <WeeklyRouteSection />
       </main>
     </div>
   );
