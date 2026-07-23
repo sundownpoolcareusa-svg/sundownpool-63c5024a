@@ -220,7 +220,6 @@ function TecnicoPage() {
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [selectedClient, setSelectedClient] = useState<TechnicianClient | null>(null);
-  const [confirmCompleteStop, setConfirmCompleteStop] = useState<TechnicianStop | null>(null);
   const [undoStop, setUndoStop] = useState<TechnicianStop | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [myEmail, setMyEmail] = useState("");
@@ -711,10 +710,7 @@ function TecnicoPage() {
                       )}
                       {next && (
                         <button
-                          onClick={() => {
-                            if (next === "Concluído") { setConfirmCompleteStop(stop); return; }
-                            statusMut.mutate({ stopId: stop.stop_id, status: next });
-                          }}
+                          onClick={() => statusMut.mutate({ stopId: stop.stop_id, status: next })}
                           disabled={statusMut.isPending}
                           className="flex shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"
                           style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
@@ -797,36 +793,6 @@ function TecnicoPage() {
         />
       )}
 
-      {confirmCompleteStop && (
-        <Modal
-          open
-          onClose={() => setConfirmCompleteStop(null)}
-          title="Concluir serviço"
-          maxWidth="max-w-sm"
-        >
-          <p className="text-sm text-[var(--dash-text-secondary)]">
-            Confirmar que o serviço em <span className="font-bold text-[var(--dash-text)]">{confirmCompleteStop.client_name}</span> foi concluído?
-          </p>
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={() => setConfirmCompleteStop(null)}
-              className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-2.5 text-sm font-bold text-[var(--dash-text-secondary)]"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={() => {
-                statusMut.mutate({ stopId: confirmCompleteStop.stop_id, status: "Concluído" });
-                setConfirmCompleteStop(null);
-              }}
-              className="flex-1 rounded-[12px] py-2.5 text-sm font-bold text-white"
-              style={{ background: "var(--dash-green)" }}
-            >
-              Confirmar
-            </button>
-          </div>
-        </Modal>
-      )}
 
       {undoStop && (
         <Modal
