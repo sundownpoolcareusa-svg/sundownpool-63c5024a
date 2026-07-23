@@ -8,7 +8,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import {
   Award, Users, DollarSign, BarChart3, FileText, ChevronDown, ChevronLeft, ChevronRight,
-  Download, Plus, Bell, CalendarDays, FlaskConical, Phone, MessageSquare, MapPin, Play, Check,
+  Download, Plus, Bell, FlaskConical, Phone, MapPin, Play, Check,
   User, Zap, AlertTriangle, CheckCircle2, ClipboardList, UserPlus, CalendarX,
 } from "lucide-react";
 import {
@@ -66,18 +66,18 @@ function DashboardStat({
   sub: ReactNode; subColor?: string; footer?: ReactNode;
 }) {
   return (
-    <div className="rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
-      <div className="flex items-center gap-3.5">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
-          <Icon className="h-5 w-5" />
+    <div className="rounded-[16px] border border-[#E9EDF5] bg-white p-3.5" style={cardShadow}>
+      <div className="flex items-center gap-2.5">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
+          <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <div className="text-[26px] font-extrabold leading-none tracking-tight text-[var(--dash-text)]">{value}</div>
-          <div className="mt-1.5 text-[15px] font-bold leading-tight text-[var(--dash-text)]">{label}</div>
-          <div className="mt-1 text-[13px] font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>{sub}</div>
+          <div className="text-[20px] font-extrabold leading-none tracking-tight text-[var(--dash-text)]">{value}</div>
+          <div className="mt-1 text-[13px] font-bold leading-tight text-[var(--dash-text)]">{label}</div>
+          <div className="mt-0.5 text-[11.5px] font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>{sub}</div>
         </div>
       </div>
-      {footer && <div className="mt-3">{footer}</div>}
+      {footer && <div className="mt-2">{footer}</div>}
     </div>
   );
 }
@@ -90,7 +90,7 @@ function ProgressFooter({ completed, remaining }: { completed: number; remaining
       <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
       </div>
-      <div className="mt-1.5 flex items-center justify-between text-[13px] font-semibold">
+      <div className="mt-1 flex items-center justify-between text-[11.5px] font-semibold">
         <span style={{ color: "var(--dash-green)" }}>{completed} completed</span>
         <span className="text-[var(--dash-text-muted)]">{remaining} remaining</span>
       </div>
@@ -160,58 +160,51 @@ function WeeklyRouteSection() {
   });
 
   return (
-    <div className="rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+    <div className="rounded-[16px] border border-[#E9EDF5] bg-white p-4" style={cardShadow}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-extrabold text-[var(--dash-text)]">Weekly Route</h2>
+        <h2 className="text-base font-extrabold text-[var(--dash-text)]">Weekly Route</h2>
         <div className="flex items-center gap-3">
-          <Link to="/rotas" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View Full Schedule</Link>
+          <Link to="/rotas" className="text-[13px] font-semibold" style={{ color: "var(--dash-link)" }}>View Full Schedule</Link>
           <div className="flex items-center gap-1.5">
-            <button type="button" onClick={() => setWeekOffset((v) => v - 1)} aria-label="Previous week" className="grid h-8 w-8 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
-              <ChevronLeft className="h-4 w-4" />
+            <button type="button" onClick={() => setWeekOffset((v) => v - 1)} aria-label="Previous week" className="grid h-7 w-7 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-            <button type="button" onClick={() => setWeekOffset((v) => v + 1)} aria-label="Next week" className="grid h-8 w-8 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
-              <ChevronRight className="h-4 w-4" />
+            <button type="button" onClick={() => setWeekOffset((v) => v + 1)} aria-label="Next week" className="grid h-7 w-7 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
+              <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {weekDays.map((d) => {
           const agg = buildDayAgg(weekDetailRoutes, d.dateForDay);
           return (
-            <div key={d.dateForDay} className="overflow-hidden rounded-[14px] border border-[var(--dash-border)]">
+            <div key={d.dateForDay} className="overflow-hidden rounded-[12px] border border-[var(--dash-border)]">
               <div className="h-[3px]" style={{ background: d.accent }} />
-              <div className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full" style={{ background: d.iconBg, color: d.accent }}>
-                    <CalendarDays className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-extrabold" style={{ color: d.accent }}>{d.name}</div>
-                    <div className="text-lg font-extrabold text-[var(--dash-text)]">{agg.pools} Pools</div>
-                  </div>
-                </div>
-                <div className="mt-1 text-sm text-[var(--dash-text-secondary)]">{fmt(agg.value)} Route Value</div>
+              <div className="p-3">
+                <div className="text-[13px] font-extrabold" style={{ color: d.accent }}>{d.name}</div>
+                <div className="text-base font-extrabold text-[var(--dash-text)]">{agg.pools} Pools</div>
+                <div className="text-[12px] text-[var(--dash-text-secondary)]">{fmt(agg.value)} Route Value</div>
 
-                <div className="mt-4 flex min-h-8 items-center gap-2">
+                <div className="mt-2 flex min-h-7 items-center gap-1.5">
                   {agg.tech ? (
                     <>
-                      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white" style={{ background: agg.tech.color }}>
+                      <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white" style={{ background: agg.tech.color }}>
                         {initials(agg.tech.name)}
                       </div>
-                      <span className="truncate text-sm font-bold text-[var(--dash-text)]">{agg.tech.name}</span>
+                      <span className="truncate text-[12px] font-bold text-[var(--dash-text)]">{agg.tech.name}</span>
                     </>
                   ) : (
-                    <span className="text-sm text-[var(--dash-text-muted)]">No technician assigned</span>
+                    <span className="text-[12px] text-[var(--dash-text-muted)]">No technician assigned</span>
                   )}
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-2">
                   <ProgressFooter completed={agg.completed} remaining={agg.remaining} />
                 </div>
 
-                <Link to="/rotas" className="mt-4 block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-bold hover:bg-[var(--dash-bg)]" style={{ color: d.accent }}>
+                <Link to="/rotas" className="mt-2 block w-full rounded-[9px] border border-[var(--dash-border)] py-1.5 text-center text-[12px] font-bold hover:bg-[var(--dash-bg)]" style={{ color: d.accent }}>
                   View Route
                 </Link>
               </div>
@@ -225,6 +218,13 @@ function WeeklyRouteSection() {
 
 function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+// Rounding to "$Xk" collapses distinct sub-$1000 values to the same label
+// (e.g. every tick reading "$0k") — only abbreviate once the value is large
+// enough for that to still be meaningful.
+function axisFmt(v: number) {
+  return v >= 1000 ? `$${(v / 1000).toFixed(1).replace(/\.0$/, "")}k` : `$${Math.round(v)}`;
 }
 
 function formatStopTime(t: string | null) {
@@ -243,14 +243,14 @@ function LabelValueStat({
 }) {
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--dash-text-secondary)]">
-        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px]" style={{ background: iconBg, color: iconColor }}>
-          <Icon className="h-3 w-3" />
+      <div className="flex items-center gap-1 text-[11px] font-semibold leading-tight text-[var(--dash-text-secondary)]">
+        <span className="grid h-4 w-4 shrink-0 place-items-center rounded-[5px]" style={{ background: iconBg, color: iconColor }}>
+          <Icon className="h-2.5 w-2.5" />
         </span>
         <span className="truncate">{label}</span>
       </div>
-      <div className="mt-1 truncate text-xl font-extrabold" style={{ color: valueColor || "var(--dash-text)" }}>{value}</div>
-      {sub && <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{sub}</div>}
+      <div className="mt-0.5 truncate text-[17px] font-extrabold" style={{ color: valueColor || "var(--dash-text)" }}>{value}</div>
+      {sub && <div className="truncate text-[11px] text-[var(--dash-text-muted)]">{sub}</div>}
     </div>
   );
 }
@@ -258,8 +258,8 @@ function LabelValueStat({
 function ValueLabelStat({ value, valueColor, label }: { value: string; valueColor?: string; label: string }) {
   return (
     <div className="min-w-0">
-      <div className="truncate text-xl font-extrabold" style={{ color: valueColor || "var(--dash-text)" }}>{value}</div>
-      <div className="mt-0.5 truncate text-[12px] font-medium text-[var(--dash-text-muted)]">{label}</div>
+      <div className="truncate text-[17px] font-extrabold" style={{ color: valueColor || "var(--dash-text)" }}>{value}</div>
+      <div className="mt-0.5 truncate text-[11px] font-medium text-[var(--dash-text-muted)] leading-tight">{label}</div>
     </div>
   );
 }
@@ -289,20 +289,20 @@ function FinancialOverviewSection({ monthlyRevenue }: { monthlyRevenue: number }
   });
 
   return (
-    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
-      <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Financial Overview</h2>
-      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div className="flex flex-col rounded-[16px] border border-[#E9EDF5] bg-white p-4" style={cardShadow}>
+      <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Financial Overview</h2>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <LabelValueStat icon={DollarSign} iconColor="#0B63F6" iconBg="#DBEAFE" label="Monthly Revenue" value={fmt(monthlyRevenue)} />
         <LabelValueStat icon={CheckCircle2} iconColor="var(--dash-green)" iconBg="#DCFCE7" label="Collected" value={fmt(collected)} valueColor="var(--dash-green)" />
         <LabelValueStat icon={AlertTriangle} iconColor="var(--dash-red)" iconBg="#FEE2E2" label="Outstanding" value={fmt(outstanding)} valueColor={outstanding > 0 ? "var(--dash-red)" : undefined} />
         <LabelValueStat icon={ClipboardList} iconColor="#7C3AED" iconBg="#EDE4FB" label="Estimates Open" value={fmt(openEstimatesTotal)} sub={`${openEstimates.length} estimate${openEstimates.length === 1 ? "" : "s"}`} />
       </div>
-      <div className="mt-5 h-44 w-full">
+      <div className="mt-3 h-32 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+          <BarChart data={chartData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--dash-border-table)" />
-            <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--dash-text-muted)" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: "var(--dash-text-muted)" }} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => `$${Math.round(v / 1000)}k`} />
+            <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--dash-text-muted)" }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: "var(--dash-text-muted)" }} axisLine={false} tickLine={false} width={40} tickFormatter={axisFmt} />
             <Tooltip formatter={(v: number) => fmt(v)} cursor={{ fill: "var(--dash-bg)" }} />
             <Bar dataKey="total" name="Revenue" fill="#0B63F6" radius={[6, 6, 0, 0]} />
           </BarChart>
@@ -347,39 +347,39 @@ function ChemicalPerformanceSection({ monthlyRevenue }: { monthlyRevenue: number
   ].filter((d) => d.value > 0);
 
   return (
-    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
-      <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Chemical Performance</h2>
-      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div className="flex flex-col rounded-[16px] border border-[#E9EDF5] bg-white p-4" style={cardShadow}>
+      <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Chemical Performance</h2>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <ValueLabelStat value={fmt(chemicalCost)} label="Chemical Cost This Month" />
         <ValueLabelStat value={fmt(avgPerVisit)} label="Average Cost per Visit" />
         <ValueLabelStat value={`${pctOfRevenue.toFixed(1)}%`} label="Chemical Cost of Revenue" />
         <ValueLabelStat value={mostUsed} valueColor="var(--dash-link)" label="Most Used Product" />
       </div>
-      <div className="mt-5 flex items-center gap-4">
-        <div className="h-28 w-28 shrink-0">
+      <div className="mt-3 flex items-center gap-3">
+        <div className="h-24 w-24 shrink-0">
           {donutData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={donutData} dataKey="value" nameKey="name" innerRadius={32} outerRadius={54} paddingAngle={2}>
+                <Pie data={donutData} dataKey="value" nameKey="name" innerRadius={28} outerRadius={46} paddingAngle={2}>
                   {donutData.map((d, i) => <Cell key={d.name} fill={PRODUCT_COLORS[i % PRODUCT_COLORS.length]} />)}
                 </Pie>
                 <Tooltip formatter={(v: number) => fmt(v)} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="grid h-full w-full place-items-center rounded-full border-2 border-dashed border-[var(--dash-border)] text-[11px] text-[var(--dash-text-muted)]">No data</div>
+            <div className="grid h-full w-full place-items-center rounded-full border-2 border-dashed border-[var(--dash-border)] text-[10px] text-[var(--dash-text-muted)]">No data</div>
           )}
         </div>
-        <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="min-w-0 flex-1 space-y-1">
           {donutData.map((d, i) => (
-            <div key={d.name} className="flex items-center justify-between gap-2 text-[13px]">
+            <div key={d.name} className="flex items-center justify-between gap-2 text-[12px]">
               <div className="flex min-w-0 items-center gap-1.5">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: PRODUCT_COLORS[i % PRODUCT_COLORS.length] }} />
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: PRODUCT_COLORS[i % PRODUCT_COLORS.length] }} />
                 <span className="truncate font-medium text-[var(--dash-text-secondary)]">{d.name}</span>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex shrink-0 items-center gap-1.5">
                 <span className="font-bold text-[var(--dash-text)]">{fmt(d.value)}</span>
-                <span className="w-10 text-right text-[var(--dash-text-muted)]">{chemicalCost > 0 ? `${((d.value / chemicalCost) * 100).toFixed(1)}%` : "—"}</span>
+                <span className="w-9 text-right text-[11px] text-[var(--dash-text-muted)]">{chemicalCost > 0 ? `${((d.value / chemicalCost) * 100).toFixed(1)}%` : "—"}</span>
               </div>
             </div>
           ))}
@@ -387,9 +387,9 @@ function ChemicalPerformanceSection({ monthlyRevenue }: { monthlyRevenue: number
       </div>
       <Link
         to="/quimicos"
-        className="mt-4 flex items-center justify-center gap-1.5 rounded-[10px] border border-[var(--dash-border)] py-2 text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+        className="mt-3 flex items-center justify-center gap-1.5 rounded-[9px] border border-[var(--dash-border)] py-1.5 text-[13px] font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
       >
-        <FlaskConical className="h-4 w-4" /> View Chemical Report
+        <FlaskConical className="h-3.5 w-3.5" /> View Chemical Report
       </Link>
     </div>
   );
@@ -420,7 +420,7 @@ function StopClientPhoto({ client }: { client: (Client & { pool_photos?: string[
     });
     return () => { alive = false; };
   }, [client?.pool_photos]);
-  return <img src={url || poolImg} alt="" className="h-11 w-11 shrink-0 rounded-[10px] object-cover" />;
+  return <img src={url || poolImg} alt="" className="h-9 w-9 shrink-0 rounded-[9px] object-cover" />;
 }
 
 function TodayServicesSection({ routes, todayStr }: { routes: RouteRow[]; todayStr: string }) {
@@ -442,73 +442,60 @@ function TodayServicesSection({ routes, todayStr }: { routes: RouteRow[]; todayS
   const firstPendingId = stops.find((s) => s.status === "Pendente")?.id;
 
   return (
-    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+    <div className="flex flex-col rounded-[16px] border border-[#E9EDF5] bg-white p-4" style={cardShadow}>
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Today's Services</h2>
-        <Link to="/rotas" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+        <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Today's Services</h2>
+        <Link to="/rotas" className="text-[13px] font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
       </div>
       {stops.length === 0 ? (
         <p className="mt-4 text-sm text-[var(--dash-text-muted)]">No stops scheduled for today.</p>
       ) : (
-        <div className="mt-3 max-h-[420px] space-y-2 overflow-y-auto pr-1">
+        <div className="mt-2 max-h-[340px] space-y-1 overflow-y-auto pr-1">
           {stops.map((stop) => {
             const client = stop.client as (Client & { monthly_value?: number | null; pool_photos?: string[] | null }) | undefined;
             const badge = stopDisplayStatus(stop.status, stop.id === firstPendingId);
             const next = nextStopStatus(stop.status);
             const address = client ? clientFullAddress(client) : "";
             return (
-              <div key={stop.id} className="rounded-[12px] border border-[var(--dash-border)] p-3">
-                <div className="flex items-center gap-3">
-                  <StopClientPhoto client={client} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="truncate text-sm font-bold text-[var(--dash-text)]">{client?.name ?? "Unknown client"}</span>
-                      <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badge.bg, color: badge.text }}>{badge.label}</span>
-                    </div>
-                    <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{formatStopTime(stop.scheduled_time)} · {address || "No address"}</div>
-                    {stop.technician && <div className="truncate text-[11px] text-[var(--dash-text-muted)]">{stop.technician.name}</div>}
-                  </div>
+              <div key={stop.id} className="flex items-center gap-2.5 border-b border-[var(--dash-border)] py-2 last:border-0">
+                <StopClientPhoto client={client} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] font-bold text-[var(--dash-text)]">{formatStopTime(stop.scheduled_time)}</div>
+                  <div className="truncate text-[13px] font-bold text-[var(--dash-text)]">{client?.name ?? "Unknown client"}</div>
+                  <div className="truncate text-[11px] text-[var(--dash-text-muted)]">{address || "No address"}{stop.technician ? ` · ${stop.technician.name}` : ""}</div>
                 </div>
-                <div className="mt-2.5 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {client?.phone && (
-                      <a href={`tel:${client.phone}`} className="grid h-8 w-8 place-items-center rounded-[9px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]" aria-label="Call">
-                        <Phone className="h-4 w-4" />
-                      </a>
-                    )}
-                    {client?.phone && (
-                      <a href={`sms:${client.phone}`} className="grid h-8 w-8 place-items-center rounded-[9px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]" aria-label="Text">
-                        <MessageSquare className="h-4 w-4" />
-                      </a>
-                    )}
-                    {address && (
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-                        target="_blank" rel="noreferrer"
-                        className="grid h-8 w-8 place-items-center rounded-[9px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]" aria-label="Map"
-                      >
-                        <MapPin className="h-4 w-4" />
-                      </a>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {client?.monthly_value != null && (
-                      <span className="text-sm font-bold text-[var(--dash-navy)]">{fmt(Number(client.monthly_value))}</span>
-                    )}
-                    {next && (
-                      <button
-                        type="button"
-                        onClick={() => client && advance.mutate({ stopId: stop.id, status: next, clientId: client.id })}
-                        disabled={advance.isPending}
-                        className="grid h-8 w-8 place-items-center rounded-[9px] text-white disabled:opacity-60"
-                        style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
-                        aria-label={next === "Concluído" ? "Complete" : "Start"}
-                      >
-                        {next === "Concluído" ? <Check className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                      </button>
-                    )}
-                  </div>
+                <span className="hidden shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold sm:inline-block" style={{ background: badge.bg, color: badge.text }}>{badge.label}</span>
+                <div className="flex shrink-0 items-center gap-1">
+                  {client?.phone && (
+                    <a href={`tel:${client.phone}`} className="grid h-7 w-7 place-items-center rounded-[8px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]" aria-label="Call">
+                      <Phone className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                  {address && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                      target="_blank" rel="noreferrer"
+                      className="hidden h-7 w-7 place-items-center rounded-[8px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] md:grid" aria-label="Map"
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                  {next && (
+                    <button
+                      type="button"
+                      onClick={() => client && advance.mutate({ stopId: stop.id, status: next, clientId: client.id })}
+                      disabled={advance.isPending}
+                      className="grid h-7 w-7 place-items-center rounded-[8px] text-white disabled:opacity-60"
+                      style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
+                      aria-label={next === "Concluído" ? "Complete" : "Start"}
+                    >
+                      {next === "Concluído" ? <Check className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                    </button>
+                  )}
                 </div>
+                {client?.monthly_value != null && (
+                  <span className="hidden w-14 shrink-0 text-right text-[13px] font-bold text-[var(--dash-navy)] lg:inline-block">{fmt(Number(client.monthly_value))}</span>
+                )}
               </div>
             );
           })}
@@ -560,22 +547,22 @@ function buildChemicalAlerts(chemHistory: ChemicalVisitEntry[]): FeedItem[] {
 }
 
 function FeedList({ items, emptyLabel }: { items: FeedItem[]; emptyLabel: string }) {
-  if (items.length === 0) return <p className="mt-4 text-sm text-[var(--dash-text-muted)]">{emptyLabel}</p>;
+  if (items.length === 0) return <p className="mt-3 text-[13px] text-[var(--dash-text-muted)]">{emptyLabel}</p>;
   return (
-    <div className="mt-3 flex-1 space-y-3">
+    <div className="mt-2 flex-1 space-y-2">
       {items.map((item) => {
         const Icon = item.icon;
         return (
-          <div key={item.id} className="flex items-start gap-3 border-b border-[var(--dash-border)] pb-3 last:border-0 last:pb-0">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: item.iconBg, color: item.iconColor }}>
-              <Icon className="h-4 w-4" />
+          <div key={item.id} className="flex items-start gap-2.5 border-b border-[var(--dash-border)] pb-2 last:border-0 last:pb-0">
+            <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full" style={{ background: item.iconBg, color: item.iconColor }}>
+              <Icon className="h-3.5 w-3.5" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-bold text-[var(--dash-text)]">{item.title}</span>
-                <span className="shrink-0 text-[11px] text-[var(--dash-text-muted)]">{timeAgo(item.whenMs)}</span>
+                <span className="truncate text-[13px] font-bold text-[var(--dash-text)]">{item.title}</span>
+                <span className="shrink-0 text-[10.5px] text-[var(--dash-text-muted)]">{timeAgo(item.whenMs)}</span>
               </div>
-              <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{item.subtitle}</div>
+              <div className="truncate text-[11px] text-[var(--dash-text-muted)]">{item.subtitle}</div>
             </div>
           </div>
         );
@@ -629,19 +616,19 @@ function RecentAlertsSection() {
 
   const alerts = [...invoiceAlerts, ...missedServiceAlerts, ...buildChemicalAlerts(chemHistory)]
     .sort((a, b) => b.whenMs - a.whenMs)
-    .slice(0, 4);
+    .slice(0, 3);
 
   return (
-    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+    <div className="flex flex-col rounded-[16px] border border-[#E9EDF5] bg-white p-4" style={cardShadow}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5" style={{ color: "var(--dash-navy)" }} />
-          <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Recent Alerts</h2>
+        <div className="flex items-center gap-1.5">
+          <Bell className="h-4 w-4" style={{ color: "var(--dash-navy)" }} />
+          <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Recent Alerts</h2>
         </div>
-        <Link to="/quimicos" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+        <Link to="/quimicos" className="text-[13px] font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
       </div>
       <FeedList items={alerts} emptyLabel="No active alerts — everything looks good." />
-      <Link to="/quimicos" className="mt-4 block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
+      <Link to="/quimicos" className="mt-3 block w-full rounded-[9px] border border-[var(--dash-border)] py-1.5 text-center text-[13px] font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
         View All Alerts
       </Link>
     </div>
@@ -684,38 +671,38 @@ function TopTechniciansSection() {
     .slice(0, 2);
 
   return (
-    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+    <div className="flex flex-col rounded-[16px] border border-[#E9EDF5] bg-white p-4" style={cardShadow}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <User className="h-5 w-5" style={{ color: "var(--dash-navy)" }} />
-          <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Top Technicians</h2>
+        <div className="flex items-center gap-1.5">
+          <User className="h-4 w-4" style={{ color: "var(--dash-navy)" }} />
+          <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Top Technicians</h2>
         </div>
-        <Link to="/tecnicos" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+        <Link to="/tecnicos" className="text-[13px] font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
       </div>
       {stats.length === 0 ? (
-        <p className="mt-4 text-sm text-[var(--dash-text-muted)]">No completed stops yet this week.</p>
+        <p className="mt-3 text-[13px] text-[var(--dash-text-muted)]">No completed stops yet this week.</p>
       ) : (
-        <div className="mt-3 flex-1 space-y-4">
+        <div className="mt-2 flex-1 space-y-2.5">
           {stats.map((s) => (
             <div key={s.technician.id}>
-              <div className="flex items-center gap-3">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: s.technician.color }}>
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[12px] font-bold text-white" style={{ background: s.technician.color }}>
                   {initials(s.technician.name)}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-bold text-[var(--dash-text)]">{s.technician.name}</span>
-                    <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold" style={{ color: "var(--dash-green)" }}>
+                    <span className="truncate text-[13px] font-bold text-[var(--dash-text)]">{s.technician.name}</span>
+                    <span className="flex shrink-0 items-center gap-1 text-[10.5px] font-semibold" style={{ color: "var(--dash-green)" }}>
                       <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--dash-green)" }} /> Active
                     </span>
                   </div>
-                  <div className="text-[12px] text-[var(--dash-text-muted)]">{s.total} pools this week · {fmt(s.routeValue)} route value</div>
+                  <div className="text-[11px] text-[var(--dash-text-muted)]">{s.total} pools this week · {fmt(s.routeValue)} route value</div>
                 </div>
               </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
                 <div className="h-full rounded-full" style={{ width: `${s.pct}%`, background: "var(--dash-green)" }} />
               </div>
-              <div className="mt-1 flex items-center justify-between text-[12px] font-semibold">
+              <div className="mt-1 flex items-center justify-between text-[11px] font-semibold">
                 <span style={{ color: "var(--dash-green)" }}>{s.completed} / {s.total} completed on time</span>
                 <span className="text-[var(--dash-text-muted)]">{s.pct}%</span>
               </div>
@@ -723,7 +710,7 @@ function TopTechniciansSection() {
           ))}
         </div>
       )}
-      <Link to="/tecnicos" className="mt-4 block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
+      <Link to="/tecnicos" className="mt-3 block w-full rounded-[9px] border border-[var(--dash-border)] py-1.5 text-center text-[13px] font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
         View All Technicians
       </Link>
     </div>
@@ -741,46 +728,46 @@ function NewClientsSection() {
   const addedRevenue = newClients.reduce((s, c) => s + Number((c as ClientFull).monthly_value || 0), 0);
 
   return (
-    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+    <div className="flex flex-col rounded-[16px] border border-[#E9EDF5] bg-white p-4" style={cardShadow}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <UserPlus className="h-5 w-5" style={{ color: "var(--dash-navy)" }} />
-          <h2 className="text-lg font-extrabold text-[var(--dash-text)]">New Clients This Month</h2>
+        <div className="flex items-center gap-1.5">
+          <UserPlus className="h-4 w-4" style={{ color: "var(--dash-navy)" }} />
+          <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">New Clients This Month</h2>
         </div>
-        <Link to="/clientes" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+        <Link to="/clientes" className="text-[13px] font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
       </div>
-      <div className="mt-3 flex items-center gap-6">
+      <div className="mt-2 flex items-center gap-5">
         <div>
-          <div className="text-xl font-extrabold text-[var(--dash-text)]">{newClients.length}</div>
-          <div className="text-[12px] text-[var(--dash-text-muted)]">New Clients</div>
+          <div className="text-[17px] font-extrabold text-[var(--dash-text)]">{newClients.length}</div>
+          <div className="text-[11px] text-[var(--dash-text-muted)]">New Clients</div>
         </div>
         <div>
-          <div className="text-xl font-extrabold" style={{ color: "var(--dash-green)" }}>{fmt(addedRevenue)}</div>
-          <div className="text-[12px] text-[var(--dash-text-muted)]">Added Monthly Revenue</div>
+          <div className="text-[17px] font-extrabold" style={{ color: "var(--dash-green)" }}>{fmt(addedRevenue)}</div>
+          <div className="text-[11px] text-[var(--dash-text-muted)]">Added Monthly Revenue</div>
         </div>
       </div>
       {newClients.length === 0 ? (
-        <p className="mt-4 text-sm text-[var(--dash-text-muted)]">No new clients yet this month.</p>
+        <p className="mt-3 text-[13px] text-[var(--dash-text-muted)]">No new clients yet this month.</p>
       ) : (
-        <div className="mt-3 flex-1 space-y-3">
-          {newClients.slice(0, 4).map((c, i) => (
-            <div key={c.id} className="flex items-center gap-3 border-b border-[var(--dash-border)] pb-3 last:border-0 last:pb-0">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold text-white" style={{ background: AVATAR_PALETTE[i % AVATAR_PALETTE.length] }}>
+        <div className="mt-2 flex-1 space-y-2">
+          {newClients.slice(0, 3).map((c, i) => (
+            <div key={c.id} className="flex items-center gap-2.5 border-b border-[var(--dash-border)] pb-2 last:border-0 last:pb-0">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white" style={{ background: AVATAR_PALETTE[i % AVATAR_PALETTE.length] }}>
                 {initials(c.name)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-bold text-[var(--dash-text)]">{c.name}</div>
-                <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{[c.city, c.state].filter(Boolean).join(", ")}</div>
+                <div className="truncate text-[13px] font-bold text-[var(--dash-text)]">{c.name}</div>
+                <div className="truncate text-[11px] text-[var(--dash-text-muted)]">{[c.city, c.state].filter(Boolean).join(", ")}</div>
               </div>
               <div className="shrink-0 text-right">
-                <div className="text-sm font-bold text-[var(--dash-text)]">{fmt(Number((c as ClientFull).monthly_value || 0))}/mo</div>
-                <div className="text-[11px] text-[var(--dash-text-muted)]">{fmtDate(c.created_at)}</div>
+                <div className="text-[13px] font-bold text-[var(--dash-text)]">{fmt(Number((c as ClientFull).monthly_value || 0))}/mo</div>
+                <div className="text-[10.5px] text-[var(--dash-text-muted)]">{fmtDate(c.created_at)}</div>
               </div>
             </div>
           ))}
         </div>
       )}
-      <Link to="/clientes" className="mt-4 block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
+      <Link to="/clientes" className="mt-3 block w-full rounded-[9px] border border-[var(--dash-border)] py-1.5 text-center text-[13px] font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
         View All New Clients
       </Link>
     </div>
@@ -829,16 +816,16 @@ function RecentActivitySection() {
 
   const events = [...routeEvents, ...invoiceEvents, ...buildChemicalAlerts(chemHistory)]
     .sort((a, b) => b.whenMs - a.whenMs)
-    .slice(0, 5);
+    .slice(0, 3);
 
   return (
-    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+    <div className="flex flex-col rounded-[16px] border border-[#E9EDF5] bg-white p-4" style={cardShadow}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5" style={{ color: "var(--dash-navy)" }} />
-          <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Recent Activity</h2>
+        <div className="flex items-center gap-1.5">
+          <Zap className="h-4 w-4" style={{ color: "var(--dash-navy)" }} />
+          <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Recent Activity</h2>
         </div>
-        <Link to="/rotas" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+        <Link to="/rotas" className="text-[13px] font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
       </div>
       <FeedList items={events} emptyLabel="No recent activity." />
     </div>
@@ -904,21 +891,21 @@ function DashboardPage() {
     <div className="dash min-h-screen bg-[var(--dash-bg)] lg:pl-60">
       <AppSidebar />
       <AppHeader />
-      <main className="space-y-5 p-3 sm:p-5">
+      <main className="space-y-3 p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-[26px] font-extrabold text-[var(--dash-text)]">{greeting}, {displayName}</h1>
-            <p className="text-sm text-[var(--dash-text-muted)]">Here's what's happening with your pool business today.</p>
+            <h1 className="text-[21px] font-extrabold text-[var(--dash-text)]">{greeting}, {displayName}</h1>
+            <p className="text-[13px] text-[var(--dash-text-muted)]">Here's what's happening with your pool business today.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">
+            <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-1.5 text-[13px] font-semibold text-[var(--dash-text-secondary)]">
               This Month <ChevronDown className="h-4 w-4" />
             </button>
-            <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">
+            <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-1.5 text-[13px] font-semibold text-[var(--dash-text-secondary)]">
               <Download className="h-4 w-4" /> Export Report
             </button>
             <div className="relative group">
-              <button className="flex items-center gap-2 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white">
+              <button className="flex items-center gap-2 rounded-[11px] bg-[var(--dash-navy)] px-4 py-1.5 text-[13px] font-semibold text-white">
                 <Plus className="h-4 w-4" /> Quick Add <ChevronDown className="h-4 w-4" />
               </button>
               <div className="invisible absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-[10px] border border-[var(--dash-border)] bg-white opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
@@ -971,7 +958,7 @@ function DashboardPage() {
             sub={invoicesDueCount > 0 ? `${fmt(invoicesDueAmount)} outstanding` : "All caught up"}
             subColor={invoicesDueCount > 0 ? "var(--dash-red)" : "var(--dash-green)"}
             footer={
-              <Link to="/invoice" className="block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-semibold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
+              <Link to="/invoice" className="block w-full rounded-[9px] border border-[var(--dash-border)] py-1.5 text-center text-[13px] font-semibold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
                 View Invoices
               </Link>
             }
@@ -980,13 +967,13 @@ function DashboardPage() {
 
         <WeeklyRouteSection />
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
           <FinancialOverviewSection monthlyRevenue={monthlyRevenue} />
           <ChemicalPerformanceSection monthlyRevenue={monthlyRevenue} />
           <TodayServicesSection routes={todayRoutes} todayStr={todayStr} />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <RecentAlertsSection />
           <TopTechniciansSection />
           <NewClientsSection />
