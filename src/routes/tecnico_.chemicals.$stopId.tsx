@@ -48,11 +48,11 @@ const READING_ICONS: Record<ChemicalReadingKey, { icon: typeof Droplet; gradient
 };
 
 function formatCleanedAt(iso: string | null | undefined) {
-  if (!iso) return "Nunca";
+  if (!iso) return "Never";
   const d = new Date(iso);
   const isToday = d.toDateString() === new Date().toDateString();
-  if (isToday) return "Hoje";
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  if (isToday) return "Today";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 // Calendar-day difference, not exact 24h elapsed — cleaned today counts as
@@ -272,16 +272,12 @@ function TechnicianChemicalsPage() {
                 <Check className="h-3.5 w-3.5" /> Filtro Limpo
               </button>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[12px] text-[var(--dash-text-muted-2)]">
-              <span>Última limpeza: <span className="font-bold text-[var(--dash-text)]">{formatCleanedAt(stop?.filter_last_cleaned_at)}</span></span>
+            <div className="mt-2 overflow-x-auto whitespace-nowrap px-1 text-[12px] text-[var(--dash-text-muted-2)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              Last cleaned: <span className="font-bold text-[var(--dash-text)]">{formatCleanedAt(stop?.filter_last_cleaned_at)}</span>
               {daysSince(stop?.filter_last_cleaned_at) !== null && (
-                <>
-                  <span className="text-[var(--dash-border)]">|</span>
-                  <span>{daysSince(stop?.filter_last_cleaned_at)} dias</span>
-                </>
+                <> · {daysSince(stop?.filter_last_cleaned_at) === 0 ? "today" : `${daysSince(stop?.filter_last_cleaned_at)} day${daysSince(stop?.filter_last_cleaned_at) === 1 ? "" : "s"} ago`}</>
               )}
-              <span className="text-[var(--dash-border)]">|</span>
-              <span># Limpezas: <span className="font-bold text-[var(--dash-text)]">{stop?.filter_cleaning_count ?? 0}</span></span>
+              {" · "}{stop?.filter_cleaning_count ?? 0} {(stop?.filter_cleaning_count ?? 0) === 1 ? "cleaning" : "cleanings"}
             </div>
           </div>
         </section>
