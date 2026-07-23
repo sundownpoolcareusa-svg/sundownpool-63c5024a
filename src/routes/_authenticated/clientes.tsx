@@ -6,11 +6,11 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
   Plus, Search, Filter, Eye, ChevronDown,
-  ChevronLeft, ChevronRight, Pencil, Trash2, Users, CalendarDays,
+  ChevronRight, Pencil, Trash2, Users, CalendarDays,
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
-  CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle,
+  CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail,
 } from "lucide-react";
-import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
+import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -253,6 +253,260 @@ function FilterChip({
   );
 }
 
+function useClientAllStops(clientId: string) {
+  return useQuery({
+    queryKey: ["client-all-stops", clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("route_stops")
+        .select("id, status, route:routes(route_date)")
+        .eq("client_id", clientId);
+      if (error) throw error;
+      return (data ?? [])
+        .map((s) => ({ id: s.id, status: s.status as string, route_date: (s.route as { route_date: string } | null)?.route_date ?? "" }))
+        .filter((s) => s.route_date);
+    },
+  });
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[var(--dash-text-muted)]">{label}</span>
+      <span className="text-right font-semibold text-[var(--dash-text)]">{value}</span>
+    </div>
+  );
+}
+
+function QuickAction({
+  icon: Icon, label, href, to, external,
+}: { icon: typeof Phone; label: string; href?: string; to?: "/invoice" | "/estimativa" | "/rotas"; external?: boolean }) {
+  const disabled = !href && !to;
+  const className = `flex flex-col items-center gap-1 rounded-[12px] border border-[var(--dash-border)] py-2.5 text-[11px] font-semibold ${disabled ? "pointer-events-none text-[var(--dash-text-muted)] opacity-40" : "text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]"}`;
+  if (to) return <Link to={to} className={className}><Icon className="h-4 w-4" />{label}</Link>;
+  return <a href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} className={className}><Icon className="h-4 w-4" />{label}</a>;
+}
+
+function ClientDetailPanel({
+  client, invoices, technicians, onEdit, onDelete,
+}: { client: ClientFull; invoices: Invoice[]; technicians: Technician[]; onEdit: () => void; onDelete: () => void }) {
+  const [tab, setTab] = useState<"overview" | "services" | "schedule" | "invoices" | "notes" | "photos" | "documents">("overview");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const status = statusInfo(client);
+  const addr = fullAddress(client);
+  const years = Math.max(0, new Date().getFullYear() - new Date(client.created_at).getFullYear());
+  const hasMonthly = client.monthly_value != null && Number(client.monthly_value) > 0;
+  const tech = technicians.find((t) => t.id === client.technician_id);
+  const clientInvoices = invoices.filter((i) => i.client_id === client.id).slice().sort((a, b) => b.invoice_date.localeCompare(a.invoice_date));
+  const todayStr = todayDateStr();
+  const { data: stops = [] } = useClientAllStops(client.id);
+  const nextStop = stops.filter((s) => s.route_date >= todayStr && s.status !== "Concluído").sort((a, b) => a.route_date.localeCompare(b.route_date))[0];
+  const lastStop = stops.filter((s) => s.status === "Concluído").sort((a, b) => b.route_date.localeCompare(a.route_date))[0];
+  const photoCount = (client.pool_photos?.length ?? 0) + (client.equipment_photos?.length ?? 0);
+
+  const tabs: { key: typeof tab; label: string; count?: number }[] = [
+    { key: "overview", label: "Overview" },
+    { key: "services", label: "Services" },
+    { key: "schedule", label: "Schedule" },
+    { key: "invoices", label: "Invoices", count: clientInvoices.length },
+    { key: "notes", label: "Notes" },
+    { key: "photos", label: "Photos", count: photoCount },
+    { key: "documents", label: "Documents" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="relative h-52 w-full overflow-hidden rounded-[18px] bg-[var(--dash-bg)]">
+        <ClientCardPhoto client={client} />
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          <button type="button" onClick={onEdit} className="flex items-center gap-1.5 rounded-[10px] bg-white/95 px-3 py-1.5 text-xs font-bold text-[var(--dash-text)] shadow hover:bg-white">
+            <Pencil className="h-3.5 w-3.5" /> Edit Client
+          </button>
+          <div className="relative">
+            <button type="button" onClick={() => setMenuOpen((v) => !v)} aria-label="More actions" className="grid h-8 w-8 place-items-center rounded-full bg-white/95 text-[var(--dash-text-secondary)] shadow hover:bg-white">
+              <MoreVertical className="h-4 w-4" />
+            </button>
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                <div className="absolute right-0 z-20 mt-1 w-32 overflow-hidden rounded-[10px] border border-[var(--dash-border)] bg-white shadow-lg">
+                  <button type="button" onClick={() => { setMenuOpen(false); onDelete(); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[var(--dash-bg)]" style={{ color: "var(--dash-red)" }}>
+                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="absolute bottom-3 left-4 grid h-12 w-12 place-items-center rounded-full text-sm font-bold text-white ring-4 ring-white" style={{ background: "var(--dash-navy)" }}>
+          {initials(client.name)}
+        </div>
+      </div>
+
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-xl font-extrabold text-[var(--dash-text)]">{client.name}</h3>
+          <Star className="h-4 w-4" style={{ color: "#F59E0B" }} fill="#F59E0B" />
+          <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: status.dot }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: status.dot }} /> {status.label}
+          </span>
+        </div>
+        <div className="mt-1 text-sm text-[var(--dash-text-secondary)]">{addr || "—"}</div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[var(--dash-text-secondary)]">
+          {client.phone && <a href={`tel:${client.phone}`} className="flex items-center gap-1.5 hover:text-[var(--dash-navy)]"><Phone className="h-3.5 w-3.5" /> {formatPhone(client.phone)}</a>}
+          {client.email && <a href={`mailto:${client.email}`} className="flex items-center gap-1.5 hover:text-[var(--dash-navy)]"><Mail className="h-3.5 w-3.5" /> {client.email}</a>}
+          <span className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Client for {years} year{years === 1 ? "" : "s"}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 rounded-[14px] border border-[var(--dash-border)] p-3.5">
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted)]">Monthly Rate</div>
+          <div className="text-lg font-extrabold text-[var(--dash-text)]">{hasMonthly ? `${fmt(Number(client.monthly_value))}/mo` : "—"}</div>
+        </div>
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted)]">Next Service</div>
+          <div className="text-lg font-extrabold" style={{ color: "var(--dash-navy)" }}>{nextStop ? fmtDate(nextStop.route_date) : "—"}</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <QuickAction icon={Phone} label="Call" href={client.phone ? `tel:${client.phone}` : undefined} />
+        <QuickAction icon={MessageSquare} label="Text" href={client.phone ? `sms:${client.phone}` : undefined} />
+        <QuickAction icon={FileText} label="Invoice" to="/invoice" />
+        <QuickAction icon={FileText} label="Estimate" to="/estimativa" />
+        <QuickAction icon={RouteIcon} label="Route" to="/rotas" />
+        <QuickAction icon={MapPin} label="Map" href={addr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}` : undefined} external />
+      </div>
+
+      <div className="flex gap-4 overflow-x-auto border-b border-[var(--dash-border)] text-sm">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap pb-2.5 font-semibold"
+            style={{ borderBottom: tab === t.key ? "2px solid var(--dash-navy)" : "2px solid transparent", color: tab === t.key ? "var(--dash-navy)" : "var(--dash-text-muted)" }}
+          >
+            {t.label}
+            {t.count != null && (
+              <span
+                className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                style={{ background: tab === t.key ? "var(--dash-water-bg)" : "var(--dash-border-table)", color: tab === t.key ? "var(--dash-navy)" : "var(--dash-text-muted-2)" }}
+              >
+                {t.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {tab === "overview" && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="rounded-[14px] border border-[var(--dash-border)] p-4">
+              <div className="font-bold text-[var(--dash-text)]">Service Information</div>
+              <div className="mt-3 space-y-2 text-sm">
+                <InfoRow label="Service Type" value="Pool Cleaning & Maintenance" />
+                <InfoRow label="Service Day" value={(client.service_days && client.service_days.length) ? client.service_days.join(", ") : "Not assigned"} />
+                <InfoRow label="Frequency" value={client.service_frequency || ((client.service_days?.length ?? 0) > 0 ? "Weekly" : "—")} />
+                <InfoRow label="Technician" value={tech?.name || "Unassigned"} />
+              </div>
+            </div>
+
+            <div className="rounded-[14px] border border-[var(--dash-border)] p-4">
+              <div className="flex items-center justify-between">
+                <div className="font-bold text-[var(--dash-text)]">Last Service</div>
+                {lastStop && (
+                  <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>Completed</span>
+                )}
+              </div>
+              {lastStop ? (
+                <>
+                  <div className="mt-3 text-sm font-semibold text-[var(--dash-text)]">{fmtDate(lastStop.route_date)}</div>
+                  <ul className="mt-2 space-y-1.5 text-sm text-[var(--dash-text-secondary)]">
+                    {["Cleaned pool", "Balanced chemicals", "Emptied skimmer baskets", "Brushed walls and steps", "Checked equipment"].map((item) => (
+                      <li key={item} className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-green)" }} /> {item}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p className="mt-3 text-sm text-[var(--dash-text-muted)]">No completed service yet.</p>
+              )}
+            </div>
+
+            <div className="rounded-[14px] border border-[var(--dash-border)] p-4">
+              <div className="flex items-center justify-between">
+                <div className="font-bold text-[var(--dash-text)]">Recent Invoices</div>
+                <button type="button" onClick={() => setTab("invoices")} className="text-xs font-semibold" style={{ color: "var(--dash-link)" }}>View All</button>
+              </div>
+              {clientInvoices.length === 0 ? (
+                <p className="mt-3 text-sm text-[var(--dash-text-muted)]">No invoices yet.</p>
+              ) : (
+                <div className="mt-3 space-y-2.5">
+                  {clientInvoices.slice(0, 3).map((inv) => (
+                    <div key={inv.id} className="flex items-center justify-between text-sm">
+                      <div>
+                        <div className="font-semibold text-[var(--dash-text)]">{inv.number}</div>
+                        <div className="text-xs text-[var(--dash-text-muted)]">{fmtDate(inv.invoice_date)}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold tabular-nums text-[var(--dash-text)]">{fmt(inv.total)}</div>
+                        <div className="text-xs font-semibold" style={{ color: inv.status === "PAID" ? "var(--dash-green)" : "var(--dash-badge-unpaid-text)" }}>{inv.status === "PAID" ? "Paid" : "Unpaid"}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[14px] border border-[var(--dash-border)] p-4">
+            <div className="font-bold text-[var(--dash-text)]">Notes</div>
+            <p className="mt-2 text-sm text-[var(--dash-text-secondary)]">{client.notes || "No notes yet."}</p>
+            {client.gate_code && <p className="mt-1 text-sm text-[var(--dash-text-secondary)]">Gate code {client.gate_code}.</p>}
+          </div>
+        </div>
+      )}
+
+      {tab === "services" && (
+        <div className="rounded-[14px] border border-dashed border-[var(--dash-border)] p-8 text-center text-sm text-[var(--dash-text-muted)]">
+          Detailed service breakdown coming soon.
+        </div>
+      )}
+
+      {tab === "schedule" && <ClientScheduledStops clientId={client.id} />}
+
+      {tab === "invoices" && <ClientInvoicesHistory clientId={client.id} />}
+
+      {tab === "notes" && (
+        <div className="rounded-[14px] border border-[var(--dash-border)] p-4 text-sm text-[var(--dash-text-secondary)]">
+          {client.notes || "No notes yet."}
+        </div>
+      )}
+
+      {tab === "photos" && (
+        <div>
+          {photoCount === 0 ? (
+            <div className="rounded-[14px] border border-dashed border-[var(--dash-border)] p-8 text-center text-sm text-[var(--dash-text-muted)]">No photos uploaded yet.</div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {(client.pool_photos ?? []).map((p) => <PhotoThumb key={p} path={p} />)}
+              {(client.equipment_photos ?? []).map((p) => <PhotoThumb key={p} path={p} />)}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "documents" && (
+        <div className="rounded-[14px] border border-dashed border-[var(--dash-border)] p-8 text-center text-sm text-[var(--dash-text-muted)]">
+          Document uploads aren't available yet.
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ClientesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -263,8 +517,10 @@ function ClientesPage() {
   const [editClient, setEditClient] = useState<ClientFull | null>(null);
   const [deleteClient, setDeleteClient] = useState<ClientFull | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedListClientId, setSelectedListClientId] = useState<string | null>(null);
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: listClients });
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices });
+  const { data: technicians = [] } = useQuery({ queryKey: ["technicians"], queryFn: listTechnicians });
   const todayStr = todayDateStr();
   const { data: todayRoutes = [] } = useQuery({ queryKey: ["routes-for-date", todayStr], queryFn: () => listRoutesForDate(todayStr) });
 
@@ -418,125 +674,63 @@ function ClientesPage() {
               ))}
             </div>
           ) : (
-            <>
-              <div className="-mx-4 mt-5 overflow-x-auto sm:mx-0"><table className="w-full min-w-[820px] text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--dash-border-table)] text-left text-[var(--dash-text-muted)]">
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Client</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Contact</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Address</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Pool Value</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Day</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Registered</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Status</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sorted.map((c, idx) => (
-                    <tr key={c.id} className="border-b border-[var(--dash-border-table)]">
-                      <td className="py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`grid h-10 w-10 place-items-center rounded-full text-xs font-bold ${avatarColors[idx % avatarColors.length]}`}>
-                            {initials(c.name)}
-                          </div>
-                          <div className="leading-tight">
-                            <div className="font-bold text-[var(--dash-text)]">{c.name}</div>
-                            <div className="text-xs text-[var(--dash-text-muted)]">{c.client_type}</div>
-                          </div>
+            <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[360px_1fr]">
+              <div className="overflow-hidden rounded-[14px] border border-[var(--dash-border)]">
+                {sorted.map((c, idx) => {
+                  const cf = c as ClientFull;
+                  const activeId = selectedListClientId ?? sorted[0]?.id;
+                  const isSelected = activeId === c.id;
+                  const dayLabel = dayBadgeLabel(cf.service_days);
+                  const dayColor = dayColors[cf.service_days?.[0] ?? ""] ?? { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
+                  const hasMonthly = cf.monthly_value != null && Number(cf.monthly_value) > 0;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setSelectedListClientId(c.id)}
+                      className="flex w-full items-start gap-2.5 border-b border-[var(--dash-border)] p-3 text-left last:border-b-0"
+                      style={{ background: isSelected ? "var(--dash-water-bg)" : "#fff" }}
+                    >
+                      <input type="checkbox" onClick={(e) => e.stopPropagation()} className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--dash-border)]" aria-label={`Select ${c.name}`} />
+                      <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold ${avatarColors[idx % avatarColors.length]}`}>
+                        {initials(c.name)}
+                      </div>
+                      <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg">
+                        <ClientCardPhoto client={cf} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-bold text-[var(--dash-text)]">{c.name}</div>
+                        <div className="truncate text-xs text-[var(--dash-text-muted)]">{cf.address || "—"}</div>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          {dayLabel ? (
+                            <span className="truncate rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>{dayLabel}</span>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
+                          )}
+                          <span className="shrink-0 text-xs font-bold tabular-nums" style={{ color: "var(--dash-navy)" }}>{hasMonthly ? `${fmt(Number(cf.monthly_value))}/mo` : "—"}</span>
                         </div>
-                      </td>
-                      <td className="py-4">
-                        <div className="text-[var(--dash-text)]">{c.phone ? formatPhone(c.phone) : "—"}</div>
-                        <div className="text-xs text-[var(--dash-link)]">{c.email || "—"}</div>
-                      </td>
-                      <td className="py-4">
-                        <div className="text-[var(--dash-text)]">{(c as ClientFull).address || "—"}</div>
-                        <div className="text-xs text-[var(--dash-text-muted)]">{c.city || ""}</div>
-                      </td>
-                      <td className="py-4 font-semibold tabular-nums text-[var(--dash-text)]">
-                        {(c as ClientFull).monthly_value ? fmt(Number((c as ClientFull).monthly_value)) : "—"}
-                      </td>
-                      <td className="py-4 text-[var(--dash-text-secondary)]">
-                        {(c.service_days && c.service_days.length) ? c.service_days.join(", ") : "—"}
-                      </td>
-                      <td className="py-4 text-[var(--dash-text-secondary)]">{fmtDate(c.created_at)}</td>
-                      <td className="py-4">
-                        {c.status !== "Ativo" ? (
-                          <span
-                            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                            style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}
-                          >
-                            Inativo
-                          </span>
-                        ) : (c.service_days ?? []).length > 0 ? (
-                          <span
-                            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                            style={{ background: "#EDE4FB", color: "#7C3AED" }}
-                            title="Has recurring service days scheduled on a route"
-                          >
-                            Route
-                          </span>
-                        ) : c.stage === "Prospecção" ? (
-                          <span
-                            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                            style={{ background: "#FEF3C7", color: "#B45309" }}
-                          >
-                            Prospecção
-                          </span>
-                        ) : (
-                          <span
-                            className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                            style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}
-                          >
-                            Cliente
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4">
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setViewClient(c as ClientFull)}
-                            title="View details"
-                            className="hover:opacity-70"
-                            style={{ color: "var(--dash-navy)" }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditClient(c as ClientFull)}
-                            title="Edit"
-                            className="hover:opacity-70"
-                            style={{ color: "var(--dash-navy)" }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteClient(c as ClientFull)}
-                            title="Delete"
-                            className="hover:opacity-70"
-                            style={{ color: "var(--dash-red)" }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table></div>
-              <div className="mt-5 flex items-center justify-between text-sm">
-                <div className="text-[var(--dash-text-muted)]">Showing {filtered.length} of {total} clients</div>
-                <div className="flex items-center gap-1">
-                  <button className="grid h-8 w-8 place-items-center rounded-[8px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"><ChevronLeft className="h-4 w-4" /></button>
-                  <button className="grid h-8 min-w-8 place-items-center rounded-[8px] px-2 text-white" style={{ background: "var(--dash-navy)", borderColor: "var(--dash-navy)" }}>1</button>
-                  <button className="grid h-8 w-8 place-items-center rounded-[8px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"><ChevronRight className="h-4 w-4" /></button>
-                </div>
+                      </div>
+                      <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
+                    </button>
+                  );
+                })}
               </div>
-            </>
+
+              {(() => {
+                const activeId = selectedListClientId ?? sorted[0]?.id ?? null;
+                const activeClient = sorted.find((c) => c.id === activeId) as ClientFull | undefined;
+                if (!activeClient) return null;
+                return (
+                  <ClientDetailPanel
+                    client={activeClient}
+                    invoices={invoices}
+                    technicians={technicians}
+                    onEdit={() => setEditClient(activeClient)}
+                    onDelete={() => setDeleteClient(activeClient)}
+                  />
+                );
+              })()}
+            </div>
           )}
         </section>
       </main>
