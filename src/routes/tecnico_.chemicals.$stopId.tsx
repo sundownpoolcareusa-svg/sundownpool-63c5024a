@@ -185,6 +185,14 @@ function TechnicianChemicalsPage() {
     });
   }
 
+  function setReadingValue(key: ChemicalReadingKey, raw: string) {
+    const meta = CHEMICAL_READING_META[key];
+    const parsed = parseFloat(raw);
+    const clamped = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    const factor = 10 ** decimals(meta.step);
+    setReadings((r) => ({ ...r, [key]: Math.round(clamped * factor) / factor }));
+  }
+
   function adjustProduct(name: string, dir: 1 | -1) {
     setProducts((list) => list.map((p) => (p.name === name ? { ...p, qty: Math.max(0, Math.round((p.qty + dir * (p.step ?? 1)) * 100) / 100) } : p)));
   }
@@ -273,18 +281,25 @@ function TechnicianChemicalsPage() {
                     <Icon className="h-3.5 w-3.5 text-white" strokeWidth={2.4} style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))" }} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[14px] font-bold text-[var(--dash-text)]">
+                    <div className="text-[12.6px] font-bold text-[var(--dash-text)]">
                       {meta.label} {meta.unit && <span className="font-normal text-[var(--dash-text-muted-2)]">({meta.unit})</span>}
                     </div>
-                    <div className="text-[12px] text-[var(--dash-text-muted-2)]">Ideal: {meta.min} – {meta.max}</div>
+                    <div className="text-[10.8px] text-[var(--dash-text-muted-2)]">Ideal: {meta.min} – {meta.max}</div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <button onClick={() => adjustReading(key, -1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
                       <Minus className="h-3 w-3" />
                     </button>
-                    <div className="w-9 shrink-0 text-center text-xl font-extrabold text-[var(--dash-text)]">
-                      {value.toFixed(decimals(meta.step))}
-                    </div>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step={meta.step}
+                      min={0}
+                      value={value}
+                      onChange={(e) => setReadingValue(key, e.target.value)}
+                      onFocus={(e) => e.target.select()}
+                      className="w-11 shrink-0 bg-transparent text-center text-[16px] font-extrabold text-[var(--dash-text)] outline-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                     <button onClick={() => adjustReading(key, 1)} className="grid h-6 w-6 shrink-0 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
                       <Plus className="h-3 w-3" />
                     </button>
