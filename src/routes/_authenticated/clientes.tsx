@@ -204,12 +204,12 @@ function SummaryStat({
 }) {
   const Comp = onClick ? "button" : "div";
   return (
-    <Comp onClick={onClick} className="rounded-[14px] border border-[#E9EDF5] bg-white p-2.5 text-left sm:rounded-[20px] sm:p-6" style={cardShadow}>
+    <Comp onClick={onClick} className="w-[135px] shrink-0 rounded-[14px] border border-[#E9EDF5] bg-white p-2.5 text-left sm:w-auto sm:rounded-[20px] sm:p-6" style={cardShadow}>
       <div className="flex items-center gap-1.5 sm:gap-3.5">
         <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full sm:h-12 sm:w-12" style={{ background: iconBg, color: iconColor }}>
           <Icon className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
         </div>
-        <div className="min-w-0 truncate text-base font-extrabold leading-none tracking-tight text-[var(--dash-text)] sm:text-[26px]">{value}</div>
+        <div className="min-w-0 truncate text-[15.5px] font-extrabold leading-none tracking-tight text-[var(--dash-text)] sm:text-[25.2px]">{value}</div>
       </div>
       <div className="mt-1.5 truncate text-[10px] font-bold leading-tight text-[var(--dash-text)] sm:mt-1.5 sm:text-[15px]">{label}</div>
       <div className="mt-0.5 flex items-center gap-1 truncate text-[9px] font-semibold sm:mt-1 sm:gap-1.5 sm:text-[13px]" style={{ color: subColor || "var(--dash-text-muted)" }}>
@@ -582,7 +582,7 @@ function ClientesPage() {
           <button className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary)]" aria-label="More options"><MoreVertical className="h-4 w-4" /></button>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 lg:grid-cols-5">
+        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-5">
           <SummaryStat
             icon={Users} iconColor="#0B63F6" iconBg="#DBEAFE"
             value={total} label="Total Clients"
@@ -601,13 +601,13 @@ function ClientesPage() {
           />
           <SummaryStat
             icon={DollarSign} iconColor="#7C3AED" iconBg="#EDE4FB"
-            value={fmt(monthlyRevenue)} label="Monthly Revenue"
+            value={fmt(monthlyRevenue).replace(/\.00$/, "")} label="Monthly Revenue"
             sub="Expected this month" subColor="#7C3AED" subArrow
           />
           <SummaryStat
             icon={AlertTriangle} iconColor="var(--dash-red)" iconBg="#FEE2E2"
             value={invoicesDueCount} label="Invoices Due"
-            sub={invoicesDueCount > 0 ? `${fmt(invoicesDueAmount)} outstanding` : "All caught up"}
+            sub={invoicesDueCount > 0 ? `${fmt(invoicesDueAmount).replace(/\.00$/, "")} outstanding` : "All caught up"}
             subColor={invoicesDueCount > 0 ? "var(--dash-red)" : "var(--dash-green)"}
           />
         </div>
