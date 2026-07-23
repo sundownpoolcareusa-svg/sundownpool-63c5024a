@@ -138,9 +138,8 @@ function ClientCard({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <button type="button" onClick={onView} className="text-left">
-                <span className="text-[18px] font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
+                <span className="text-[16.2px] font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
               </button>
-              <Star className="h-5 w-5 shrink-0" style={{ color: "#F59E0B" }} fill="#F59E0B" />
             </div>
             <div className="mt-1.5 truncate text-[13.5px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
             <div className="truncate text-[13.5px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
