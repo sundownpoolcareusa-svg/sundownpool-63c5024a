@@ -141,8 +141,8 @@ function ClientCard({
                 <span className="text-[16.2px] font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
               </button>
             </div>
-            <div className="mt-1.5 truncate text-[13.5px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
-            <div className="truncate text-[13.5px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
+            <div className="mt-1.5 truncate text-[12.15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
+            <div className="truncate text-[12.15px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               {dayLabel ? (
@@ -159,15 +159,15 @@ function ClientCard({
             </div>
 
             <div className="mt-3 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 text-sm font-bold" style={{ color: status.dot }}>
-                <span className="h-2 w-2 rounded-full" style={{ background: status.dot }} /> {status.label}
+              <div className="flex items-center gap-1.5 text-[12.6px] font-bold" style={{ color: status.dot }}>
+                <span className="h-[7.2px] w-[7.2px] rounded-full" style={{ background: status.dot }} /> {status.label}
               </div>
               <button
                 type="button"
                 onClick={onView}
-                className="flex shrink-0 items-center gap-1 rounded-xl border border-[var(--dash-border)] px-4 py-2.5 text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+                className="flex shrink-0 items-center gap-1 rounded-xl border border-[var(--dash-border)] px-[15.2px] py-[9.5px] text-[13.3px] font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
               >
-                View <ChevronRight className="h-4 w-4" />
+                View <ChevronRight className="h-[15.2px] w-[15.2px]" />
               </button>
             </div>
           </div>
