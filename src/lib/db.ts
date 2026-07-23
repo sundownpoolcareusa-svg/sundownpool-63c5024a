@@ -555,6 +555,7 @@ export type ClientChemicalsHistoryEntry = {
   total_alkalinity: number | null;
   calcium_hardness: number | null;
   stabilizer: number | null;
+  salt: number | null;
   products: Product[];
   notes: string | null;
 };
@@ -690,6 +691,7 @@ export async function saveMyStopChemicals(
     p_total_alkalinity: values.readings.total_alkalinity,
     p_calcium_hardness: values.readings.calcium_hardness,
     p_stabilizer: values.readings.stabilizer,
+    p_salt: values.readings.salt,
     p_products: values.products as unknown as Json,
     p_notes: values.notes,
     p_body_type: bodyType,
@@ -716,6 +718,7 @@ export async function getMyStopChemicalsHistory(stopId: string): Promise<Chemica
       total_alkalinity: row.total_alkalinity,
       calcium_hardness: row.calcium_hardness,
       stabilizer: row.stabilizer,
+      salt: row.salt,
       products: (row.products as unknown as Product[]) ?? [],
       notes: row.notes,
     },
@@ -805,7 +808,8 @@ export type ChemicalReadingKey =
   | "ph"
   | "total_alkalinity"
   | "calcium_hardness"
-  | "stabilizer";
+  | "stabilizer"
+  | "salt";
 
 export type ChemicalReadings = Record<ChemicalReadingKey, number>;
 
@@ -820,6 +824,7 @@ export type StopChemicals = {
   total_alkalinity: number | null;
   calcium_hardness: number | null;
   stabilizer: number | null;
+  salt: number | null;
   products: Product[];
   notes: string | null;
 };
@@ -833,6 +838,7 @@ export const CHEMICAL_READING_META: Record<
   total_alkalinity: { label: "Total Alkalinity", unit: "ppm", min: 80, max: 120, step: 1 },
   calcium_hardness: { label: "Calcium Hardness", unit: "ppm", min: 200, max: 400, step: 1 },
   stabilizer: { label: "Stabilizer (CYA)", unit: "ppm", min: 30, max: 60, step: 1 },
+  salt: { label: "Salt Pool", unit: "ppm", min: 2700, max: 3400, step: 50 },
 };
 
 export const DEFAULT_READINGS: ChemicalReadings = {
@@ -841,6 +847,7 @@ export const DEFAULT_READINGS: ChemicalReadings = {
   total_alkalinity: 90,
   calcium_hardness: 275,
   stabilizer: 50,
+  salt: 3200,
 };
 
 export const DEFAULT_PRODUCTS: Product[] = [
@@ -850,6 +857,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   { name: "Baking Soda", unit: "scoop", qty: 0, step: 0.5 },
   { name: "Calcium", unit: "scoop", qty: 0, step: 0.5 },
   { name: "Stabilizer", unit: "scoop", qty: 0, step: 0.5 },
+  { name: "Salt Bag", unit: "bag", qty: 0, step: 1 },
 ];
 
 const QTY_FRACTIONS: Record<string, string> = { "0.25": "¼", "0.50": "½", "0.75": "¾" };
@@ -911,6 +919,7 @@ export async function saveStopChemicals(
       total_alkalinity: values.readings.total_alkalinity,
       calcium_hardness: values.readings.calcium_hardness,
       stabilizer: values.readings.stabilizer,
+      salt: values.readings.salt,
       products: values.products,
       notes: values.notes || null,
     },

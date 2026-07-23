@@ -525,7 +525,7 @@ function timeAgo(ms: number) {
   return `${days}d ago`;
 }
 
-const CHEMICAL_KEYS: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer"];
+const CHEMICAL_KEYS: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer", "salt"];
 
 // Out-of-range chemical readings are a real, defensible source of "alerts" —
 // no fabricated weather/equipment/schedule events, only what the tech actually logged.

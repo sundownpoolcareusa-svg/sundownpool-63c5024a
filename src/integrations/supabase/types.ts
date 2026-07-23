@@ -515,6 +515,7 @@ export type Database = {
           ph: number | null
           products: Json
           route_stop_id: string
+          salt: number | null
           stabilizer: number | null
           total_alkalinity: number | null
           updated_at: string
@@ -529,6 +530,7 @@ export type Database = {
           ph?: number | null
           products?: Json
           route_stop_id: string
+          salt?: number | null
           stabilizer?: number | null
           total_alkalinity?: number | null
           updated_at?: string
@@ -543,6 +545,7 @@ export type Database = {
           ph?: number | null
           products?: Json
           route_stop_id?: string
+          salt?: number | null
           stabilizer?: number | null
           total_alkalinity?: number | null
           updated_at?: string
@@ -622,6 +625,7 @@ export type Database = {
           products: Json
           route_date: string
           route_stop_id: string
+          salt: number
           stabilizer: number
           total_alkalinity: number
         }[]
@@ -656,6 +660,7 @@ export type Database = {
           notes: string
           ph: number
           products: Json
+          salt: number
           stabilizer: number
           total_alkalinity: number
         }[]
@@ -671,6 +676,7 @@ export type Database = {
           products: Json
           route_date: string
           route_stop_id: string
+          salt: number
           stabilizer: number
           total_alkalinity: number
         }[]
@@ -779,6 +785,7 @@ export type Database = {
           p_notes: string
           p_ph: number
           p_products: Json
+          p_salt?: number
           p_stabilizer: number
           p_stop_id: string
           p_total_alkalinity: number
