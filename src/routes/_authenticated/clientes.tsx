@@ -5,7 +5,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
-  Plus, Search, Filter, Eye, ChevronDown,
+  Plus, Search, Filter, ChevronDown,
   ChevronRight, Pencil, Trash2, Users, CalendarDays,
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
   CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, TrendingUp,
@@ -100,27 +100,31 @@ function ClientCard({
   const dayColor = dayColors[client.service_days?.[0] ?? ""] ?? { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
   const addr = fullAddress(client);
   const hasMonthly = client.monthly_value != null && Number(client.monthly_value) > 0;
+  const cityLine = [client.city, [client.state, client.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ");
 
   return (
-    <div className="relative overflow-hidden rounded-[18px] border border-[var(--dash-border)] bg-white" style={cardShadow}>
-      <div className="relative h-32 w-full bg-[var(--dash-bg)]">
-        <ClientCardPhoto client={client} />
-        <div className={`absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full text-xs font-bold ring-2 ring-white ${avatarColors[idx % avatarColors.length]}`}>
-          {initials(client.name)}
+    <div className="overflow-hidden rounded-[18px] border border-[var(--dash-border)] bg-white" style={cardShadow}>
+      <div className="flex">
+        <div className="relative h-44 w-[38%] shrink-0 bg-[var(--dash-bg)]">
+          <ClientCardPhoto client={client} />
+          <div className={`absolute left-3 top-3 grid h-11 w-11 place-items-center rounded-full text-sm font-bold ring-2 ring-white ${avatarColors[idx % avatarColors.length]}`}>
+            {initials(client.name)}
+          </div>
         </div>
-        <div className="absolute right-2 top-2">
+
+        <div className="relative flex-1 p-4 pr-11">
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="More actions"
-            className="grid h-8 w-8 place-items-center rounded-full bg-white/90 text-[var(--dash-text-secondary)] shadow hover:bg-white"
+            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]"
           >
-            <MoreVertical className="h-4 w-4" />
+            <MoreVertical className="h-5 w-5" />
           </button>
           {menuOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-              <div className="absolute right-0 z-20 mt-1 w-32 overflow-hidden rounded-[10px] border border-[var(--dash-border)] bg-white shadow-lg">
+              <div className="absolute right-3 top-11 z-20 w-32 overflow-hidden rounded-[10px] border border-[var(--dash-border)] bg-white shadow-lg">
                 <button type="button" onClick={() => { setMenuOpen(false); onEdit(); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
                   <Pencil className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Edit
                 </button>
@@ -130,67 +134,73 @@ function ClientCard({
               </div>
             </>
           )}
+
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={onView} className="text-left">
+              <span className="text-xl font-extrabold text-[var(--dash-text)] hover:underline">{client.name}</span>
+            </button>
+            <Star className="h-5 w-5 shrink-0" style={{ color: "#F59E0B" }} fill="#F59E0B" />
+          </div>
+          <div className="mt-1.5 truncate text-[15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
+          <div className="truncate text-[15px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
+
+          <div className="mt-3 flex items-center justify-between gap-2">
+            {dayLabel ? (
+              <span className="flex shrink-0 items-center gap-1.5 truncate rounded-full px-3.5 py-2 text-sm font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
+                <CalendarDays className="h-4 w-4 shrink-0" /> {dayLabel}
+              </span>
+            ) : (
+              <span className="text-sm font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
+            )}
+            <span className="shrink-0 whitespace-nowrap text-xl font-extrabold tabular-nums" style={{ color: "#0B63F6" }}>
+              {hasMonthly ? fmt(Number(client.monthly_value)) : "—"}
+              <span className="text-sm font-semibold text-[var(--dash-text-muted)]">/mo</span>
+            </span>
+          </div>
+
+          <div className="mt-2 flex items-center gap-1.5 text-sm font-bold" style={{ color: status.dot }}>
+            <span className="h-2 w-2 rounded-full" style={{ background: status.dot }} /> {status.label}
+          </div>
         </div>
       </div>
 
-      <div className="p-4">
-        <button type="button" onClick={onView} className="text-left">
-          <div className="font-bold text-[var(--dash-text)] hover:underline">{client.name}</div>
+      <div className="flex items-center gap-2 border-t border-[var(--dash-border)] p-3">
+        <a
+          href={client.phone ? `tel:${client.phone}` : undefined}
+          aria-label="Call"
+          title="Call"
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--dash-border)] ${client.phone ? "text-[var(--dash-text)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
+        >
+          <Phone className="h-[18px] w-[18px]" />
+        </a>
+        <a
+          href={client.phone ? `sms:${client.phone}` : undefined}
+          aria-label="Text"
+          title="Text"
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--dash-border)] ${client.phone ? "text-[var(--dash-text)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
+        >
+          <MessageSquare className="h-[18px] w-[18px]" />
+        </a>
+        <Link to="/invoice" aria-label="Invoice" title="Invoice" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
+          <FileText className="h-[18px] w-[18px]" />
+        </Link>
+        <a
+          href={addr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}` : undefined}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Map"
+          title="Map"
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[var(--dash-border)] ${addr ? "text-[var(--dash-text)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
+        >
+          <MapPin className="h-[18px] w-[18px]" />
+        </a>
+        <button
+          type="button"
+          onClick={onView}
+          className="ml-auto flex h-11 items-center gap-1.5 rounded-xl border border-[var(--dash-border)] px-5 text-[15px] font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+        >
+          View <ChevronRight className="h-4 w-4" />
         </button>
-        <div className="mt-0.5 truncate text-sm text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
-        <div className="truncate text-xs text-[var(--dash-text-muted)]">{[client.city, client.zip].filter(Boolean).join(", ")}</div>
-
-        <div className="mt-2.5 flex items-center justify-between gap-2">
-          {dayLabel ? (
-            <span className="truncate rounded-full px-2.5 py-1 text-[11px] font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
-              {dayLabel}
-            </span>
-          ) : (
-            <span className="text-[11px] font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
-          )}
-          <span className="shrink-0 text-sm font-bold tabular-nums" style={{ color: "var(--dash-navy)" }}>
-            {hasMonthly ? `${fmt(Number(client.monthly_value))}/mo` : "—"}
-          </span>
-        </div>
-
-        <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold" style={{ color: status.dot }}>
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: status.dot }} /> {status.label}
-        </div>
-
-        <div className="mt-3 grid grid-cols-5 gap-1.5 border-t border-[var(--dash-border)] pt-3">
-          <a
-            href={client.phone ? `tel:${client.phone}` : undefined}
-            aria-label="Call"
-            title="Call"
-            className={`grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] ${client.phone ? "text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
-          >
-            <Phone className="h-4 w-4" />
-          </a>
-          <a
-            href={client.phone ? `sms:${client.phone}` : undefined}
-            aria-label="Text"
-            title="Text"
-            className={`grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] ${client.phone ? "text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
-          >
-            <MessageSquare className="h-4 w-4" />
-          </a>
-          <Link to="/invoice" aria-label="Invoice" title="Invoice" className="grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]">
-            <FileText className="h-4 w-4" />
-          </Link>
-          <a
-            href={addr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}` : undefined}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Map"
-            title="Map"
-            className={`grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] ${addr ? "text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
-          >
-            <MapPin className="h-4 w-4" />
-          </a>
-          <button type="button" onClick={onView} aria-label="View details" title="View details" className="grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]">
-            <Eye className="h-4 w-4" />
-          </button>
-        </div>
       </div>
     </div>
   );
