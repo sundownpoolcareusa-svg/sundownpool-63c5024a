@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowLeft, Droplet, FlaskConical, Diamond, ShieldCheck, Minus, Plus, Filter,
-  CheckCircle2, AlertTriangle, Check, ChevronRight, StickyNote, History, X, Waves, Droplets,
+  CheckCircle2, AlertTriangle, Check, ChevronRight, StickyNote, History, X, Waves, Droplets, CalendarDays,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -45,6 +45,14 @@ const READING_ICONS: Record<ChemicalReadingKey, { icon: typeof Droplet; gradient
   total_alkalinity: { icon: FlaskConical, gradient: "linear-gradient(135deg, #7FC97F 0%, #3C8D40 100%)" },
   calcium_hardness: { icon: Diamond, gradient: "linear-gradient(135deg, #FBB03B 0%, #F2711C 100%)" },
   stabilizer: { icon: ShieldCheck, gradient: "linear-gradient(135deg, #4FADF7 0%, #0B63E8 100%)" },
+};
+
+const READING_FLAT_COLORS: Record<ChemicalReadingKey, { icon: typeof Droplet; bg: string; fg: string }> = {
+  free_chlorine: { icon: Droplet, bg: "#DBEAFE", fg: "#0B63E8" },
+  ph: { icon: FlaskConical, bg: "#EDE4FB", fg: "#7C3AED" },
+  total_alkalinity: { icon: FlaskConical, bg: "#DCFCE7", fg: "#3C8D40" },
+  calcium_hardness: { icon: Diamond, bg: "#FFEDD5", fg: "#F2711C" },
+  stabilizer: { icon: ShieldCheck, bg: "#DBEAFE", fg: "#0B63E8" },
 };
 
 function formatCleanedAt(iso: string | null | undefined) {
@@ -107,13 +115,14 @@ function TechnicianChemicalsPage() {
   const [newProductUnit, setNewProductUnit] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyMode, setHistoryMode] = useState<"chemicals" | "products">("chemicals");
+  const [historyBodyType, setHistoryBodyType] = useState<BodyType>("pool");
 
   const { data: history, isLoading: historyLoading } = useQuery({
     queryKey: ["my-stop-chemicals-history", stopId],
     queryFn: () => getMyStopChemicalsHistory(stopId),
     enabled: historyOpen,
   });
-  const historyForBody = (history ?? []).filter((h) => h.chemicals.body_type === bodyType);
+  const historyForBody = (history ?? []).filter((h) => h.chemicals.body_type === historyBodyType);
 
   useEffect(() => {
     if (!checkedSession || isLoading || loadedKey === bodyType) return;
@@ -236,7 +245,7 @@ function TechnicianChemicalsPage() {
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Leituras Químicas</h2>
             <button
-              onClick={() => { setHistoryMode("chemicals"); setHistoryOpen(true); }}
+              onClick={() => { setHistoryMode("chemicals"); setHistoryBodyType(bodyType); setHistoryOpen(true); }}
               className="flex items-center gap-1.5 rounded-full bg-[var(--dash-water-bg)] px-3 py-1.5 text-[12px] font-bold text-[var(--dash-water-icon)]"
             >
               <History className="h-3.5 w-3.5" /> Histórico
@@ -321,7 +330,7 @@ function TechnicianChemicalsPage() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => { setHistoryMode("products"); setHistoryOpen(true); }}
+                onClick={() => { setHistoryMode("products"); setHistoryBodyType(bodyType); setHistoryOpen(true); }}
                 className="flex items-center gap-1.5 rounded-full bg-[var(--dash-water-bg)] px-3 py-1.5 text-[12px] font-bold text-[var(--dash-water-icon)]"
               >
                 <History className="h-3.5 w-3.5" /> Histórico
@@ -416,13 +425,33 @@ function TechnicianChemicalsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-[var(--dash-border)] p-4">
-              <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">
+              <h2 className="text-xl font-extrabold text-[var(--dash-text)]">
                 {historyMode === "chemicals" ? "Histórico de Químicos" : "Histórico de Produtos"}
               </h2>
-              <button onClick={() => setHistoryOpen(false)} className="grid h-8 w-8 place-items-center rounded-full text-[var(--dash-text-secondary)]">
+              <button onClick={() => setHistoryOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-secondary)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
+
+            {stop?.has_spa && (
+              <div className="flex gap-2 p-4 pb-0">
+                {(["pool", "spa"] as BodyType[]).map((bt) => (
+                  <button
+                    key={bt}
+                    onClick={() => setHistoryBodyType(bt)}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-full border py-2.5 text-sm font-bold capitalize"
+                    style={{
+                      background: historyBodyType === bt ? "#0B63F6" : "#fff",
+                      color: historyBodyType === bt ? "#fff" : "#0B63F6",
+                      borderColor: historyBodyType === bt ? "transparent" : "#0B63F6",
+                    }}
+                  >
+                    {bt === "pool" ? <Waves className="h-4 w-4" /> : <Droplets className="h-4 w-4" />}
+                    {bt === "pool" ? "Pool" : "Spa"}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {historyLoading ? (
@@ -434,16 +463,27 @@ function TechnicianChemicalsPage() {
               ) : historyMode === "chemicals" ? (
                 historyForBody.map((entry) => (
                   <div key={entry.chemicals.id} className="rounded-xl border border-[var(--dash-border)] p-3">
-                    <div className="text-[13px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</div>
-                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#DBEAFE] text-[#0B63F6]">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="text-[14px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</div>
+                    </div>
+                    <div className="divide-y divide-[var(--dash-border-table)]">
                       {READING_ORDER.map((key) => {
                         const meta = CHEMICAL_READING_META[key];
                         const value = entry.chemicals[key];
                         if (value === null) return null;
+                        const { icon: Icon, bg, fg } = READING_FLAT_COLORS[key];
                         return (
-                          <div key={key} className="text-[12px]">
-                            <span className="text-[var(--dash-text-muted-2)]">{meta.label}: </span>
-                            <span className="font-bold text-[var(--dash-text)]">{value.toFixed(decimals(meta.step))}</span>
+                          <div key={key} className="flex items-center justify-between gap-2 py-1.5">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full" style={{ background: bg, color: fg }}>
+                                <Icon className="h-3.5 w-3.5" />
+                              </div>
+                              <span className="truncate text-[13px] text-[var(--dash-text-secondary)]">{meta.label}</span>
+                            </div>
+                            <span className="shrink-0 text-[15px] font-extrabold text-[var(--dash-text)]">{value.toFixed(decimals(meta.step))}</span>
                           </div>
                         );
                       })}
