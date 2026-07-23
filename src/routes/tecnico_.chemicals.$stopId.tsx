@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Droplet, FlaskConical, Diamond, ShieldCheck, Minus, Plus, Filter,
   CheckCircle2, AlertTriangle, Check, ChevronRight, StickyNote, History, X, Waves, Droplets, CalendarDays,
+  ChevronDown, Square,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -116,6 +117,14 @@ function TechnicianChemicalsPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyMode, setHistoryMode] = useState<"chemicals" | "products">("chemicals");
   const [historyBodyType, setHistoryBodyType] = useState<BodyType>("pool");
+  const [collapsedEntries, setCollapsedEntries] = useState<Set<string>>(new Set());
+  function toggleEntryCollapsed(id: string) {
+    setCollapsedEntries((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
 
   const { data: history, isLoading: historyLoading } = useQuery({
     queryKey: ["my-stop-chemicals-history", stopId],
@@ -496,19 +505,46 @@ function TechnicianChemicalsPage() {
               ) : (
                 historyForBody.map((entry) => {
                   const usedProducts = entry.chemicals.products.filter((p) => p.qty > 0);
+                  const expanded = !collapsedEntries.has(entry.chemicals.id);
                   return (
                     <div key={entry.chemicals.id} className="rounded-xl border border-[var(--dash-border)] p-3">
-                      <div className="text-[13px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</div>
-                      {usedProducts.length > 0 ? (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {usedProducts.map((p) => (
-                            <span key={p.name} className="rounded-full bg-[var(--dash-bg)] px-2.5 py-1 text-[12px] font-semibold text-[var(--dash-text-secondary)]">
-                              {p.name}: <span className="font-bold text-[var(--dash-text)]">{formatProductQty(p.qty)} {p.unit}</span>
-                            </span>
-                          ))}
+                      <button
+                        type="button"
+                        onClick={() => toggleEntryCollapsed(entry.chemicals.id)}
+                        className="flex w-full items-center justify-between gap-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#DBEAFE] text-[#0B63F6]">
+                            <CalendarDays className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="text-[14px] font-extrabold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</span>
                         </div>
-                      ) : (
-                        <div className="mt-1 text-[12px] text-[var(--dash-text-muted-2)]">Nenhum produto usado nesta visita.</div>
+                        <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--dash-text-muted-2)] transition-transform ${expanded ? "rotate-180" : ""}`} />
+                      </button>
+                      {expanded && (
+                        usedProducts.length > 0 ? (
+                          <div className="mt-2 space-y-2">
+                            {usedProducts.map((p) => (
+                              <div key={p.name} className="flex items-center gap-2.5 rounded-xl bg-[var(--dash-bg)] px-3 py-2.5">
+                                {PRODUCT_ICONS[p.name] ? (
+                                  <img src={PRODUCT_ICONS[p.name]} alt="" className="h-6 w-6 shrink-0 object-contain" />
+                                ) : (
+                                  <div className="h-6 w-6 shrink-0 rounded-full border border-[var(--dash-border)]" />
+                                )}
+                                <span className="text-[13px] text-[var(--dash-text-secondary)]">
+                                  <span className="font-semibold text-[var(--dash-text)]">{p.name}:</span> {formatProductQty(p.qty)} {p.unit}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="mt-2 flex items-center gap-2.5 text-[13px] text-[var(--dash-text-muted-2)]">
+                            <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 border-dashed border-[var(--dash-border)]">
+                              <Square className="h-3 w-3" />
+                            </div>
+                            Nenhum produto usado nesta visita.
+                          </div>
+                        )
                       )}
                     </div>
                   );
