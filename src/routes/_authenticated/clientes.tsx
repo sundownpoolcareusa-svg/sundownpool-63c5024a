@@ -202,20 +202,20 @@ function SummaryStat({
 }) {
   const Comp = onClick ? "button" : "div";
   return (
-    <Comp onClick={onClick} className="rounded-[20px] border border-[#E9EDF5] bg-white p-6 text-left" style={cardShadow}>
-      <div className="flex items-center gap-3.5">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
-          <Icon className="h-5 w-5" />
+    <Comp onClick={onClick} className="rounded-[14px] border border-[#E9EDF5] bg-white p-3 text-left sm:rounded-[20px] sm:p-6" style={cardShadow}>
+      <div className="flex items-center gap-2 sm:gap-3.5">
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full sm:h-12 sm:w-12" style={{ background: iconBg, color: iconColor }}>
+          <Icon className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
         </div>
         <div className="min-w-0">
-          <div className="text-[26px] font-extrabold leading-none tracking-tight text-[var(--dash-text)]">{value}</div>
-          <div className="mt-1.5 text-[15px] font-bold leading-tight text-[var(--dash-text)]">{label}</div>
-          <div className="mt-1 flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>
+          <div className="truncate text-base font-extrabold leading-none tracking-tight text-[var(--dash-text)] sm:text-[26px]">{value}</div>
+          <div className="mt-1 truncate text-[11px] font-bold leading-tight text-[var(--dash-text)] sm:mt-1.5 sm:text-[15px]">{label}</div>
+          <div className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-semibold sm:mt-1 sm:gap-1.5 sm:text-[13px]" style={{ color: subColor || "var(--dash-text-muted)" }}>
             {sub}{subArrow && <span aria-hidden="true">→</span>}
           </div>
         </div>
       </div>
-      {footer && <div className="mt-4 border-t border-[#E9EDF5] pt-4">{footer}</div>}
+      {footer && <div className="mt-2 border-t border-[#E9EDF5] pt-2 sm:mt-4 sm:pt-4">{footer}</div>}
     </Comp>
   );
 }
@@ -223,9 +223,9 @@ function SummaryStat({
 function StatFooterSplit({ text, iconColor, iconBg }: { text: string; iconColor: string; iconBg: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[13px] text-[var(--dash-text-secondary)]">{text}</span>
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: iconBg, color: iconColor }}>
-        <TrendingUp className="h-4 w-4" />
+      <span className="truncate text-[10px] text-[var(--dash-text-secondary)] sm:text-[13px]">{text}</span>
+      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg sm:h-8 sm:w-8" style={{ background: iconBg, color: iconColor }}>
+        <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
       </span>
     </div>
   );
@@ -235,9 +235,9 @@ function StatFooterProgress({ completed, remaining }: { completed: number; remai
   const total = completed + remaining;
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-2.5 text-[13px]">
+    <div className="flex items-center gap-1.5 text-[10px] sm:gap-2.5 sm:text-[13px]">
       <span className="shrink-0 font-semibold" style={{ color: "var(--dash-green)" }}>{completed} completed</span>
-      <div className="h-2 flex-1 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full sm:h-2" style={{ background: "var(--dash-border-table)" }}>
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
       </div>
       <span className="shrink-0 font-semibold text-[var(--dash-text-muted)]">{remaining} remaining</span>
@@ -614,7 +614,7 @@ function ClientesPage() {
           <SummaryStat
             icon={Users} iconColor="#0B63F6" iconBg="#DBEAFE"
             value={total} label="Total Clients"
-            sub="View all clients" subColor="#0B63F6" subArrow
+            sub="View all" subColor="#0B63F6" subArrow
             onClick={() => { setDayFilter("all"); setSearch(""); }}
             footer={<StatFooterSplit text={`${ativos} active | ${inactiveCount} inactive`} iconColor="#0B63F6" iconBg="#DBEAFE" />}
           />
