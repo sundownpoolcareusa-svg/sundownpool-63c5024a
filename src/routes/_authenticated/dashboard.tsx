@@ -1,12 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
+} from "recharts";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import {
-  Award, Users, DollarSign, BarChart3, FileText, ChevronDown, ChevronLeft, ChevronRight, Download, Plus, Bell, CalendarDays,
+  Award, Users, DollarSign, BarChart3, FileText, ChevronDown, ChevronLeft, ChevronRight,
+  Download, Plus, Bell, CalendarDays, FlaskConical, Phone, MessageSquare, MapPin, Play, Check,
 } from "lucide-react";
-import { listClients, listInvoices, listRoutesForDate, fmt, initials } from "@/lib/db";
+import {
+  listClients, listInvoices, listEstimates, listRoutesForDate, listAllChemicalsHistory, listProductCosts,
+  updateStopStatus, clientFullAddress, fmt, initials,
+  type RouteRow, type StopStatus, type Client,
+} from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -212,6 +220,266 @@ function WeeklyRouteSection() {
   );
 }
 
+function monthKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function formatStopTime(t: string | null) {
+  if (!t) return "Anytime";
+  const [hStr, mStr] = t.split(":");
+  const h = Number(hStr);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${mStr} ${ampm}`;
+}
+
+function StatChip({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  return (
+    <div className="rounded-[12px] border border-[var(--dash-border)] p-3">
+      <div className="text-[13px] font-medium text-[var(--dash-text-muted)]">{label}</div>
+      <div className="mt-1 text-lg font-extrabold" style={{ color: valueColor || "var(--dash-text)" }}>{value}</div>
+    </div>
+  );
+}
+
+function FinancialOverviewSection() {
+  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices });
+  const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates });
+
+  const now = new Date();
+  const thisMonth = monthKey(now);
+  const collected = invoices
+    .filter((i) => i.status === "PAID" && (i.invoice_date || "").slice(0, 7) === thisMonth)
+    .reduce((s, i) => s + Number(i.total || 0), 0);
+  const outstanding = invoices
+    .filter((i) => i.status !== "PAID")
+    .reduce((s, i) => s + Number(i.total || 0), 0);
+  const openEstimates = estimates.filter((e) => e.status === "PENDENTE" || e.status === "ENVIADA");
+  const openEstimatesTotal = openEstimates.reduce((s, e) => s + Number(e.total || 0), 0);
+
+  const months = Array.from({ length: 6 }, (_, i) => new Date(now.getFullYear(), now.getMonth() - (5 - i), 1));
+  const chartData = months.map((d) => {
+    const key = monthKey(d);
+    const total = invoices
+      .filter((i) => i.status === "PAID" && (i.invoice_date || "").slice(0, 7) === key)
+      .reduce((s, i) => s + Number(i.total || 0), 0);
+    return { month: d.toLocaleString("en-US", { month: "short" }), total };
+  });
+
+  return (
+    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+      <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Financial Overview</h2>
+      <div className="mt-4 h-44 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+            <CartesianGrid vertical={false} stroke="var(--dash-border-table)" />
+            <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--dash-text-muted)" }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: "var(--dash-text-muted)" }} axisLine={false} tickLine={false} width={48} tickFormatter={(v) => `$${Math.round(v / 1000)}k`} />
+            <Tooltip formatter={(v: number) => fmt(v)} cursor={{ fill: "var(--dash-bg)" }} />
+            <Bar dataKey="total" name="Revenue" fill="#0B63F6" radius={[6, 6, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <StatChip label="Collected This Month" value={fmt(collected)} valueColor="var(--dash-green)" />
+        <StatChip label="Outstanding" value={fmt(outstanding)} valueColor={outstanding > 0 ? "var(--dash-red)" : undefined} />
+        <StatChip label="Estimates Open" value={String(openEstimates.length)} />
+        <StatChip label="Open Estimate Value" value={fmt(openEstimatesTotal)} />
+      </div>
+    </div>
+  );
+}
+
+const PRODUCT_COLORS = ["#0B63F6", "#16A34A", "#F59E0B", "#7C3AED", "#EF4444", "#6B7280"];
+
+function ChemicalPerformanceSection({ monthlyRevenue }: { monthlyRevenue: number }) {
+  const { data: chemHistory = [] } = useQuery({ queryKey: ["chemicals-history-all"], queryFn: listAllChemicalsHistory });
+  const { data: productCosts = [] } = useQuery({ queryKey: ["product-costs"], queryFn: listProductCosts });
+
+  const costByName = new Map(productCosts.map((c) => [c.product_name, Number(c.cost_per_unit)]));
+  const thisMonth = monthKey(new Date());
+  const entriesThisMonth = chemHistory.filter((e) => e.route_date.slice(0, 7) === thisMonth);
+
+  const productTotals = new Map<string, { visits: number; cost: number }>();
+  for (const entry of entriesThisMonth) {
+    for (const p of entry.chemicals.products ?? []) {
+      if (!p.qty || p.qty <= 0) continue;
+      const cost = p.qty * (costByName.get(p.name) ?? 0);
+      const cur = productTotals.get(p.name) ?? { visits: 0, cost: 0 };
+      productTotals.set(p.name, { visits: cur.visits + 1, cost: cur.cost + cost });
+    }
+  }
+  const chemicalCost = [...productTotals.values()].reduce((s, v) => s + v.cost, 0);
+  const avgPerVisit = entriesThisMonth.length > 0 ? chemicalCost / entriesThisMonth.length : 0;
+  const pctOfRevenue = monthlyRevenue > 0 ? (chemicalCost / monthlyRevenue) * 100 : 0;
+  const sortedProducts = [...productTotals.entries()].sort((a, b) => b[1].visits - a[1].visits);
+  const mostUsed = sortedProducts[0]?.[0] ?? "—";
+
+  const sortedByCost = [...productTotals.entries()].sort((a, b) => b[1].cost - a[1].cost);
+  const top = sortedByCost.slice(0, 5);
+  const rest = sortedByCost.slice(5);
+  const restCost = rest.reduce((s, [, v]) => s + v.cost, 0);
+  const donutData = [
+    ...top.map(([name, v]) => ({ name, value: v.cost })),
+    ...(restCost > 0 ? [{ name: "Other", value: restCost }] : []),
+  ].filter((d) => d.value > 0);
+
+  return (
+    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+      <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Chemical Performance</h2>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <StatChip label="Chemical Cost This Month" value={fmt(chemicalCost)} />
+        <StatChip label="Avg Cost per Visit" value={fmt(avgPerVisit)} />
+        <StatChip label="Cost of Revenue" value={`${pctOfRevenue.toFixed(1)}%`} />
+        <StatChip label="Most Used Product" value={mostUsed} />
+      </div>
+      <div className="mt-4 flex items-center gap-4">
+        <div className="h-28 w-28 shrink-0">
+          {donutData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={donutData} dataKey="value" nameKey="name" innerRadius={32} outerRadius={54} paddingAngle={2}>
+                  {donutData.map((d, i) => <Cell key={d.name} fill={PRODUCT_COLORS[i % PRODUCT_COLORS.length]} />)}
+                </Pie>
+                <Tooltip formatter={(v: number) => fmt(v)} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="grid h-full w-full place-items-center rounded-full border-2 border-dashed border-[var(--dash-border)] text-[11px] text-[var(--dash-text-muted)]">No data</div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          {donutData.map((d, i) => (
+            <div key={d.name} className="flex items-center justify-between gap-2 text-[13px]">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: PRODUCT_COLORS[i % PRODUCT_COLORS.length] }} />
+                <span className="truncate font-medium text-[var(--dash-text-secondary)]">{d.name}</span>
+              </div>
+              <span className="shrink-0 font-bold text-[var(--dash-text)]">{fmt(d.value)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Link
+        to="/quimicos"
+        className="mt-4 flex items-center justify-center gap-1.5 rounded-[10px] border border-[var(--dash-border)] py-2 text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+      >
+        <FlaskConical className="h-4 w-4" /> View Chemical Report
+      </Link>
+    </div>
+  );
+}
+
+function nextStopStatus(status: StopStatus): StopStatus | null {
+  if (status === "Pendente") return "Em serviço";
+  if (status === "Em serviço") return "Concluído";
+  return null;
+}
+
+function stopDisplayStatus(status: StopStatus, isNext: boolean): { label: string; bg: string; text: string } {
+  if (status === "Concluído") return { label: "Completed", bg: "var(--dash-badge-paid-bg)", text: "var(--dash-badge-paid-text)" };
+  if (status === "Em serviço") return { label: "In Progress", bg: "var(--dash-badge-sent-bg)", text: "var(--dash-badge-sent-text)" };
+  return isNext
+    ? { label: "Next", bg: "#FFEDD5", text: "var(--dash-orange)" }
+    : { label: "Scheduled", bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
+}
+
+function TodayServicesSection({ routes, todayStr }: { routes: RouteRow[]; todayStr: string }) {
+  const qc = useQueryClient();
+  const advance = useMutation({
+    mutationFn: ({ stopId, status, clientId }: { stopId: string; status: StopStatus; clientId: string }) =>
+      updateStopStatus(stopId, status, clientId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["routes-for-date", todayStr] }),
+  });
+
+  const stops = routes
+    .flatMap((r) => (r.route_stops ?? []).map((s) => ({ ...s, technician: r.technician ?? null })))
+    .sort((a, b) => {
+      if (a.scheduled_time && b.scheduled_time) return a.scheduled_time.localeCompare(b.scheduled_time);
+      if (a.scheduled_time) return -1;
+      if (b.scheduled_time) return 1;
+      return a.position - b.position;
+    });
+  const firstPendingId = stops.find((s) => s.status === "Pendente")?.id;
+
+  return (
+    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Today's Services</h2>
+        <Link to="/rotas" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+      </div>
+      {stops.length === 0 ? (
+        <p className="mt-4 text-sm text-[var(--dash-text-muted)]">No stops scheduled for today.</p>
+      ) : (
+        <div className="mt-3 max-h-[420px] space-y-2 overflow-y-auto pr-1">
+          {stops.map((stop) => {
+            const client = stop.client as (Client & { monthly_value?: number | null }) | undefined;
+            const badge = stopDisplayStatus(stop.status, stop.id === firstPendingId);
+            const next = nextStopStatus(stop.status);
+            const address = client ? clientFullAddress(client) : "";
+            return (
+              <div key={stop.id} className="rounded-[12px] border border-[var(--dash-border)] p-3">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-xs font-bold text-[var(--dash-navy)]">
+                    {initials(client?.name ?? "?")}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-bold text-[var(--dash-text)]">{client?.name ?? "Unknown client"}</span>
+                      <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badge.bg, color: badge.text }}>{badge.label}</span>
+                    </div>
+                    <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{formatStopTime(stop.scheduled_time)} · {address || "No address"}</div>
+                  </div>
+                </div>
+                <div className="mt-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    {client?.phone && (
+                      <a href={`tel:${client.phone}`} className="grid h-8 w-8 place-items-center rounded-[9px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]" aria-label="Call">
+                        <Phone className="h-4 w-4" />
+                      </a>
+                    )}
+                    {client?.phone && (
+                      <a href={`sms:${client.phone}`} className="grid h-8 w-8 place-items-center rounded-[9px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]" aria-label="Text">
+                        <MessageSquare className="h-4 w-4" />
+                      </a>
+                    )}
+                    {address && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                        target="_blank" rel="noreferrer"
+                        className="grid h-8 w-8 place-items-center rounded-[9px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]" aria-label="Map"
+                      >
+                        <MapPin className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {client?.monthly_value != null && (
+                      <span className="text-sm font-bold text-[var(--dash-navy)]">{fmt(Number(client.monthly_value))}</span>
+                    )}
+                    {next && (
+                      <button
+                        type="button"
+                        onClick={() => client && advance.mutate({ stopId: stop.id, status: next, clientId: client.id })}
+                        disabled={advance.isPending}
+                        className="grid h-8 w-8 place-items-center rounded-[9px] text-white disabled:opacity-60"
+                        style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
+                        aria-label={next === "Concluído" ? "Complete" : "Start"}
+                      >
+                        {next === "Concluído" ? <Check className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DashboardPage() {
   const [email, setEmail] = useState("");
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? "")); }, []);
@@ -346,6 +614,12 @@ function DashboardPage() {
         </div>
 
         <WeeklyRouteSection />
+
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+          <FinancialOverviewSection />
+          <ChemicalPerformanceSection monthlyRevenue={monthlyRevenue} />
+          <TodayServicesSection routes={todayRoutes} todayStr={todayStr} />
+        </div>
       </main>
     </div>
   );
