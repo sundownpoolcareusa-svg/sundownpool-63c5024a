@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLogo } from "@/components/AppLogo";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 import { TecnicoClientDetail } from "@/components/TecnicoClientDetail";
+import { Modal } from "@/components/Modal";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
@@ -219,6 +220,7 @@ function TecnicoPage() {
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [selectedClient, setSelectedClient] = useState<TechnicianClient | null>(null);
+  const [confirmCompleteStop, setConfirmCompleteStop] = useState<TechnicianStop | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [myEmail, setMyEmail] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
@@ -698,7 +700,7 @@ function TecnicoPage() {
                       {next && (
                         <button
                           onClick={() => {
-                            if (next === "Concluído" && !confirm(`Confirmar que o serviço em "${stop.client_name}" foi concluído?`)) return;
+                            if (next === "Concluído") { setConfirmCompleteStop(stop); return; }
                             statusMut.mutate({ stopId: stop.stop_id, status: next });
                           }}
                           disabled={statusMut.isPending}
@@ -781,6 +783,37 @@ function TecnicoPage() {
             if (stop) statusMut.mutate({ stopId: stop.stop_id, status: "Concluído" });
           }}
         />
+      )}
+
+      {confirmCompleteStop && (
+        <Modal
+          open
+          onClose={() => setConfirmCompleteStop(null)}
+          title="Concluir serviço"
+          maxWidth="max-w-sm"
+        >
+          <p className="text-sm text-[var(--dash-text-secondary)]">
+            Confirmar que o serviço em <span className="font-bold text-[var(--dash-text)]">{confirmCompleteStop.client_name}</span> foi concluído?
+          </p>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => setConfirmCompleteStop(null)}
+              className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-2.5 text-sm font-bold text-[var(--dash-text-secondary)]"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                statusMut.mutate({ stopId: confirmCompleteStop.stop_id, status: "Concluído" });
+                setConfirmCompleteStop(null);
+              }}
+              className="flex-1 rounded-[12px] py-2.5 text-sm font-bold text-white"
+              style={{ background: "var(--dash-green)" }}
+            >
+              Confirmar
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );
