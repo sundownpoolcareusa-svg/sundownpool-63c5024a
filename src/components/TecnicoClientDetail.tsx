@@ -337,7 +337,7 @@ function ClientHistoryList({ client }: { client: TechnicianClient }) {
   );
 }
 
-const READING_KEYS: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer"];
+const READING_KEYS: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer", "salt"];
 
 const READING_BADGE: Record<ChemicalReadingKey, { abbr: string; bg: string; fg: string }> = {
   free_chlorine: { abbr: "Cl", bg: "#DCFCE7", fg: "#16A34A" },
@@ -345,6 +345,7 @@ const READING_BADGE: Record<ChemicalReadingKey, { abbr: string; bg: string; fg: 
   total_alkalinity: { abbr: "Alk", bg: "#FEF3C7", fg: "#B45309" },
   calcium_hardness: { abbr: "Ca", bg: "#EDE4FB", fg: "#7C3AED" },
   stabilizer: { abbr: "CYA", bg: "#FFE4E6", fg: "#E11D48" },
+  salt: { abbr: "Salt", bg: "#CCFBF1", fg: "#0D9488" },
 };
 
 const READING_RECOMMENDATIONS: Record<ChemicalReadingKey, { high: string; low: string }> = {
@@ -353,6 +354,7 @@ const READING_RECOMMENDATIONS: Record<ChemicalReadingKey, { high: string; low: s
   total_alkalinity: { high: "Total Alkalinity is high. Add pH decreaser to lower it.", low: "Total Alkalinity is low. Add baking soda to raise it." },
   calcium_hardness: { high: "Calcium Hardness is high. Consider partial water replacement.", low: "Calcium Hardness is low. Add calcium increaser." },
   stabilizer: { high: "Stabilizer (CYA) is high. Consider partial water replacement.", low: "Stabilizer (CYA) is low. Add stabilizer/conditioner." },
+  salt: { high: "Salt is high. Consider partial water replacement.", low: "Salt is low. Add a bag of salt." },
 };
 
 function readingStatus(key: ChemicalReadingKey, value: number | null): "good" | "high" | "low" | null {

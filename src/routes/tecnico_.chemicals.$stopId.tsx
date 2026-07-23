@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Droplet, FlaskConical, Diamond, ShieldCheck, Minus, Plus, Filter,
   CheckCircle2, AlertTriangle, Check, ChevronRight, StickyNote, History, X, Waves, Droplets, CalendarDays,
-  ChevronDown, Square,
+  ChevronDown, Square, Gem,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -20,6 +20,7 @@ import iconMuriaticAcid from "@/assets/products/muriatic-acid.png";
 import iconBakingSoda from "@/assets/products/baking-soda.png";
 import iconCalcium from "@/assets/products/calcium.png";
 import iconStabilizer from "@/assets/products/stabilizer.png";
+import iconSaltBag from "@/assets/products/salt-bag.png";
 
 const PRODUCT_ICONS: Record<string, string> = {
   "Liquid Chlorine": iconLiquidChlorine,
@@ -28,6 +29,7 @@ const PRODUCT_ICONS: Record<string, string> = {
   "Baking Soda": iconBakingSoda,
   "Calcium": iconCalcium,
   "Stabilizer": iconStabilizer,
+  "Salt Bag": iconSaltBag,
 };
 
 const PRODUCT_SHORT_NAMES: Record<string, string> = {
@@ -46,6 +48,7 @@ const READING_ICONS: Record<ChemicalReadingKey, { icon: typeof Droplet; gradient
   total_alkalinity: { icon: FlaskConical, gradient: "linear-gradient(135deg, #7FC97F 0%, #3C8D40 100%)" },
   calcium_hardness: { icon: Diamond, gradient: "linear-gradient(135deg, #FBB03B 0%, #F2711C 100%)" },
   stabilizer: { icon: ShieldCheck, gradient: "linear-gradient(135deg, #4FADF7 0%, #0B63E8 100%)" },
+  salt: { icon: Gem, gradient: "linear-gradient(135deg, #2DD4BF 0%, #0D9488 100%)" },
 };
 
 const READING_FLAT_COLORS: Record<ChemicalReadingKey, { icon: typeof Droplet; bg: string; fg: string }> = {
@@ -54,6 +57,7 @@ const READING_FLAT_COLORS: Record<ChemicalReadingKey, { icon: typeof Droplet; bg
   total_alkalinity: { icon: FlaskConical, bg: "#DCFCE7", fg: "#3C8D40" },
   calcium_hardness: { icon: Diamond, bg: "#FFEDD5", fg: "#F2711C" },
   stabilizer: { icon: ShieldCheck, bg: "#DBEAFE", fg: "#0B63E8" },
+  salt: { icon: Gem, bg: "#CCFBF1", fg: "#0D9488" },
 };
 
 function formatCleanedAt(iso: string | null | undefined) {
@@ -75,7 +79,7 @@ function daysSince(iso: string | null | undefined) {
   return Math.max(0, Math.round((todayDate.getTime() - cleanedDate.getTime()) / 86400000));
 }
 
-const READING_ORDER: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer"];
+const READING_ORDER: ChemicalReadingKey[] = ["free_chlorine", "ph", "total_alkalinity", "calcium_hardness", "stabilizer", "salt"];
 
 const STATUS_LABEL: Record<string, string> = { "Pendente": "Pendente", "Em serviço": "Em andamento", "Concluído": "Concluído" };
 
@@ -143,6 +147,7 @@ function TechnicianChemicalsPage() {
         total_alkalinity: existing.total_alkalinity ?? DEFAULT_READINGS.total_alkalinity,
         calcium_hardness: existing.calcium_hardness ?? DEFAULT_READINGS.calcium_hardness,
         stabilizer: existing.stabilizer ?? DEFAULT_READINGS.stabilizer,
+        salt: existing.salt ?? DEFAULT_READINGS.salt,
       });
       setProducts(existing.products.length > 0 ? mergeSavedProducts(existing.products) : DEFAULT_PRODUCTS);
       setNotes(existing.notes ?? "");
