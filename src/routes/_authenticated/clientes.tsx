@@ -107,12 +107,12 @@ function ClientCard({
 
   return (
     <div className="overflow-hidden rounded-[18px] border border-[var(--dash-border)] bg-white" style={cardShadow}>
-      <div className="flex">
-        <div className="relative h-44 w-[38%] shrink-0 bg-[var(--dash-bg)]">
+      <div className="flex items-stretch">
+        <div className="relative w-[38%] shrink-0 bg-[var(--dash-bg)]">
           <ClientCardPhoto client={client} />
         </div>
 
-        <div className="relative flex-1 p-4 pr-11">
+        <div className="relative flex-1 py-3 pl-4 pr-11">
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
@@ -158,16 +158,16 @@ function ClientCard({
               </span>
             </div>
 
-            <div className="mt-3 flex items-center justify-between gap-2">
+            <div className="mt-2 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 text-[12.6px] font-bold" style={{ color: status.dot }}>
                 <span className="h-[7.2px] w-[7.2px] rounded-full" style={{ background: status.dot }} /> {status.label}
               </div>
               <button
                 type="button"
                 onClick={onView}
-                className="flex shrink-0 items-center gap-1 rounded-xl border border-[var(--dash-border)] px-[15.2px] py-[9.5px] text-[13.3px] font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+                className="flex shrink-0 items-center gap-1 rounded-xl border border-[var(--dash-border)] px-[13.4px] py-[8.4px] text-[11.7px] font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
               >
-                View <ChevronRight className="h-[15.2px] w-[15.2px]" />
+                View <ChevronRight className="h-[13.4px] w-[13.4px]" />
               </button>
             </div>
           </div>
