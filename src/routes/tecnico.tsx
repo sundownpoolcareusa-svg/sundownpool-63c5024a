@@ -9,7 +9,7 @@ import { TecnicoClientDetail } from "@/components/TecnicoClientDetail";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
-  CheckCircle2, Timer, Route as RouteIcon, Car, Waves, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
+  CheckCircle2, Timer, Route as RouteIcon, Car, Home, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
   AlertTriangle, DollarSign, Filter, FileText, X,
 } from "lucide-react";
 import {
@@ -663,11 +663,11 @@ function TecnicoPage() {
 
                     <div className="mt-2 flex flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       <span
-                        className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-1 text-[11px] font-bold"
+                        title={commercial ? "Comercial" : "Residencial"}
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
                         style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
                       >
-                        {commercial ? <Building2 className="h-3 w-3" /> : <Waves className="h-3 w-3" />}
-                        {commercial ? "Comercial" : "Residencial"}
+                        {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
                       </span>
                       <Link
                         to="/tecnico/chemicals/$stopId"
@@ -697,7 +697,10 @@ function TecnicoPage() {
                       )}
                       {next && (
                         <button
-                          onClick={() => statusMut.mutate({ stopId: stop.stop_id, status: next })}
+                          onClick={() => {
+                            if (next === "Concluído" && !confirm(`Confirmar que o serviço em "${stop.client_name}" foi concluído?`)) return;
+                            statusMut.mutate({ stopId: stop.stop_id, status: next });
+                          }}
                           disabled={statusMut.isPending}
                           className="flex shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"
                           style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
@@ -844,11 +847,11 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
                       {c.name}
                     </span>
                     <span
-                      className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                      title={commercial ? "Comercial" : "Residencial"}
+                      className="grid h-5 w-5 shrink-0 place-items-center rounded-full"
                       style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
                     >
-                      {commercial ? <Building2 className="h-2.5 w-2.5" /> : <Waves className="h-2.5 w-2.5" />}
-                      {commercial ? "Comercial" : "Residencial"}
+                      {commercial ? <Building2 className="h-3 w-3" /> : <Home className="h-3 w-3" />}
                     </span>
                   </div>
                 </div>
