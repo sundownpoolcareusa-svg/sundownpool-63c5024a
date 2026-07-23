@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -8,7 +8,7 @@ import {
   Plus, Search, Filter, ChevronDown,
   ChevronRight, Pencil, Trash2, Users, CalendarDays,
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
-  CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, TrendingUp,
+  CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail,
 } from "lucide-react";
 import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -195,53 +195,23 @@ function todayDateStr() {
 }
 
 function SummaryStat({
-  icon: Icon, iconColor, iconBg, value, label, sub, subColor, subArrow, onClick, footer,
+  icon: Icon, iconColor, iconBg, value, label, sub, subColor, subArrow, onClick,
 }: {
   icon: typeof Users; iconColor: string; iconBg: string; value: string | number; label: string;
-  sub: string; subColor?: string; subArrow?: boolean; onClick?: () => void; footer?: ReactNode;
+  sub: string; subColor?: string; subArrow?: boolean; onClick?: () => void;
 }) {
   const Comp = onClick ? "button" : "div";
   return (
-    <Comp onClick={onClick} className="rounded-[14px] border border-[#E9EDF5] bg-white p-3 text-left sm:rounded-[20px] sm:p-6" style={cardShadow}>
-      <div className="flex items-center gap-2 sm:gap-3.5">
-        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full sm:h-12 sm:w-12" style={{ background: iconBg, color: iconColor }}>
-          <Icon className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
-        </div>
-        <div className="min-w-0">
-          <div className="truncate text-base font-extrabold leading-none tracking-tight text-[var(--dash-text)] sm:text-[26px]">{value}</div>
-          <div className="mt-1 truncate text-[11px] font-bold leading-tight text-[var(--dash-text)] sm:mt-1.5 sm:text-[15px]">{label}</div>
-          <div className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-semibold sm:mt-1 sm:gap-1.5 sm:text-[13px]" style={{ color: subColor || "var(--dash-text-muted)" }}>
-            {sub}{subArrow && <span aria-hidden="true">→</span>}
-          </div>
-        </div>
+    <Comp onClick={onClick} className="w-[130px] shrink-0 rounded-[14px] border border-[#E9EDF5] bg-white p-3 text-left sm:w-auto sm:rounded-[20px] sm:p-6" style={cardShadow}>
+      <div className="grid h-8 w-8 place-items-center rounded-full sm:h-12 sm:w-12" style={{ background: iconBg, color: iconColor }}>
+        <Icon className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
       </div>
-      {footer && <div className="mt-2 border-t border-[#E9EDF5] pt-2 sm:mt-4 sm:pt-4">{footer}</div>}
+      <div className="mt-2 truncate text-lg font-extrabold leading-none tracking-tight text-[var(--dash-text)] sm:mt-3.5 sm:text-[26px]">{value}</div>
+      <div className="mt-1 truncate text-[11px] font-bold leading-tight text-[var(--dash-text)] sm:mt-1.5 sm:text-[15px]">{label}</div>
+      <div className="mt-0.5 flex items-center gap-1 truncate text-[10px] font-semibold sm:mt-1 sm:gap-1.5 sm:text-[13px]" style={{ color: subColor || "var(--dash-text-muted)" }}>
+        {sub}{subArrow && <span aria-hidden="true">→</span>}
+      </div>
     </Comp>
-  );
-}
-
-function StatFooterSplit({ text, iconColor, iconBg }: { text: string; iconColor: string; iconBg: string }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="truncate text-[10px] text-[var(--dash-text-secondary)] sm:text-[13px]">{text}</span>
-      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg sm:h-8 sm:w-8" style={{ background: iconBg, color: iconColor }}>
-        <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
-      </span>
-    </div>
-  );
-}
-
-function StatFooterProgress({ completed, remaining }: { completed: number; remaining: number }) {
-  const total = completed + remaining;
-  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-  return (
-    <div className="flex items-center gap-1.5 text-[10px] sm:gap-2.5 sm:text-[13px]">
-      <span className="shrink-0 font-semibold" style={{ color: "var(--dash-green)" }}>{completed} completed</span>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full sm:h-2" style={{ background: "var(--dash-border-table)" }}>
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
-      </div>
-      <span className="shrink-0 font-semibold text-[var(--dash-text-muted)]">{remaining} remaining</span>
-    </div>
   );
 }
 
@@ -570,8 +540,6 @@ function ClientesPage() {
   const invoicesDueCount = overdueInvoices.length;
   const invoicesDueAmount = overdueInvoices.reduce((s, i) => s + Number(i.total || 0), 0);
   const todayRouteCount = todayRoutes.reduce((s, r) => s + (r.route_stops?.length ?? 0), 0);
-  const todayCompletedCount = todayRoutes.reduce((s, r) => s + (r.route_stops ?? []).filter((st) => st.status === "Concluído").length, 0);
-  const todayRemainingCount = Math.max(0, todayRouteCount - todayCompletedCount);
   const todayTechnicianCount = new Set(todayRoutes.filter((r) => (r.route_stops?.length ?? 0) > 0).map((r) => r.technician_id)).size;
 
   const delMut = useMutation({
@@ -610,25 +578,22 @@ function ClientesPage() {
           <button className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary)]" aria-label="More options"><MoreVertical className="h-4 w-4" /></button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-5">
           <SummaryStat
             icon={Users} iconColor="#0B63F6" iconBg="#DBEAFE"
             value={total} label="Total Clients"
             sub="View all" subColor="#0B63F6" subArrow
             onClick={() => { setDayFilter("all"); setSearch(""); }}
-            footer={<StatFooterSplit text={`${ativos} active | ${inactiveCount} inactive`} iconColor="#0B63F6" iconBg="#DBEAFE" />}
           />
           <SummaryStat
             icon={CheckCircle2} iconColor="var(--dash-green)" iconBg="#DCFCE7"
             value={ativos} label="Active Clients"
             sub={`${total > 0 ? Math.round((ativos / total) * 100) : 0}% of total`} subColor="var(--dash-green)"
-            footer={<StatFooterSplit text={`${prospectCount} prospects | ${inactiveCount} inactive`} iconColor="var(--dash-green)" iconBg="#DCFCE7" />}
           />
           <SummaryStat
             icon={RouteIcon} iconColor="var(--dash-orange)" iconBg="#FFEDD5"
             value={todayRouteCount} label="Today's Route"
             sub={`${todayTechnicianCount} technician${todayTechnicianCount === 1 ? "" : "s"}`}
-            footer={<StatFooterProgress completed={todayCompletedCount} remaining={todayRemainingCount} />}
           />
           <SummaryStat
             icon={DollarSign} iconColor="#7C3AED" iconBg="#EDE4FB"
