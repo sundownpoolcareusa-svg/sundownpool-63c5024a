@@ -383,8 +383,12 @@ function ChemistryReadingsView({
   }
 
   const address = clientFullAddress(client);
+  // Pool is the "default" body for this summary/history view — the Spa
+  // gets its own independent readings, browsable via the toggle on the
+  // main Chemicals page where they're actually logged.
+  const poolHistory = history.filter((h) => h.body_type === "pool");
   const completedVisits = visits.filter((v) => v.status === "Concluído").length;
-  const latest = history[0] ?? null;
+  const latest = poolHistory[0] ?? null;
   const latestVisit = latest ? visits.find((v) => v.route_stop_id === latest.route_stop_id) : null;
   const latestTime = latestVisit?.completed_at ?? latestVisit?.started_at ?? null;
   const latestTimeLabel = latestTime
@@ -397,7 +401,7 @@ function ChemistryReadingsView({
       )
     : [];
 
-  const visible = showAll ? history : history.slice(0, 4);
+  const visible = showAll ? poolHistory : poolHistory.slice(0, 4);
 
   const addReadingsButton = todayStopId ? (
     <Link to="/tecnico/chemicals/$stopId" params={{ stopId: todayStopId }} onClick={onClose}>
@@ -528,11 +532,11 @@ function ChemistryReadingsView({
 
       {addReadingsButton}
 
-      {history.length > 0 && (
+      {poolHistory.length > 0 && (
         <div>
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-[15px] font-bold text-[var(--dash-text)]">Reading History</h3>
-            {history.length > 4 && (
+            {poolHistory.length > 4 && (
               <button onClick={() => setShowAll((s) => !s)} className="text-[12.5px] font-bold" style={{ color: "#4F46E5" }}>
                 {showAll ? "Show Less" : "View All ›"}
               </button>

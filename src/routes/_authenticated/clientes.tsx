@@ -939,6 +939,7 @@ function ClientFormModal({
     technician_id: null as string | null,
     gate_code: "",
     contacts: [] as ClientContact[],
+    has_spa: false,
   };
   const [form, setForm] = useState(empty);
   const [visitMode, setVisitMode] = useState<"recorrente" | "unica">("recorrente");
@@ -975,6 +976,7 @@ function ClientFormModal({
         technician_id: editing.technician_id ?? null,
         gate_code: editing.gate_code || "",
         contacts: editing.contacts || [],
+        has_spa: editing.has_spa ?? false,
       });
     } else {
       setForm(empty);
@@ -1114,6 +1116,15 @@ function ClientFormModal({
             </select>
           </div>
         </div>
+        <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+          <input
+            type="checkbox"
+            checked={form.has_spa}
+            onChange={(e) => setForm({ ...form, has_spa: e.target.checked })}
+            className="h-4 w-4"
+          />
+          This client has a Spa (tracked independently from the Pool)
+        </label>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Schedule</label>
           <div className="mt-1.5 grid grid-cols-2 gap-2">
