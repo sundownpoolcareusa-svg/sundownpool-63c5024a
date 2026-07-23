@@ -7,6 +7,7 @@ import { Modal } from "@/components/Modal";
 import {
   Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
   ChevronLeft, ChevronRight, Pencil, Trash2, Users, Map, CalendarDays,
+  LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
 } from "lucide-react";
 import { listClients, listTechnicians, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -14,6 +15,7 @@ import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
+import poolImg from "@/assets/pool.jpg";
 
 function formatPhone(input: string): string {
   const digits = (input || "").replace(/\D/g, "").slice(0, 10);
@@ -47,6 +49,152 @@ type ClientFull = Client & {
   contacts?: ClientContact[] | null;
 };
 
+const dayColors: Record<string, { bg: string; text: string }> = {
+  "Seg": { bg: "#DBEAFE", text: "#1D4ED8" },
+  "Ter": { bg: "#CCFBF1", text: "#0F766E" },
+  "Qua": { bg: "#FEF3C7", text: "#B45309" },
+  "Qui": { bg: "#FFE4E6", text: "#BE123C" },
+  "Sex": { bg: "#EDE4FB", text: "#7C3AED" },
+  "Sáb": { bg: "#DCFCE7", text: "#15803D" },
+  "Dom": { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" },
+};
+
+function dayBadgeLabel(days?: string[] | null) {
+  if (!days || days.length === 0) return null;
+  return days.join(", ");
+}
+
+function statusInfo(c: Client) {
+  const isOnRoute = (c.service_days ?? []).length > 0;
+  if (c.status !== "Ativo") return { label: "Inactive", dot: "var(--dash-text-muted)" };
+  if (isOnRoute) return { label: "Active", dot: "var(--dash-green)" };
+  if (c.stage === "Prospecção") return { label: "Prospect", dot: "var(--dash-orange)" };
+  return { label: "Active", dot: "var(--dash-green)" };
+}
+
+function fullAddress(c: ClientFull) {
+  return [c.address, c.city, c.state, c.zip].filter(Boolean).join(", ");
+}
+
+function ClientCardPhoto({ client }: { client: ClientFull }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const path = client.pool_photos?.[0];
+    if (!path) { setUrl(null); return; }
+    let alive = true;
+    supabase.storage.from("client-photos").createSignedUrl(path, 60 * 60).then(({ data }) => {
+      if (alive && data?.signedUrl) setUrl(data.signedUrl);
+    });
+    return () => { alive = false; };
+  }, [client.pool_photos]);
+  return <img src={url || poolImg} alt="" className="h-full w-full object-cover" />;
+}
+
+function ClientCard({
+  client, idx, onView, onEdit, onDelete,
+}: { client: ClientFull; idx: number; onView: () => void; onEdit: () => void; onDelete: () => void }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const status = statusInfo(client);
+  const dayLabel = dayBadgeLabel(client.service_days);
+  const dayColor = dayColors[client.service_days?.[0] ?? ""] ?? { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
+  const addr = fullAddress(client);
+  const hasMonthly = client.monthly_value != null && Number(client.monthly_value) > 0;
+
+  return (
+    <div className="relative overflow-hidden rounded-[18px] border border-[var(--dash-border)] bg-white" style={cardShadow}>
+      <div className="relative h-32 w-full bg-[var(--dash-bg)]">
+        <ClientCardPhoto client={client} />
+        <div className={`absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-full text-xs font-bold ring-2 ring-white ${avatarColors[idx % avatarColors.length]}`}>
+          {initials(client.name)}
+        </div>
+        <div className="absolute right-2 top-2">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="More actions"
+            className="grid h-8 w-8 place-items-center rounded-full bg-white/90 text-[var(--dash-text-secondary)] shadow hover:bg-white"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 z-20 mt-1 w-32 overflow-hidden rounded-[10px] border border-[var(--dash-border)] bg-white shadow-lg">
+                <button type="button" onClick={() => { setMenuOpen(false); onEdit(); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
+                  <Pencil className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> Edit
+                </button>
+                <button type="button" onClick={() => { setMenuOpen(false); onDelete(); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[var(--dash-bg)]" style={{ color: "var(--dash-red)" }}>
+                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="p-4">
+        <button type="button" onClick={onView} className="text-left">
+          <div className="font-bold text-[var(--dash-text)] hover:underline">{client.name}</div>
+        </button>
+        <div className="mt-0.5 truncate text-sm text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
+        <div className="truncate text-xs text-[var(--dash-text-muted)]">{[client.city, client.zip].filter(Boolean).join(", ")}</div>
+
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          {dayLabel ? (
+            <span className="truncate rounded-full px-2.5 py-1 text-[11px] font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
+              {dayLabel}
+            </span>
+          ) : (
+            <span className="text-[11px] font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
+          )}
+          <span className="shrink-0 text-sm font-bold tabular-nums" style={{ color: "var(--dash-navy)" }}>
+            {hasMonthly ? `${fmt(Number(client.monthly_value))}/mo` : "—"}
+          </span>
+        </div>
+
+        <div className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold" style={{ color: status.dot }}>
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: status.dot }} /> {status.label}
+        </div>
+
+        <div className="mt-3 grid grid-cols-5 gap-1.5 border-t border-[var(--dash-border)] pt-3">
+          <a
+            href={client.phone ? `tel:${client.phone}` : undefined}
+            aria-label="Call"
+            title="Call"
+            className={`grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] ${client.phone ? "text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
+          >
+            <Phone className="h-4 w-4" />
+          </a>
+          <a
+            href={client.phone ? `sms:${client.phone}` : undefined}
+            aria-label="Text"
+            title="Text"
+            className={`grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] ${client.phone ? "text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </a>
+          <Link to="/invoice" aria-label="Invoice" title="Invoice" className="grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]">
+            <FileText className="h-4 w-4" />
+          </Link>
+          <a
+            href={addr ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}` : undefined}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Map"
+            title="Map"
+            className={`grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] ${addr ? "text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]" : "pointer-events-none text-[var(--dash-text-muted)] opacity-40"}`}
+          >
+            <MapPin className="h-4 w-4" />
+          </a>
+          <button type="button" onClick={onView} aria-label="View details" title="View details" className="grid h-9 place-items-center rounded-lg border border-[var(--dash-border)] text-[var(--dash-navy)] hover:bg-[var(--dash-bg)]">
+            <Eye className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ClientesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -55,6 +203,7 @@ function ClientesPage() {
   const [viewClient, setViewClient] = useState<ClientFull | null>(null);
   const [editClient, setEditClient] = useState<ClientFull | null>(null);
   const [deleteClient, setDeleteClient] = useState<ClientFull | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: listClients });
 
   const isOnRoute = (c: Client) => (c.service_days ?? []).length > 0;
@@ -157,6 +306,28 @@ function ClientesPage() {
               </button>
               <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Filter className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Filter</button>
               <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Upload className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Export</button>
+              <div className="flex overflow-hidden rounded-[11px] border border-[var(--dash-border)] bg-white">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  aria-label="Grid view"
+                  title="Grid view"
+                  className="grid h-9 w-9 place-items-center"
+                  style={{ background: viewMode === "grid" ? "var(--dash-navy)" : "#fff", color: viewMode === "grid" ? "#fff" : "var(--dash-text-secondary)" }}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  aria-label="List view"
+                  title="List view"
+                  className="grid h-9 w-9 place-items-center border-l border-[var(--dash-border)]"
+                  style={{ background: viewMode === "list" ? "var(--dash-navy)" : "#fff", color: viewMode === "list" ? "#fff" : "var(--dash-text-secondary)" }}
+                >
+                  <ListIcon className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -170,6 +341,19 @@ function ClientesPage() {
               <button onClick={() => setOpen(true)} className="mt-4 inline-flex items-center gap-2 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white">
                 <Plus className="h-4 w-4" /> Add first client
               </button>
+            </div>
+          ) : viewMode === "grid" ? (
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((c, idx) => (
+                <ClientCard
+                  key={c.id}
+                  client={c as ClientFull}
+                  idx={idx}
+                  onView={() => setViewClient(c as ClientFull)}
+                  onEdit={() => setEditClient(c as ClientFull)}
+                  onDelete={() => setDeleteClient(c as ClientFull)}
+                />
+              ))}
             </div>
           ) : (
             <>
