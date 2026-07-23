@@ -145,17 +145,17 @@ function ClientCard({
             <div className="mt-1.5 truncate text-[15px] text-[var(--dash-text-secondary)]">{client.address || "—"}</div>
             <div className="truncate text-[15px] text-[var(--dash-text-secondary)]">{cityLine || "—"}</div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
               {dayLabel ? (
-                <span className="flex shrink-0 items-center gap-1.5 truncate rounded-full px-3.5 py-2 text-sm font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
-                  <CalendarDays className="h-4 w-4 shrink-0" /> {dayLabel}
+                <span className="flex shrink-0 items-center gap-1 truncate rounded-full px-2.5 py-1.5 text-[12px] font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
+                  <CalendarDays className="h-3.5 w-3.5 shrink-0" /> {dayLabel}
                 </span>
               ) : (
-                <span className="text-sm font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
+                <span className="text-[12px] font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
               )}
-              <span className="shrink-0 whitespace-nowrap text-xl font-extrabold tabular-nums" style={{ color: "#0B63F6" }}>
+              <span className="shrink-0 whitespace-nowrap text-base font-extrabold tabular-nums" style={{ color: "#0B63F6" }}>
                 {hasMonthly ? fmt(Number(client.monthly_value)) : "—"}
-                <span className="text-sm font-semibold text-[var(--dash-text-muted)]">/mo</span>
+                <span className="text-[11px] font-semibold text-[var(--dash-text-muted)]">/mo</span>
               </span>
             </div>
 
