@@ -11,7 +11,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Home, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
-  AlertTriangle, DollarSign, Filter, FileText, X,
+  AlertTriangle, DollarSign, Filter, FileText, X, RotateCcw,
 } from "lucide-react";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
@@ -221,6 +221,7 @@ function TecnicoPage() {
   const [showTraffic, setShowTraffic] = useState(false);
   const [selectedClient, setSelectedClient] = useState<TechnicianClient | null>(null);
   const [confirmCompleteStop, setConfirmCompleteStop] = useState<TechnicianStop | null>(null);
+  const [undoStop, setUndoStop] = useState<TechnicianStop | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [myEmail, setMyEmail] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
@@ -649,9 +650,20 @@ function TecnicoPage() {
                         )}
                       </div>
                       <div className="shrink-0 text-right">
-                        <span className="whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badgeStyle.bg, color: badgeStyle.text }}>
-                          {stopStatusLabel(stop.status)}
-                        </span>
+                        <div className="flex items-center justify-end gap-1">
+                          <span className="whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badgeStyle.bg, color: badgeStyle.text }}>
+                            {stopStatusLabel(stop.status)}
+                          </span>
+                          {stop.status === "Concluído" && (
+                            <button
+                              onClick={() => setUndoStop(stop)}
+                              title="Desfazer conclusão"
+                              className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[var(--dash-text-muted-2)]"
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
                         <div className="mt-1 text-[11px] font-semibold text-[var(--dash-text-muted-2)]">{stop.scheduled_time ? stop.scheduled_time.slice(0, 5) : "—"}</div>
                       </div>
                     </div>
@@ -809,6 +821,37 @@ function TecnicoPage() {
               }}
               className="flex-1 rounded-[12px] py-2.5 text-sm font-bold text-white"
               style={{ background: "var(--dash-green)" }}
+            >
+              Confirmar
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {undoStop && (
+        <Modal
+          open
+          onClose={() => setUndoStop(null)}
+          title="Desfazer conclusão"
+          maxWidth="max-w-sm"
+        >
+          <p className="text-sm text-[var(--dash-text-secondary)]">
+            Voltar o serviço em <span className="font-bold text-[var(--dash-text)]">{undoStop.client_name}</span> para Pendente?
+          </p>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => setUndoStop(null)}
+              className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-2.5 text-sm font-bold text-[var(--dash-text-secondary)]"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                statusMut.mutate({ stopId: undoStop.stop_id, status: "Pendente" });
+                setUndoStop(null);
+              }}
+              className="flex-1 rounded-[12px] py-2.5 text-sm font-bold text-white"
+              style={{ background: "var(--dash-navy)" }}
             >
               Confirmar
             </button>
