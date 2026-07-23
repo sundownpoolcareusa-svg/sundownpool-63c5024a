@@ -9,7 +9,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import {
   Award, Users, DollarSign, BarChart3, FileText, ChevronDown, ChevronLeft, ChevronRight,
   Download, Plus, Bell, CalendarDays, FlaskConical, Phone, MessageSquare, MapPin, Play, Check,
-  User, Zap, AlertTriangle, CheckCircle2,
+  User, Zap, AlertTriangle, CheckCircle2, ClipboardList, UserPlus, CalendarX,
 } from "lucide-react";
 import {
   listClients, listInvoices, listEstimates, listRoutesForDate, listAllChemicalsHistory, listProductCosts,
@@ -18,6 +18,7 @@ import {
   type ChemicalVisitEntry,
 } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
+import poolImg from "@/assets/pool.jpg";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -235,16 +236,35 @@ function formatStopTime(t: string | null) {
   return `${h12}:${mStr} ${ampm}`;
 }
 
-function StatChip({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+function LabelValueStat({
+  icon: Icon, iconColor, iconBg, label, value, valueColor, sub,
+}: {
+  icon: typeof DollarSign; iconColor: string; iconBg: string; label: string; value: string; valueColor?: string; sub?: string;
+}) {
   return (
-    <div className="rounded-[12px] border border-[var(--dash-border)] p-3">
-      <div className="text-[13px] font-medium text-[var(--dash-text-muted)]">{label}</div>
-      <div className="mt-1 text-lg font-extrabold" style={{ color: valueColor || "var(--dash-text)" }}>{value}</div>
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--dash-text-secondary)]">
+        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px]" style={{ background: iconBg, color: iconColor }}>
+          <Icon className="h-3 w-3" />
+        </span>
+        <span className="truncate">{label}</span>
+      </div>
+      <div className="mt-1 truncate text-xl font-extrabold" style={{ color: valueColor || "var(--dash-text)" }}>{value}</div>
+      {sub && <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{sub}</div>}
     </div>
   );
 }
 
-function FinancialOverviewSection() {
+function ValueLabelStat({ value, valueColor, label }: { value: string; valueColor?: string; label: string }) {
+  return (
+    <div className="min-w-0">
+      <div className="truncate text-xl font-extrabold" style={{ color: valueColor || "var(--dash-text)" }}>{value}</div>
+      <div className="mt-0.5 truncate text-[12px] font-medium text-[var(--dash-text-muted)]">{label}</div>
+    </div>
+  );
+}
+
+function FinancialOverviewSection({ monthlyRevenue }: { monthlyRevenue: number }) {
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices });
   const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates });
 
@@ -271,7 +291,13 @@ function FinancialOverviewSection() {
   return (
     <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
       <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Financial Overview</h2>
-      <div className="mt-4 h-44 w-full">
+      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <LabelValueStat icon={DollarSign} iconColor="#0B63F6" iconBg="#DBEAFE" label="Monthly Revenue" value={fmt(monthlyRevenue)} />
+        <LabelValueStat icon={CheckCircle2} iconColor="var(--dash-green)" iconBg="#DCFCE7" label="Collected" value={fmt(collected)} valueColor="var(--dash-green)" />
+        <LabelValueStat icon={AlertTriangle} iconColor="var(--dash-red)" iconBg="#FEE2E2" label="Outstanding" value={fmt(outstanding)} valueColor={outstanding > 0 ? "var(--dash-red)" : undefined} />
+        <LabelValueStat icon={ClipboardList} iconColor="#7C3AED" iconBg="#EDE4FB" label="Estimates Open" value={fmt(openEstimatesTotal)} sub={`${openEstimates.length} estimate${openEstimates.length === 1 ? "" : "s"}`} />
+      </div>
+      <div className="mt-5 h-44 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--dash-border-table)" />
@@ -281,12 +307,6 @@ function FinancialOverviewSection() {
             <Bar dataKey="total" name="Revenue" fill="#0B63F6" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
-      </div>
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <StatChip label="Collected This Month" value={fmt(collected)} valueColor="var(--dash-green)" />
-        <StatChip label="Outstanding" value={fmt(outstanding)} valueColor={outstanding > 0 ? "var(--dash-red)" : undefined} />
-        <StatChip label="Estimates Open" value={String(openEstimates.length)} />
-        <StatChip label="Open Estimate Value" value={fmt(openEstimatesTotal)} />
       </div>
     </div>
   );
@@ -329,13 +349,13 @@ function ChemicalPerformanceSection({ monthlyRevenue }: { monthlyRevenue: number
   return (
     <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
       <h2 className="text-lg font-extrabold text-[var(--dash-text)]">Chemical Performance</h2>
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <StatChip label="Chemical Cost This Month" value={fmt(chemicalCost)} />
-        <StatChip label="Avg Cost per Visit" value={fmt(avgPerVisit)} />
-        <StatChip label="Cost of Revenue" value={`${pctOfRevenue.toFixed(1)}%`} />
-        <StatChip label="Most Used Product" value={mostUsed} />
+      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <ValueLabelStat value={fmt(chemicalCost)} label="Chemical Cost This Month" />
+        <ValueLabelStat value={fmt(avgPerVisit)} label="Average Cost per Visit" />
+        <ValueLabelStat value={`${pctOfRevenue.toFixed(1)}%`} label="Chemical Cost of Revenue" />
+        <ValueLabelStat value={mostUsed} valueColor="var(--dash-link)" label="Most Used Product" />
       </div>
-      <div className="mt-4 flex items-center gap-4">
+      <div className="mt-5 flex items-center gap-4">
         <div className="h-28 w-28 shrink-0">
           {donutData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -357,7 +377,10 @@ function ChemicalPerformanceSection({ monthlyRevenue }: { monthlyRevenue: number
                 <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: PRODUCT_COLORS[i % PRODUCT_COLORS.length] }} />
                 <span className="truncate font-medium text-[var(--dash-text-secondary)]">{d.name}</span>
               </div>
-              <span className="shrink-0 font-bold text-[var(--dash-text)]">{fmt(d.value)}</span>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="font-bold text-[var(--dash-text)]">{fmt(d.value)}</span>
+                <span className="w-10 text-right text-[var(--dash-text-muted)]">{chemicalCost > 0 ? `${((d.value / chemicalCost) * 100).toFixed(1)}%` : "—"}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -384,6 +407,20 @@ function stopDisplayStatus(status: StopStatus, isNext: boolean): { label: string
   return isNext
     ? { label: "Next", bg: "#FFEDD5", text: "var(--dash-orange)" }
     : { label: "Scheduled", bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
+}
+
+function StopClientPhoto({ client }: { client: (Client & { pool_photos?: string[] | null }) | undefined }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const path = client?.pool_photos?.[0];
+    if (!path) { setUrl(null); return; }
+    let alive = true;
+    supabase.storage.from("client-photos").createSignedUrl(path, 60 * 60).then(({ data }) => {
+      if (alive && data?.signedUrl) setUrl(data.signedUrl);
+    });
+    return () => { alive = false; };
+  }, [client?.pool_photos]);
+  return <img src={url || poolImg} alt="" className="h-11 w-11 shrink-0 rounded-[10px] object-cover" />;
 }
 
 function TodayServicesSection({ routes, todayStr }: { routes: RouteRow[]; todayStr: string }) {
@@ -415,22 +452,21 @@ function TodayServicesSection({ routes, todayStr }: { routes: RouteRow[]; todayS
       ) : (
         <div className="mt-3 max-h-[420px] space-y-2 overflow-y-auto pr-1">
           {stops.map((stop) => {
-            const client = stop.client as (Client & { monthly_value?: number | null }) | undefined;
+            const client = stop.client as (Client & { monthly_value?: number | null; pool_photos?: string[] | null }) | undefined;
             const badge = stopDisplayStatus(stop.status, stop.id === firstPendingId);
             const next = nextStopStatus(stop.status);
             const address = client ? clientFullAddress(client) : "";
             return (
               <div key={stop.id} className="rounded-[12px] border border-[var(--dash-border)] p-3">
                 <div className="flex items-center gap-3">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-xs font-bold text-[var(--dash-navy)]">
-                    {initials(client?.name ?? "?")}
-                  </div>
+                  <StopClientPhoto client={client} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <span className="truncate text-sm font-bold text-[var(--dash-text)]">{client?.name ?? "Unknown client"}</span>
                       <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badge.bg, color: badge.text }}>{badge.label}</span>
                     </div>
                     <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{formatStopTime(stop.scheduled_time)} · {address || "No address"}</div>
+                    {stop.technician && <div className="truncate text-[11px] text-[var(--dash-text-muted)]">{stop.technician.name}</div>}
                   </div>
                 </div>
                 <div className="mt-2.5 flex items-center justify-between">
@@ -553,6 +589,23 @@ function RecentAlertsSection() {
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices });
 
   const todayStr = todayDateStr();
+  const since = dateStr(new Date(Date.now() - 14 * 86400000));
+  const { data: recentPastRoutes = [] } = useQuery({
+    queryKey: ["routes-missed-service", since],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("routes")
+        .select("route_date, technician:technicians(name), route_stops(id,status,client:clients(name))")
+        .gte("route_date", since)
+        .lt("route_date", todayStr);
+      if (error) throw error;
+      return (data ?? []) as {
+        route_date: string; technician: { name: string } | null;
+        route_stops: { id: string; status: string; client: { name: string } | null }[] | null;
+      }[];
+    },
+  });
+
   const invoiceAlerts: FeedItem[] = invoices
     .filter((i) => i.status !== "PAID" && i.due_date && i.due_date < todayStr)
     .map((i) => ({
@@ -562,7 +615,19 @@ function RecentAlertsSection() {
       whenMs: new Date(`${i.due_date}T12:00:00`).getTime(),
     }));
 
-  const alerts = [...invoiceAlerts, ...buildChemicalAlerts(chemHistory)]
+  const missedServiceAlerts: FeedItem[] = recentPastRoutes.flatMap((r) =>
+    (r.route_stops ?? [])
+      .filter((s) => s.status !== "Concluído")
+      .map((s) => ({
+        id: `missed-${s.id}`,
+        icon: CalendarX, iconColor: "var(--dash-red)", iconBg: "#FEE2E2",
+        title: "Missed Service",
+        subtitle: `${s.client?.name ?? "Client"} · ${r.technician?.name ?? "Technician"} did not complete the ${fmtDate(r.route_date)} visit`,
+        whenMs: new Date(`${r.route_date}T12:00:00`).getTime(),
+      })),
+  );
+
+  const alerts = [...invoiceAlerts, ...missedServiceAlerts, ...buildChemicalAlerts(chemHistory)]
     .sort((a, b) => b.whenMs - a.whenMs)
     .slice(0, 4);
 
@@ -587,28 +652,32 @@ function TopTechniciansSection() {
   const { data: technicians = [] } = useQuery({ queryKey: ["technicians"], queryFn: listTechnicians });
 
   const now = new Date();
-  const monthStart = dateStr(new Date(now.getFullYear(), now.getMonth(), 1));
-  const monthEnd = dateStr(new Date(now.getFullYear(), now.getMonth() + 1, 0));
-  const { data: monthRoutes = [] } = useQuery({
-    queryKey: ["routes-month-tech", monthStart],
+  const weekStart = dateStr(mondayOf(now));
+  const weekEnd = dateStr(fridayOf(now));
+  const { data: weekRoutes = [] } = useQuery({
+    queryKey: ["routes-week-tech", weekStart],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("routes")
-        .select("technician_id, route_stops(id, status)")
-        .gte("route_date", monthStart)
-        .lte("route_date", monthEnd);
+        .select("technician_id, route_stops(id, status, client:clients(monthly_value, service_days))")
+        .gte("route_date", weekStart)
+        .lte("route_date", weekEnd);
       if (error) throw error;
-      return (data ?? []) as { technician_id: string; route_stops: { id: string; status: string }[] | null }[];
+      return (data ?? []) as { technician_id: string; route_stops: RouteStopAgg[] | null }[];
     },
   });
 
   const stats = technicians
     .map((t) => {
-      const stops = monthRoutes.filter((r) => r.technician_id === t.id).flatMap((r) => r.route_stops ?? []);
+      const stops = weekRoutes.filter((r) => r.technician_id === t.id).flatMap((r) => r.route_stops ?? []);
       const total = stops.length;
       const completed = stops.filter((s) => s.status === "Concluído").length;
       const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-      return { technician: t, total, completed, pct };
+      const routeValue = stops.reduce((s, stop) => {
+        const days = stop.client?.service_days?.length || 1;
+        return s + Number(stop.client?.monthly_value || 0) / days;
+      }, 0);
+      return { technician: t, total, completed, pct, routeValue };
     })
     .filter((s) => s.total > 0)
     .sort((a, b) => b.pct - a.pct || b.total - a.total)
@@ -624,28 +693,30 @@ function TopTechniciansSection() {
         <Link to="/tecnicos" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
       </div>
       {stats.length === 0 ? (
-        <p className="mt-4 text-sm text-[var(--dash-text-muted)]">No completed stops yet this month.</p>
+        <p className="mt-4 text-sm text-[var(--dash-text-muted)]">No completed stops yet this week.</p>
       ) : (
         <div className="mt-3 flex-1 space-y-4">
-          {stats.map((s, i) => (
+          {stats.map((s) => (
             <div key={s.technician.id}>
               <div className="flex items-center gap-3">
                 <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: s.technician.color }}>
                   {initials(s.technician.name)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
                     <span className="truncate text-sm font-bold text-[var(--dash-text)]">{s.technician.name}</span>
-                    <span className="shrink-0 rounded-full bg-[var(--dash-water-bg)] px-2 py-0.5 text-[11px] font-bold text-[var(--dash-navy)]">#{i + 1}</span>
+                    <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold" style={{ color: "var(--dash-green)" }}>
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--dash-green)" }} /> Active
+                    </span>
                   </div>
-                  <div className="text-[12px] text-[var(--dash-text-muted)]">{s.total} pools · {s.pct}% completion</div>
+                  <div className="text-[12px] text-[var(--dash-text-muted)]">{s.total} pools this week · {fmt(s.routeValue)} route value</div>
                 </div>
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
                 <div className="h-full rounded-full" style={{ width: `${s.pct}%`, background: "var(--dash-green)" }} />
               </div>
               <div className="mt-1 flex items-center justify-between text-[12px] font-semibold">
-                <span style={{ color: "var(--dash-green)" }}>{s.completed} / {s.total} pools completed</span>
+                <span style={{ color: "var(--dash-green)" }}>{s.completed} / {s.total} completed on time</span>
                 <span className="text-[var(--dash-text-muted)]">{s.pct}%</span>
               </div>
             </div>
@@ -654,6 +725,63 @@ function TopTechniciansSection() {
       )}
       <Link to="/tecnicos" className="mt-4 block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
         View All Technicians
+      </Link>
+    </div>
+  );
+}
+
+const AVATAR_PALETTE = ["#0B63F6", "#16A34A", "#F59E0B", "#7C3AED", "#EF4444", "#0EA5E9"];
+
+function NewClientsSection() {
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: listClients });
+  const thisMonth = monthKey(new Date());
+  const newClients = clients
+    .filter((c) => (c.created_at || "").slice(0, 7) === thisMonth && c.stage !== "Prospecção")
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const addedRevenue = newClients.reduce((s, c) => s + Number((c as ClientFull).monthly_value || 0), 0);
+
+  return (
+    <div className="flex flex-col rounded-[18px] border border-[#E9EDF5] bg-white p-5" style={cardShadow}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <UserPlus className="h-5 w-5" style={{ color: "var(--dash-navy)" }} />
+          <h2 className="text-lg font-extrabold text-[var(--dash-text)]">New Clients This Month</h2>
+        </div>
+        <Link to="/clientes" className="text-sm font-semibold" style={{ color: "var(--dash-link)" }}>View All</Link>
+      </div>
+      <div className="mt-3 flex items-center gap-6">
+        <div>
+          <div className="text-xl font-extrabold text-[var(--dash-text)]">{newClients.length}</div>
+          <div className="text-[12px] text-[var(--dash-text-muted)]">New Clients</div>
+        </div>
+        <div>
+          <div className="text-xl font-extrabold" style={{ color: "var(--dash-green)" }}>{fmt(addedRevenue)}</div>
+          <div className="text-[12px] text-[var(--dash-text-muted)]">Added Monthly Revenue</div>
+        </div>
+      </div>
+      {newClients.length === 0 ? (
+        <p className="mt-4 text-sm text-[var(--dash-text-muted)]">No new clients yet this month.</p>
+      ) : (
+        <div className="mt-3 flex-1 space-y-3">
+          {newClients.slice(0, 4).map((c, i) => (
+            <div key={c.id} className="flex items-center gap-3 border-b border-[var(--dash-border)] pb-3 last:border-0 last:pb-0">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold text-white" style={{ background: AVATAR_PALETTE[i % AVATAR_PALETTE.length] }}>
+                {initials(c.name)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-bold text-[var(--dash-text)]">{c.name}</div>
+                <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{[c.city, c.state].filter(Boolean).join(", ")}</div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="text-sm font-bold text-[var(--dash-text)]">{fmt(Number((c as ClientFull).monthly_value || 0))}/mo</div>
+                <div className="text-[11px] text-[var(--dash-text-muted)]">{fmtDate(c.created_at)}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <Link to="/clientes" className="mt-4 block w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-center text-sm font-bold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]">
+        View All New Clients
       </Link>
     </div>
   );
@@ -852,16 +980,17 @@ function DashboardPage() {
 
         <WeeklyRouteSection />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <RecentAlertsSection />
-          <TopTechniciansSection />
-          <RecentActivitySection />
-        </div>
-
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-          <FinancialOverviewSection />
+          <FinancialOverviewSection monthlyRevenue={monthlyRevenue} />
           <ChemicalPerformanceSection monthlyRevenue={monthlyRevenue} />
           <TodayServicesSection routes={todayRoutes} todayStr={todayStr} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <RecentAlertsSection />
+          <TopTechniciansSection />
+          <NewClientsSection />
+          <RecentActivitySection />
         </div>
       </main>
     </div>
