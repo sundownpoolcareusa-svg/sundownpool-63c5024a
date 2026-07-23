@@ -154,7 +154,7 @@ function ClientCard({
                 <span className="text-[12px] font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
               )}
               <span className="shrink-0 whitespace-nowrap text-base font-extrabold tabular-nums" style={{ color: "#0B63F6" }}>
-                {hasMonthly ? fmt(Number(client.monthly_value)) : "—"}
+                {hasMonthly ? fmt(Number(client.monthly_value)).replace(/\.00$/, "") : "—"}
                 <span className="text-[11px] font-semibold text-[var(--dash-text-muted)]">/mo</span>
               </span>
             </div>
