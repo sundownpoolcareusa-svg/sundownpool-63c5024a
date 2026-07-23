@@ -747,7 +747,10 @@ function TecnicoPage() {
         )}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-[var(--dash-border)] bg-white px-2 py-2">
+      <nav
+        className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-[var(--dash-border)] bg-white px-2 py-2 [-webkit-transform:translateZ(0)] [transform:translateZ(0)]"
+        style={{ willChange: "transform" }}
+      >
         <button
           onClick={() => setView("rota")}
           className="flex flex-col items-center gap-0.5 px-2 text-[10px] font-bold"
