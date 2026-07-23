@@ -5,11 +5,12 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import {
-  Plus, Search, Filter, Eye, Smartphone, Share2, Upload, ChevronDown,
-  ChevronLeft, ChevronRight, Pencil, Trash2, Users, Map, CalendarDays,
+  Plus, Search, Filter, Eye, ChevronDown,
+  ChevronLeft, ChevronRight, Pencil, Trash2, Users, CalendarDays,
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
+  CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle,
 } from "lucide-react";
-import { listClients, listTechnicians, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
+import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -195,34 +196,107 @@ function ClientCard({
   );
 }
 
+const WEEKDAY_FILTERS = [
+  { v: "Seg", label: "Monday" },
+  { v: "Ter", label: "Tuesday" },
+  { v: "Qua", label: "Wednesday" },
+  { v: "Qui", label: "Thursday" },
+  { v: "Sex", label: "Friday" },
+];
+
+type DayFilter = "all" | "Seg" | "Ter" | "Qua" | "Qui" | "Sex" | "prospects" | "inactive";
+type SortBy = "name-asc" | "name-desc" | "value-desc" | "recent";
+
+function todayDateStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function SummaryStat({
+  icon: Icon, tint, value, label, sub, subColor, onClick,
+}: { icon: typeof Users; tint: string; value: string | number; label: string; sub: string; subColor?: string; onClick?: () => void }) {
+  const Comp = onClick ? "button" : "div";
+  return (
+    <Comp onClick={onClick} className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4 text-left" style={cardShadow}>
+      <div className="grid h-9 w-9 place-items-center rounded-full" style={{ background: `${tint}1A`, color: tint }}>
+        <Icon className="h-[18px] w-[18px]" />
+      </div>
+      <div className="mt-2 text-xl font-extrabold leading-tight text-[var(--dash-text)]">{value}</div>
+      <div className="text-sm text-[var(--dash-text-secondary)]">{label}</div>
+      <div className="mt-0.5 text-xs font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>{sub}</div>
+    </Comp>
+  );
+}
+
+function FilterChip({
+  active, onClick, label, count, tint,
+}: { active: boolean; onClick: () => void; label: string; count: number; tint?: { bg: string; text: string } }) {
+  const t = tint ?? { bg: "var(--dash-navy)", text: "#fff" };
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition"
+      style={{ background: active ? t.bg : "transparent", color: active ? t.text : (tint ? t.text : "var(--dash-text-secondary)") }}
+    >
+      {label}
+      <span
+        className="rounded-full px-1.5 py-0.5 text-[11px] font-bold"
+        style={{ background: active ? "rgba(255,255,255,.3)" : "var(--dash-border-table)", color: active ? t.text : "var(--dash-text-muted-2)" }}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
+
 function ClientesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [onRouteOnly, setOnRouteOnly] = useState(false);
+  const [dayFilter, setDayFilter] = useState<DayFilter>("all");
+  const [sortBy, setSortBy] = useState<SortBy>("name-asc");
   const [viewClient, setViewClient] = useState<ClientFull | null>(null);
   const [editClient, setEditClient] = useState<ClientFull | null>(null);
   const [deleteClient, setDeleteClient] = useState<ClientFull | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: listClients });
-
-  const isOnRoute = (c: Client) => (c.service_days ?? []).length > 0;
+  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices });
+  const todayStr = todayDateStr();
+  const { data: todayRoutes = [] } = useQuery({ queryKey: ["routes-for-date", todayStr], queryFn: () => listRoutesForDate(todayStr) });
 
   const filtered = clients.filter((c) => {
-    const matchesSearch = !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.email?.toLowerCase().includes(search.toLowerCase());
-    const matchesRoute = !onRouteOnly || isOnRoute(c);
-    return matchesSearch && matchesRoute;
+    const q = search.toLowerCase();
+    const matchesSearch = !search
+      || c.name.toLowerCase().includes(q)
+      || c.email?.toLowerCase().includes(q)
+      || (c.address || "").toLowerCase().includes(q);
+    let matchesFilter = true;
+    if (dayFilter === "prospects") matchesFilter = c.stage === "Prospecção";
+    else if (dayFilter === "inactive") matchesFilter = c.status !== "Ativo";
+    else if (dayFilter !== "all") matchesFilter = (c.service_days ?? []).includes(dayFilter);
+    return matchesSearch && matchesFilter;
+  });
+
+  const sorted = filtered.slice().sort((a, b) => {
+    if (sortBy === "name-desc") return b.name.localeCompare(a.name);
+    if (sortBy === "value-desc") return Number((b as ClientFull).monthly_value || 0) - Number((a as ClientFull).monthly_value || 0);
+    if (sortBy === "recent") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    return a.name.localeCompare(b.name);
   });
 
   const total = clients.length;
   const ativos = clients.filter((c) => c.status === "Ativo").length;
-  const onRouteCount = clients.filter(isOnRoute).length;
   const prospectCount = clients.filter((c) => c.stage === "Prospecção").length;
-  const now = new Date();
-  const novos = clients.filter((c) => {
-    const d = new Date(c.created_at);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }).length;
+  const inactiveCount = clients.filter((c) => c.status !== "Ativo").length;
+  const countByDay = (d: string) => clients.filter((c) => (c.service_days ?? []).includes(d)).length;
+  const monthlyRevenue = clients.filter((c) => c.status === "Ativo").reduce((s, c) => s + Number((c as ClientFull).monthly_value || 0), 0);
+  const invoicesDueCount = invoices.filter((i) => i.status !== "PAID" && i.due_date && i.due_date < todayStr).length;
+  const todayRouteCount = todayRoutes.reduce((s, r) => s + (r.route_stops?.length ?? 0), 0);
+  const todayLabel = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
   const delMut = useMutation({
     mutationFn: async (id: string) => {
@@ -241,95 +315,83 @@ function ClientesPage() {
     <div className="dash min-h-screen bg-[var(--dash-bg)] lg:pl-60">
       <AppSidebar />
       <AppHeader />
-      <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12">
-        <aside className="space-y-4 lg:col-span-3">
-          <div className="flex items-center justify-between">
-            <h1 className="text-[20px] font-extrabold text-[var(--dash-text)]">Clients</h1>
-            <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-3 py-2 text-sm font-semibold text-white hover:opacity-90">
-              <Plus className="h-4 w-4" /> New Client
-            </button>
+      <main className="space-y-5 p-3 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-[22px] font-extrabold text-[var(--dash-text)]">Clients</h1>
+            <p className="text-sm text-[var(--dash-text-muted)]">Manage your pool care clients</p>
           </div>
-          <div className="relative">
+          <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90">
+            <Plus className="h-4 w-4" /> New Client
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[220px] flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-[var(--dash-text-muted)]" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clients..." className="w-full rounded-[11px] border border-[var(--dash-border-input)] bg-white py-2 pl-9 pr-3 text-sm" />
           </div>
+          <button className="flex shrink-0 items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Filter className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Filter</button>
+          <button className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary)]" aria-label="More options"><MoreVertical className="h-4 w-4" /></button>
+        </div>
 
-          <div className="rounded-[18px] border border-[var(--dash-border)] bg-white p-[18px]" style={cardShadow}>
-            <div className="border-b border-[var(--dash-border)] pb-2 font-bold text-[var(--dash-text)]">Summary</div>
-            <div className="mt-3 space-y-2.5 text-sm">
-              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Total Clients</span><span className="font-bold tabular-nums text-[var(--dash-text)]">{total}</span></div>
-              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Active Clients</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-green)" }}>{ativos}</span></div>
-              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">On Route</span><span className="font-bold tabular-nums" style={{ color: "#7C3AED" }}>{onRouteCount}</span></div>
-              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Prospects</span><span className="font-bold tabular-nums" style={{ color: "#B45309" }}>{prospectCount}</span></div>
-              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">New this month</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-navy)" }}>{novos}</span></div>
-              <div className="flex justify-between"><span className="text-[var(--dash-text-secondary)]">Services this month</span><span className="font-bold tabular-nums" style={{ color: "var(--dash-orange)" }}>0</span></div>
-            </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <SummaryStat icon={Users} tint="#0B63F6" value={total} label="Total Clients" sub="View all clients" onClick={() => { setDayFilter("all"); setSearch(""); }} />
+          <SummaryStat icon={CheckCircle2} tint="var(--dash-green)" value={ativos} label="Active Clients" sub={`${total > 0 ? Math.round((ativos / total) * 100) : 0}% of total`} />
+          <SummaryStat icon={RouteIcon} tint="var(--dash-orange)" value={todayRouteCount} label="Today's Route" sub={todayLabel} />
+          <SummaryStat icon={DollarSign} tint="#7C3AED" value={fmt(monthlyRevenue)} label="Monthly Revenue" sub="Expected this month" />
+          <SummaryStat icon={AlertTriangle} tint="var(--dash-red)" value={invoicesDueCount} label="Invoices Due" sub={invoicesDueCount > 0 ? "Action required" : "All caught up"} subColor={invoicesDueCount > 0 ? "var(--dash-red)" : undefined} />
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--dash-border)] bg-white p-3" style={cardShadow}>
+          <div className="flex flex-wrap items-center gap-1">
+            <FilterChip active={dayFilter === "all"} onClick={() => setDayFilter("all")} label="All Clients" count={total} />
+            {WEEKDAY_FILTERS.map((d) => (
+              <FilterChip key={d.v} active={dayFilter === d.v} onClick={() => setDayFilter(d.v as DayFilter)} label={d.label} count={countByDay(d.v)} />
+            ))}
+            <FilterChip active={dayFilter === "prospects"} onClick={() => setDayFilter("prospects")} label="Prospects" count={prospectCount} tint={{ bg: "#FEF3C7", text: "#B45309" }} />
+            <FilterChip active={dayFilter === "inactive"} onClick={() => setDayFilter("inactive")} label="Inactive" count={inactiveCount} tint={{ bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" }} />
           </div>
-
-          <div className="rounded-[18px] border border-[var(--dash-border)] bg-white p-[18px]" style={cardShadow}>
-            <div className="font-bold text-[var(--dash-text)]">Upcoming Services</div>
-            <p className="mt-3 text-sm text-[var(--dash-text-muted)]">No scheduled services.</p>
-          </div>
-
-          <div
-            className="rounded-[18px] border border-[var(--dash-border)] p-[18px]"
-            style={{ background: "linear-gradient(135deg, var(--dash-navy), var(--dash-navy-2))", ...cardShadow }}
-          >
-            <div className="flex items-start gap-3">
-              <Smartphone className="h-5 w-5 text-white" />
-              <div>
-                <div className="font-bold text-white">Client Portal</div>
-                <p className="mt-1 text-xs text-white/80">Your clients can schedule services, view history and receive invoices.</p>
-              </div>
-            </div>
-            <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-[11px] border border-white/30 bg-white/10 py-2 text-sm font-semibold text-white hover:bg-white/20">
-              <Share2 className="h-4 w-4" /> Share Link
-            </button>
-          </div>
-        </aside>
-
-        <section className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4 sm:p-6 lg:col-span-9" style={cardShadow}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-extrabold text-[var(--dash-text)] sm:text-2xl">Client List</h2>
-            <div className="flex flex-wrap items-center gap-2">
-              <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]">All statuses <ChevronDown className="h-4 w-4" /></button>
-              <button
-                onClick={() => setOnRouteOnly((v) => !v)}
-                className="flex items-center gap-2 rounded-[11px] border px-3 py-2 text-sm font-semibold"
-                style={{
-                  borderColor: onRouteOnly ? "#7C3AED" : "var(--dash-border)",
-                  background: onRouteOnly ? "#EDE4FB" : "#fff",
-                  color: onRouteOnly ? "#7C3AED" : "var(--dash-text-secondary)",
-                }}
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortBy)}
+                className="appearance-none rounded-[11px] border border-[var(--dash-border)] bg-white py-2 pl-3 pr-8 text-sm font-semibold text-[var(--dash-text-secondary)]"
               >
-                <Map className="h-4 w-4" /> On Route
+                <option value="name-asc">Sort by: Name A-Z</option>
+                <option value="name-desc">Sort by: Name Z-A</option>
+                <option value="value-desc">Sort by: Monthly Value</option>
+                <option value="recent">Sort by: Recently Added</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+            </div>
+            <div className="flex overflow-hidden rounded-[11px] border border-[var(--dash-border)] bg-white">
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                aria-label="Grid view"
+                title="Grid view"
+                className="grid h-9 w-9 place-items-center"
+                style={{ background: viewMode === "grid" ? "var(--dash-navy)" : "#fff", color: viewMode === "grid" ? "#fff" : "var(--dash-text-secondary)" }}
+              >
+                <LayoutGrid className="h-4 w-4" />
               </button>
-              <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Filter className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Filter</button>
-              <button className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Upload className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Export</button>
-              <div className="flex overflow-hidden rounded-[11px] border border-[var(--dash-border)] bg-white">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("grid")}
-                  aria-label="Grid view"
-                  title="Grid view"
-                  className="grid h-9 w-9 place-items-center"
-                  style={{ background: viewMode === "grid" ? "var(--dash-navy)" : "#fff", color: viewMode === "grid" ? "#fff" : "var(--dash-text-secondary)" }}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("list")}
-                  aria-label="List view"
-                  title="List view"
-                  className="grid h-9 w-9 place-items-center border-l border-[var(--dash-border)]"
-                  style={{ background: viewMode === "list" ? "var(--dash-navy)" : "#fff", color: viewMode === "list" ? "#fff" : "var(--dash-text-secondary)" }}
-                >
-                  <ListIcon className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                aria-label="List view"
+                title="List view"
+                className="grid h-9 w-9 place-items-center border-l border-[var(--dash-border)]"
+                style={{ background: viewMode === "list" ? "var(--dash-navy)" : "#fff", color: viewMode === "list" ? "#fff" : "var(--dash-text-secondary)" }}
+              >
+                <ListIcon className="h-4 w-4" />
+              </button>
             </div>
           </div>
+        </div>
+
+        <section className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4 sm:p-6" style={cardShadow}>
 
           {isLoading ? (
             <div className="py-12 text-center text-[var(--dash-text-muted)]">Loading...</div>
@@ -344,7 +406,7 @@ function ClientesPage() {
             </div>
           ) : viewMode === "grid" ? (
             <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((c, idx) => (
+              {sorted.map((c, idx) => (
                 <ClientCard
                   key={c.id}
                   client={c as ClientFull}
@@ -371,7 +433,7 @@ function ClientesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((c, idx) => (
+                  {sorted.map((c, idx) => (
                     <tr key={c.id} className="border-b border-[var(--dash-border-table)]">
                       <td className="py-4">
                         <div className="flex items-center gap-3">
@@ -407,7 +469,7 @@ function ClientesPage() {
                           >
                             Inativo
                           </span>
-                        ) : isOnRoute(c) ? (
+                        ) : (c.service_days ?? []).length > 0 ? (
                           <span
                             className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
                             style={{ background: "#EDE4FB", color: "#7C3AED" }}
