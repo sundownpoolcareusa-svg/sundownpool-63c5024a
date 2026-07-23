@@ -268,7 +268,7 @@ function StatFooterProgress({ completed, remaining }: { completed: number; remai
   return (
     <div className="flex items-center gap-2.5 text-[13px]">
       <span className="shrink-0 font-semibold" style={{ color: "var(--dash-green)" }}>{completed} completed</span>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
+      <div className="h-2 flex-1 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
       </div>
       <span className="shrink-0 font-semibold text-[var(--dash-text-muted)]">{remaining} remaining</span>
@@ -590,11 +590,13 @@ function ClientesPage() {
   });
 
   const total = clients.length;
-  const ativos = clients.filter((c) => c.status === "Ativo").length;
+  const ativos = clients.filter((c) => c.status === "Ativo" && c.stage !== "Prospecção").length;
   const prospectCount = clients.filter((c) => c.stage === "Prospecção").length;
   const inactiveCount = clients.filter((c) => c.status !== "Ativo").length;
   const countByDay = (d: string) => clients.filter((c) => (c.service_days ?? []).includes(d)).length;
-  const monthlyRevenue = clients.filter((c) => c.status === "Ativo").reduce((s, c) => s + Number((c as ClientFull).monthly_value || 0), 0);
+  const monthlyRevenue = clients
+    .filter((c) => c.status === "Ativo" && c.stage !== "Prospecção")
+    .reduce((s, c) => s + Number((c as ClientFull).monthly_value || 0), 0);
   const overdueInvoices = invoices.filter((i) => i.status !== "PAID" && i.due_date && i.due_date < todayStr);
   const invoicesDueCount = overdueInvoices.length;
   const invoicesDueAmount = overdueInvoices.reduce((s, i) => s + Number(i.total || 0), 0);
