@@ -334,7 +334,7 @@ function TechnicianChemicalsPage() {
                 <Check className="h-3.5 w-3.5" /> Filtro Limpo
               </button>
             </div>
-            <div className="mt-2 overflow-x-auto whitespace-nowrap px-1 text-[12px] text-[var(--dash-text-muted-2)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="mt-2 overflow-x-auto whitespace-nowrap px-1 text-center text-[13.2px] text-[var(--dash-text-muted-2)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               Last cleaned: <span className="font-bold text-[var(--dash-text)]">{formatCleanedAt(stop?.filter_last_cleaned_at)}</span>
               {daysSince(stop?.filter_last_cleaned_at) !== null && (
                 <> · {daysSince(stop?.filter_last_cleaned_at) === 0 ? "today" : `${daysSince(stop?.filter_last_cleaned_at)} day${daysSince(stop?.filter_last_cleaned_at) === 1 ? "" : "s"} ago`}</>
@@ -350,7 +350,7 @@ function TechnicianChemicalsPage() {
               <div className="grid h-7 w-7 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[var(--dash-water-icon)]">
                 <FlaskConical className="h-4 w-4" />
               </div>
-              <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Produtos Usados</h2>
+              <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Produtos</h2>
             </div>
             <div className="flex gap-2">
               <button
