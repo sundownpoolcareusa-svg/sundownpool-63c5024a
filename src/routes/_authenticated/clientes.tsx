@@ -146,11 +146,11 @@ function ClientCard({
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               {dayLabel ? (
-                <span className="flex shrink-0 items-center gap-1 truncate rounded-full px-2.5 py-1.5 text-[12px] font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
-                  <CalendarDays className="h-3.5 w-3.5 shrink-0" /> {dayLabel}
+                <span className="flex shrink-0 items-center gap-1 truncate rounded-full px-[9px] py-[5.4px] text-[10.8px] font-bold" style={{ background: dayColor.bg, color: dayColor.text }}>
+                  <CalendarDays className="h-[12.6px] w-[12.6px] shrink-0" /> {dayLabel}
                 </span>
               ) : (
-                <span className="text-[12px] font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
+                <span className="text-[10.8px] font-semibold text-[var(--dash-text-muted)]">Not assigned</span>
               )}
               <span className="shrink-0 whitespace-nowrap text-base font-extrabold tabular-nums" style={{ color: "#0B63F6" }}>
                 {hasMonthly ? fmt(Number(client.monthly_value)).replace(/\.00$/, "") : "—"}
