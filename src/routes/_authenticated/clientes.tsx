@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -8,7 +8,7 @@ import {
   Plus, Search, Filter, Eye, ChevronDown,
   ChevronRight, Pencil, Trash2, Users, CalendarDays,
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
-  CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail,
+  CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, TrendingUp,
 } from "lucide-react";
 import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -216,18 +216,51 @@ function todayDateStr() {
 }
 
 function SummaryStat({
-  icon: Icon, tint, value, label, sub, subColor, onClick,
-}: { icon: typeof Users; tint: string; value: string | number; label: string; sub: string; subColor?: string; onClick?: () => void }) {
+  icon: Icon, iconColor, iconBg, value, label, sub, subColor, subArrow, onClick, footer,
+}: {
+  icon: typeof Users; iconColor: string; iconBg: string; value: string | number; label: string;
+  sub: string; subColor?: string; subArrow?: boolean; onClick?: () => void; footer?: ReactNode;
+}) {
   const Comp = onClick ? "button" : "div";
   return (
     <Comp onClick={onClick} className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4 text-left" style={cardShadow}>
-      <div className="grid h-9 w-9 place-items-center rounded-full" style={{ background: `${tint}1A`, color: tint }}>
-        <Icon className="h-[18px] w-[18px]" />
+      <div className="flex items-center gap-3">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full" style={{ background: iconBg, color: iconColor }}>
+          <Icon className="h-6 w-6" />
+        </div>
+        <div className="text-2xl font-extrabold leading-tight text-[var(--dash-text)]">{value}</div>
       </div>
-      <div className="mt-2 text-xl font-extrabold leading-tight text-[var(--dash-text)]">{value}</div>
-      <div className="text-sm text-[var(--dash-text-secondary)]">{label}</div>
-      <div className="mt-0.5 text-xs font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>{sub}</div>
+      <div className="mt-2 text-sm text-[var(--dash-text-secondary)]">{label}</div>
+      <div className="mt-0.5 flex items-center gap-1 text-sm font-semibold" style={{ color: subColor || "var(--dash-text-muted)" }}>
+        {sub}{subArrow && <span aria-hidden="true">→</span>}
+      </div>
+      {footer && <div className="mt-3 border-t border-[var(--dash-border)] pt-3">{footer}</div>}
     </Comp>
+  );
+}
+
+function StatFooterSplit({ text, iconColor, iconBg }: { text: string; iconColor: string; iconBg: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-sm text-[var(--dash-text-secondary)]">{text}</span>
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg" style={{ background: iconBg, color: iconColor }}>
+        <TrendingUp className="h-4 w-4" />
+      </span>
+    </div>
+  );
+}
+
+function StatFooterProgress({ completed, remaining }: { completed: number; remaining: number }) {
+  const total = completed + remaining;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  return (
+    <div className="flex items-center gap-2.5 text-sm">
+      <span className="shrink-0 font-semibold" style={{ color: "var(--dash-green)" }}>{completed} completed</span>
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: "var(--dash-border-table)" }}>
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
+      </div>
+      <span className="shrink-0 font-semibold text-[var(--dash-text-muted)]">{remaining} remaining</span>
+    </div>
   );
 }
 
@@ -550,9 +583,13 @@ function ClientesPage() {
   const inactiveCount = clients.filter((c) => c.status !== "Ativo").length;
   const countByDay = (d: string) => clients.filter((c) => (c.service_days ?? []).includes(d)).length;
   const monthlyRevenue = clients.filter((c) => c.status === "Ativo").reduce((s, c) => s + Number((c as ClientFull).monthly_value || 0), 0);
-  const invoicesDueCount = invoices.filter((i) => i.status !== "PAID" && i.due_date && i.due_date < todayStr).length;
+  const overdueInvoices = invoices.filter((i) => i.status !== "PAID" && i.due_date && i.due_date < todayStr);
+  const invoicesDueCount = overdueInvoices.length;
+  const invoicesDueAmount = overdueInvoices.reduce((s, i) => s + Number(i.total || 0), 0);
   const todayRouteCount = todayRoutes.reduce((s, r) => s + (r.route_stops?.length ?? 0), 0);
-  const todayLabel = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const todayCompletedCount = todayRoutes.reduce((s, r) => s + (r.route_stops ?? []).filter((st) => st.status === "Concluído").length, 0);
+  const todayRemainingCount = Math.max(0, todayRouteCount - todayCompletedCount);
+  const todayTechnicianCount = new Set(todayRoutes.filter((r) => (r.route_stops?.length ?? 0) > 0).map((r) => r.technician_id)).size;
 
   const delMut = useMutation({
     mutationFn: async (id: string) => {
@@ -592,11 +629,36 @@ function ClientesPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <SummaryStat icon={Users} tint="#0B63F6" value={total} label="Total Clients" sub="View all clients" onClick={() => { setDayFilter("all"); setSearch(""); }} />
-          <SummaryStat icon={CheckCircle2} tint="var(--dash-green)" value={ativos} label="Active Clients" sub={`${total > 0 ? Math.round((ativos / total) * 100) : 0}% of total`} />
-          <SummaryStat icon={RouteIcon} tint="var(--dash-orange)" value={todayRouteCount} label="Today's Route" sub={todayLabel} />
-          <SummaryStat icon={DollarSign} tint="#7C3AED" value={fmt(monthlyRevenue)} label="Monthly Revenue" sub="Expected this month" />
-          <SummaryStat icon={AlertTriangle} tint="var(--dash-red)" value={invoicesDueCount} label="Invoices Due" sub={invoicesDueCount > 0 ? "Action required" : "All caught up"} subColor={invoicesDueCount > 0 ? "var(--dash-red)" : undefined} />
+          <SummaryStat
+            icon={Users} iconColor="#0B63F6" iconBg="#DBEAFE"
+            value={total} label="Total Clients"
+            sub="View all clients" subColor="#0B63F6" subArrow
+            onClick={() => { setDayFilter("all"); setSearch(""); }}
+            footer={<StatFooterSplit text={`${ativos} active | ${inactiveCount} inactive`} iconColor="#0B63F6" iconBg="#DBEAFE" />}
+          />
+          <SummaryStat
+            icon={CheckCircle2} iconColor="var(--dash-green)" iconBg="#DCFCE7"
+            value={ativos} label="Active Clients"
+            sub={`${total > 0 ? Math.round((ativos / total) * 100) : 0}% of total`} subColor="var(--dash-green)"
+            footer={<StatFooterSplit text={`${prospectCount} prospects | ${inactiveCount} inactive`} iconColor="var(--dash-green)" iconBg="#DCFCE7" />}
+          />
+          <SummaryStat
+            icon={RouteIcon} iconColor="var(--dash-orange)" iconBg="#FFEDD5"
+            value={todayRouteCount} label="Today's Route"
+            sub={`${todayTechnicianCount} technician${todayTechnicianCount === 1 ? "" : "s"}`}
+            footer={<StatFooterProgress completed={todayCompletedCount} remaining={todayRemainingCount} />}
+          />
+          <SummaryStat
+            icon={DollarSign} iconColor="#7C3AED" iconBg="#EDE4FB"
+            value={fmt(monthlyRevenue)} label="Monthly Revenue"
+            sub="Expected this month" subColor="#7C3AED" subArrow
+          />
+          <SummaryStat
+            icon={AlertTriangle} iconColor="var(--dash-red)" iconBg="#FEE2E2"
+            value={invoicesDueCount} label="Invoices Due"
+            sub={invoicesDueCount > 0 ? `${fmt(invoicesDueAmount)} outstanding` : "All caught up"}
+            subColor={invoicesDueCount > 0 ? "var(--dash-red)" : "var(--dash-green)"}
+          />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[var(--dash-border)] bg-white p-3" style={cardShadow}>
