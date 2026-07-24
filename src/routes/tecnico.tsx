@@ -12,7 +12,7 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Home, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
   AlertTriangle, DollarSign, Filter, FileText, X, RotateCcw,
-  Search, Waves, Brush, Leaf, Settings, Bell, Clock, ShieldCheck,
+  Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal,
 } from "lucide-react";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
@@ -1040,17 +1040,16 @@ function TecnicoPage() {
 
 const OTHER_SERVICE = "Outro serviço";
 const SERVICE_TYPE_OPTIONS: { key: string; icon: typeof FlaskConical }[] = [
-  { key: "Balanceamento químico", icon: FlaskConical },
-  { key: "Aspiração", icon: Waves },
-  { key: "Escovação", icon: Brush },
-  { key: "Remoção de folhas", icon: Leaf },
-  { key: "Limpeza de filtro", icon: Filter },
-  { key: "Inspeção de equipamentos", icon: Settings },
+  { key: "Tratamento de Phosphate", icon: FlaskConical },
+  { key: "Check sistema de sal", icon: Cylinder },
+  { key: "Leak no sistema", icon: Droplet },
+  { key: "Vazamento na piscina", icon: Waves },
+  { key: "Trocar filtro", icon: Filter },
 ];
-const PRIORITY_OPTIONS: { key: ServiceJobPriority; bg: string; fg: string }[] = [
-  { key: "Baixa", bg: "#DCFCE7", fg: "#16A34A" },
-  { key: "Média", bg: "#FEF3C7", fg: "#B45309" },
-  { key: "Alta", bg: "#FEE2E2", fg: "#DC2626" },
+const PRIORITY_OPTIONS: { key: ServiceJobPriority; bg: string; fg: string; icon: typeof ChevronUp }[] = [
+  { key: "Baixa", bg: "#DCFCE7", fg: "#16A34A", icon: ChevronDown },
+  { key: "Média", bg: "#FEF3C7", fg: "#B45309", icon: Equal },
+  { key: "Alta", bg: "#FEE2E2", fg: "#DC2626", icon: ChevronUp },
 ];
 const DURATION_OPTIONS = [
   { value: "30", label: "30 minutos" },
@@ -1080,7 +1079,7 @@ function NewServiceWizard({
   const [clientSearch, setClientSearch] = useState("");
   const [clientId, setClientId] = useState("");
   const [serviceTypes, setServiceTypes] = useState<string[]>([]);
-  const [customDesc, setCustomDesc] = useState("");
+  const [notesText, setNotesText] = useState("");
   const [priority, setPriority] = useState<ServiceJobPriority | null>(null);
   const [schedDate, setSchedDate] = useState(() => toDateStr(new Date()));
   const [schedTime, setSchedTime] = useState("09:00");
@@ -1099,15 +1098,12 @@ function NewServiceWizard({
     setServiceTypes((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
   }
 
-  const hasOther = serviceTypes.includes(OTHER_SERVICE);
-  const canContinueInfo = serviceTypes.length > 0 && (!hasOther || customDesc.trim().length > 0);
+  const canContinueInfo = serviceTypes.length > 0;
   const durationLabel = DURATION_OPTIONS.find((d) => d.value === duration)?.label ?? "";
   const reminderLabel = REMINDER_OPTIONS.find((r) => r.value === reminderMinutes)?.label ?? "";
 
   function buildTitle() {
-    const parts = serviceTypes.filter((s) => s !== OTHER_SERVICE);
-    if (hasOther && customDesc.trim()) parts.push(customDesc.trim());
-    return parts.join(", ");
+    return serviceTypes.join(", ");
   }
 
   function handleConfirm() {
@@ -1115,7 +1111,7 @@ function NewServiceWizard({
     onSubmit({
       clientId: client.client_id,
       title: buildTitle(),
-      notes: hasOther && customDesc.trim() ? customDesc.trim() : null,
+      notes: notesText.trim() || null,
       serviceTypes,
       priority,
       scheduledDate: schedDate || null,
@@ -1236,7 +1232,7 @@ function NewServiceWizard({
 
               <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
                 <h2 className="mb-2 text-[13px] font-bold text-[var(--dash-text)]">Serviço a ser realizado</h2>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
                   {SERVICE_TYPE_OPTIONS.map((opt) => {
                     const Icon = opt.icon;
                     const checked = serviceTypes.includes(opt.key);
@@ -1245,7 +1241,7 @@ function NewServiceWizard({
                         key={opt.key}
                         type="button"
                         onClick={() => toggleServiceType(opt.key)}
-                        className="flex items-center gap-2 rounded-[12px] border p-2.5 text-left"
+                        className="flex w-full items-center gap-2 rounded-[12px] border p-2.5 text-left"
                         style={checked ? { borderColor: "var(--dash-navy)", background: "var(--dash-water-bg)" } : { borderColor: "var(--dash-border)" }}
                       >
                         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[var(--dash-water-icon)]">
@@ -1264,8 +1260,8 @@ function NewServiceWizard({
                   <button
                     type="button"
                     onClick={() => toggleServiceType(OTHER_SERVICE)}
-                    className="col-span-2 flex items-center gap-2 rounded-[12px] border p-2.5 text-left"
-                    style={hasOther ? { borderColor: "var(--dash-navy)", background: "var(--dash-water-bg)" } : { borderColor: "var(--dash-border)" }}
+                    className="flex w-full items-center gap-2 rounded-[12px] border p-2.5 text-left"
+                    style={serviceTypes.includes(OTHER_SERVICE) ? { borderColor: "var(--dash-navy)", background: "var(--dash-water-bg)" } : { borderColor: "var(--dash-border)" }}
                   >
                     <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[var(--dash-water-icon)]">
                       <MoreHorizontal className="h-4 w-4" />
@@ -1276,42 +1272,43 @@ function NewServiceWizard({
                     </span>
                     <span
                       className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-[5px] border"
-                      style={hasOther ? { background: "var(--dash-navy)", borderColor: "var(--dash-navy)" } : { borderColor: "var(--dash-border)" }}
+                      style={serviceTypes.includes(OTHER_SERVICE) ? { background: "var(--dash-navy)", borderColor: "var(--dash-navy)" } : { borderColor: "var(--dash-border)" }}
                     >
-                      {hasOther && <Check className="h-3 w-3 text-white" />}
+                      {serviceTypes.includes(OTHER_SERVICE) && <Check className="h-3 w-3 text-white" />}
                     </span>
                   </button>
                 </div>
+              </div>
 
-                {hasOther && (
-                  <div className="mt-3">
-                    <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Descreva o serviço</label>
-                    <textarea
-                      value={customDesc}
-                      onChange={(e) => setCustomDesc(e.target.value.slice(0, 200))}
-                      rows={3}
-                      placeholder="Ex: Reparo de bomba da piscina"
-                      className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-                    />
-                    <div className="mt-1 text-right text-[10.5px] text-[var(--dash-text-muted)]">{customDesc.length}/200</div>
-                  </div>
-                )}
+              <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+                <label className="text-[13px] font-bold text-[var(--dash-text)]">Descrição / Observações (opcional)</label>
+                <textarea
+                  value={notesText}
+                  onChange={(e) => setNotesText(e.target.value.slice(0, 250))}
+                  rows={3}
+                  placeholder="Adicione detalhes sobre o serviço..."
+                  className="mt-1.5 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                />
+                <div className="mt-1 text-right text-[10.5px] text-[var(--dash-text-muted)]">{notesText.length}/250</div>
               </div>
 
               <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
                 <h2 className="mb-2 text-[13px] font-bold text-[var(--dash-text)]">Prioridade (opcional)</h2>
                 <div className="grid grid-cols-3 gap-2">
-                  {PRIORITY_OPTIONS.map((p) => (
-                    <button
-                      key={p.key}
-                      type="button"
-                      onClick={() => setPriority((cur) => (cur === p.key ? null : p.key))}
-                      className="rounded-full py-2 text-center text-[12.5px] font-bold"
-                      style={priority === p.key ? { background: p.fg, color: "#fff" } : { background: p.bg, color: p.fg }}
-                    >
-                      {p.key}
-                    </button>
-                  ))}
+                  {PRIORITY_OPTIONS.map((p) => {
+                    const Icon = p.icon;
+                    return (
+                      <button
+                        key={p.key}
+                        type="button"
+                        onClick={() => setPriority((cur) => (cur === p.key ? null : p.key))}
+                        className="flex items-center justify-center gap-1 rounded-full py-2 text-center text-[12.5px] font-bold"
+                        style={priority === p.key ? { background: p.fg, color: "#fff" } : { background: p.bg, color: p.fg }}
+                      >
+                        <Icon className="h-3.5 w-3.5" /> {p.key}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </>
@@ -1428,12 +1425,12 @@ function NewServiceWizard({
                   <div className="py-2.5">
                     <div className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--dash-text-muted-2)]">Serviço a ser realizado</div>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {serviceTypes.filter((s) => s !== OTHER_SERVICE).map((s) => (
+                      {serviceTypes.map((s) => (
                         <span key={s} className="rounded-full bg-[var(--dash-badge-paid-bg)] px-2.5 py-1 text-[11.5px] font-semibold text-[var(--dash-badge-paid-text)]">{s}</span>
                       ))}
                     </div>
-                    {hasOther && customDesc.trim() && (
-                      <p className="mt-1.5 text-[12.5px] text-[var(--dash-text-secondary)]">{customDesc.trim()}</p>
+                    {notesText.trim() && (
+                      <p className="mt-1.5 text-[12.5px] text-[var(--dash-text-secondary)]">{notesText.trim()}</p>
                     )}
                   </div>
 
