@@ -1874,19 +1874,29 @@ function TecnicoHomeDashboard({
         })}
       </div>
 
-      <div className="rounded-[18px] p-4 text-white" style={{ background: "linear-gradient(135deg, #2563EB, #3B82F6)" }}>
-        <div className="flex items-center gap-3">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/90" style={{ color: "#2563EB" }}>
-            <DollarSign className="h-5 w-5" />
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+          <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#DBEAFE", color: "#2563EB" }}>
+            <DollarSign className="h-4 w-4" />
           </div>
-          <div className="min-w-0">
-            <div className="text-[12px] text-white/85">Receita estimada da rota</div>
-            <div className="text-2xl font-extrabold tabular-nums">{fmt(stats.estimated_route_revenue)}</div>
-            <div className="text-[11px] text-white/85">
-              Média por visita: <span className="font-bold">{fmt(stats.avg_revenue_per_pool)}</span>
-            </div>
-            <div className="text-[10px] text-white/70">valor mensal ÷ visitas por semana</div>
+          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(stats.estimated_route_revenue)}</div>
+          <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Total mensal</div>
+        </div>
+        <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+          <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#CCFBF1", color: "#0D9488" }}>
+            <DollarSign className="h-4 w-4" />
           </div>
+          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">
+            {fmt(stats.total_pools > 0 ? stats.estimated_route_revenue / stats.total_pools : 0)}
+          </div>
+          <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por piscina</div>
+        </div>
+        <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+          <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#EDE4FB", color: "#7C3AED" }}>
+            <DollarSign className="h-4 w-4" />
+          </div>
+          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(stats.avg_revenue_per_pool / 4)}</div>
+          <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por visita</div>
         </div>
       </div>
 
