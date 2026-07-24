@@ -176,7 +176,7 @@ export function TecnicoClientDetail({
                     >
                       {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
                     </span>
-                    <span className="truncate text-lg font-extrabold text-[var(--dash-text)]">{client.name}</span>
+                    <span className="truncate text-[15.3px] font-extrabold text-[var(--dash-text)]">{client.name}</span>
                   </div>
                   <div className="shrink-0 text-right">
                     <div className="text-[13.5px] font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(client.monthly_value || 0))}</div>
