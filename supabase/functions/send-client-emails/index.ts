@@ -153,12 +153,16 @@ Deno.serve(async () => {
   // 3. Visit photo — stop completed, client opted in, a photo attached, not
   // yet sent. Independent of the chemicals email — a photo added later (or
   // not at all) doesn't hold up or merge with the readings email.
+  // Not filtering on visit_photos here — array-vs-empty-array filters are a
+  // known PostgREST rough edge, and the "does this stop have a photo yet"
+  // check is trivial to do in code below instead. This block just pulls
+  // every unsent completed stop for opted-in clients and skips the ones
+  // without a photo (picked up on a later run once one is added).
   const { data: photoStops, error: photoErr } = await supabase
     .from("route_stops")
     .select("id, completed_at, visit_photos, client:clients!inner(id, name, email, notify_photo)")
     .eq("status", "Concluído")
     .is("photo_email_sent_at", null)
-    .not("visit_photos", "eq", "{}")
     .eq("clients.notify_photo", true);
 
   if (photoErr) return new Response(JSON.stringify({ error: photoErr.message }), { status: 500 });
@@ -173,10 +177,13 @@ Deno.serve(async () => {
     const photoPath = stop.visit_photos?.[0];
     if (!photoPath) continue;
 
-    const { data: signed } = await supabase.storage
+    const { data: signed, error: signError } = await supabase.storage
       .from("client-photos")
       .createSignedUrl(photoPath, 60 * 60 * 24 * 7);
-    if (!signed?.signedUrl) continue;
+    if (!signed?.signedUrl) {
+      errors.push(`photo ${stop.id}: could not sign ${photoPath}: ${signError?.message ?? "unknown error"}`);
+      continue;
+    }
 
     const visitDate = stop.completed_at ? new Date(stop.completed_at) : new Date();
     const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
