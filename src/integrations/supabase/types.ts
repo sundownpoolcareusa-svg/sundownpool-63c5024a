@@ -512,36 +512,6 @@ export type Database = {
           },
         ]
       }
-      services: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          unit_price: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          unit_price?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          unit_price?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       service_jobs: {
         Row: {
           client_id: string
@@ -619,6 +589,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      services: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          unit_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          unit_price?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          unit_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       stop_chemicals: {
         Row: {
@@ -812,19 +812,32 @@ export type Database = {
           title: string
         }[]
       }
-      get_my_stop_chemicals: {
-        Args: { p_body_type?: string; p_stop_id: string }
-        Returns: {
-          calcium_hardness: number
-          free_chlorine: number
-          notes: string
-          ph: number
-          products: Json
-          salt: number
-          stabilizer: number
-          total_alkalinity: number
-        }[]
-      }
+      get_my_stop_chemicals:
+        | {
+            Args: { p_stop_id: string }
+            Returns: {
+              calcium_hardness: number
+              free_chlorine: number
+              notes: string
+              ph: number
+              products: Json
+              stabilizer: number
+              total_alkalinity: number
+            }[]
+          }
+        | {
+            Args: { p_body_type?: string; p_stop_id: string }
+            Returns: {
+              calcium_hardness: number
+              free_chlorine: number
+              notes: string
+              ph: number
+              products: Json
+              salt: number
+              stabilizer: number
+              total_alkalinity: number
+            }[]
+          }
       get_my_stop_chemicals_history: {
         Args: { p_stop_id: string }
         Returns: {
@@ -867,7 +880,7 @@ export type Database = {
         }[]
       }
       get_my_technician_clients: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           address: string
           city: string
