@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   getMyClientInvoices, getMyClientVisitHistory, getMyClientChemicalsHistory, updateMyClientPoolPhotos, updateMyClientEquipment,
   updateMyClientNotes, logMyClientFilterChange,
-  fmt, fmtDate, initials, CHEMICAL_READING_META,
+  fmt, fmtDate, initials, formatProductQty, CHEMICAL_READING_META,
   type TechnicianClient, type ClientVisitHistoryEntry, type ChemicalReadingKey,
 } from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
@@ -76,7 +76,7 @@ function ClientPhoto({ client }: { client: TechnicianClient }) {
   );
 }
 
-type SubView = "history" | "chemicals" | "invoices" | "photos" | "equipment" | null;
+type SubView = "history" | "chemicals" | "products" | "invoices" | "photos" | "equipment" | null;
 
 export function TecnicoClientDetail({
   client, onClose, todayStopId, onCompleteService,
@@ -140,10 +140,10 @@ export function TecnicoClientDetail({
     onClose();
   }
 
-  const quickActions: { key: string; label: string; icon: typeof Clock; bg: string; fg: string; onClick?: () => void; link?: string }[] = [
+  const quickActions: { key: string; label: string; icon: typeof Clock; bg: string; fg: string; onClick: () => void }[] = [
     { key: "history", label: "Histórico", icon: Clock, bg: "#FEF3C7", fg: "#B45309", onClick: () => setSubView("history") },
     { key: "chemicals", label: "Químicos", icon: FlaskConical, bg: "#EDE4FB", fg: "#7C3AED", onClick: () => setSubView("chemicals") },
-    { key: "products", label: "Produtos", icon: TestTube, bg: "#DCFCE7", fg: "#16A34A", onClick: todayStopId ? undefined : needsTodayStop, link: todayStopId ?? undefined },
+    { key: "products", label: "Produtos", icon: TestTube, bg: "#DCFCE7", fg: "#16A34A", onClick: () => setSubView("products") },
     { key: "invoices", label: "Faturas", icon: FileText, bg: "#EDE4FB", fg: "#7C3AED", onClick: () => setSubView("invoices") },
     { key: "photos", label: "Fotos", icon: Camera, bg: "#FFEDD5", fg: "#C2410C", onClick: () => setSubView("photos") },
     { key: "equipment", label: "Equipamento", icon: Wrench, bg: "#DBEAFE", fg: "#2563EB", onClick: () => setSubView("equipment") },
@@ -224,25 +224,14 @@ export function TecnicoClientDetail({
           <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
             <h2 className="mb-3 text-[15px] font-extrabold text-[var(--dash-text)]">Ações rápidas</h2>
             <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ scrollSnapType: "x proximity" }}>
-              {quickActions.map((a) => {
-                const tile = (
-                  <div className="flex w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-[var(--dash-border)] bg-white p-3" style={{ scrollSnapAlign: "start" }}>
-                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full" style={{ background: a.bg, color: a.fg }}>
-                      <a.icon className="h-5 w-5" />
-                    </div>
-                    <span className="text-center text-[11px] font-bold leading-tight text-[var(--dash-text)]">{a.label}</span>
+              {quickActions.map((a) => (
+                <button key={a.key} type="button" onClick={a.onClick} className="flex w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-[var(--dash-border)] bg-white p-3" style={{ scrollSnapAlign: "start" }}>
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full" style={{ background: a.bg, color: a.fg }}>
+                    <a.icon className="h-5 w-5" />
                   </div>
-                );
-                return a.link ? (
-                  <Link key={a.key} to="/tecnico/chemicals/$stopId" params={{ stopId: a.link }} onClick={onClose}>
-                    {tile}
-                  </Link>
-                ) : (
-                  <button key={a.key} type="button" onClick={a.onClick}>
-                    {tile}
-                  </button>
-                );
-              })}
+                  <span className="text-center text-[11px] font-bold leading-tight text-[var(--dash-text)]">{a.label}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -337,6 +326,9 @@ export function TecnicoClientDetail({
       </Modal>
       <Modal open={subView === "chemicals"} onClose={() => setSubView(null)} title="Chemistry Readings" maxWidth="max-w-lg">
         <ChemistryReadingsView client={client} todayStopId={todayStopId} onClose={onClose} />
+      </Modal>
+      <Modal open={subView === "products"} onClose={() => setSubView(null)} title="Histórico de Produtos" maxWidth="max-w-lg">
+        <ProductsHistoryView client={client} todayStopId={todayStopId} onClose={onClose} />
       </Modal>
       <Modal open={subView === "invoices"} onClose={() => setSubView(null)} title="Invoices" maxWidth="max-w-lg">
         <ClientInvoicesList clientId={client.client_id} />
@@ -744,6 +736,72 @@ function ChemistryReadingsView({
       )}
 
       {productsUsedButton}
+    </div>
+  );
+}
+
+// Pool is the "default" body for this summary/history view — same
+// convention as ChemistryReadingsView above.
+function ProductsHistoryView({
+  client, todayStopId, onClose,
+}: { client: TechnicianClient; todayStopId: string | null; onClose: () => void }) {
+  const { data: history = [], isLoading } = useQuery({
+    queryKey: ["my-client-chemicals-history", client.client_id],
+    queryFn: () => getMyClientChemicalsHistory(client.client_id),
+  });
+
+  if (isLoading) return <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">Loading...</p>;
+
+  function needsTodayStop() {
+    toast.info("Só disponível no dia da visita agendada");
+  }
+
+  const poolHistory = history.filter((h) => h.body_type === "pool");
+
+  const addProductsButton = todayStopId ? (
+    <Link to="/tecnico/chemicals/$stopId" params={{ stopId: todayStopId }} onClick={onClose}>
+      <button className="flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white" style={{ background: "#4F46E5" }}>
+        <PlusCircle className="h-4 w-4" /> Registrar Produtos de Hoje
+      </button>
+    </Link>
+  ) : (
+    <button onClick={needsTodayStop} className="flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white" style={{ background: "#4F46E5" }}>
+      <PlusCircle className="h-4 w-4" /> Registrar Produtos de Hoje
+    </button>
+  );
+
+  return (
+    <div className="space-y-4">
+      {poolHistory.length === 0 ? (
+        <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">Nenhum produto registrado ainda.</p>
+      ) : (
+        <div className="space-y-2.5">
+          {poolHistory.map((entry) => {
+            const used = entry.products.filter((p) => p.qty > 0);
+            return (
+              <div key={entry.route_stop_id} className="rounded-[14px] border border-[var(--dash-border)] p-3">
+                <div className="flex items-center gap-2 text-[13px] font-extrabold text-[var(--dash-text)]">
+                  <CalendarDays className="h-3.5 w-3.5" style={{ color: "#7C3AED" }} /> {fmtDate(entry.route_date)}
+                </div>
+                {used.length > 0 ? (
+                  <div className="mt-2 space-y-1.5">
+                    {used.map((p) => (
+                      <div key={p.name} className="flex items-center justify-between text-[13px] text-[var(--dash-text-secondary)]">
+                        <span>{p.name}</span>
+                        <span className="font-bold text-[var(--dash-text)]">{formatProductQty(p.qty)} {p.unit}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-1.5 text-[12.5px] text-[var(--dash-text-muted)]">Nenhum produto usado nesta visita.</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {addProductsButton}
     </div>
   );
 }
