@@ -739,6 +739,46 @@ export async function deleteStop(stopId: string) {
   await compactStopPositions(stop.route_id);
 }
 
+// Moves a stop to a different day, keeping the same technician — used to
+// edit a manually-scheduled one-time visit's date from the client's
+// "Visitas agendadas" list. Reuses the same route (creating it if needed)
+// and position logic as scheduling a new one-time visit.
+export async function rescheduleStop(stopId: string, newDate: string) {
+  const { data: stop, error: findErr } = await supabase
+    .from("route_stops")
+    .select("route_id, route:routes(technician_id, route_date)")
+    .eq("id", stopId)
+    .single();
+  if (findErr) throw findErr;
+
+  const route = stop.route as { technician_id: string; route_date: string } | null;
+  if (!route) throw new Error("Route not found for this stop");
+  if (route.route_date === newDate) return;
+
+  const oldRouteId = stop.route_id;
+  const newRoute = await getOrCreateRoute(route.technician_id, newDate);
+
+  const { data: existing, error: countErr } = await supabase
+    .from("route_stops")
+    .select("position")
+    .eq("route_id", newRoute.id)
+    .order("position", { ascending: false })
+    .limit(1);
+  if (countErr) throw countErr;
+  const nextPosition = existing && existing.length > 0 ? existing[0].position + 1 : 0;
+
+  const { error } = await supabase
+    .from("route_stops")
+    .update({ route_id: newRoute.id, position: nextPosition })
+    .eq("id", stopId);
+  if (error) {
+    if (error.code === "23505") throw new Error("This client already has a visit scheduled that day.");
+    throw error;
+  }
+
+  await compactStopPositions(oldRouteId);
+}
+
 const WEEKDAY_ABBR = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 function localDateStr(d: Date) {
