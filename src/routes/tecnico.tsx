@@ -1847,15 +1847,7 @@ function TecnicoHomeDashboard({
   ];
   const openJobs = serviceJobs.filter((j) => j.status !== "Concluído");
 
-  // A straight sum(value)/count(pools) skews high for pools visited more
-  // than once a week (e.g. a commercial account serviced 3x vs. a
-  // residential pool serviced 1x) — they'd out-earn a typical pool just by
-  // being visited more often, not by being worth more per visit. Normalize
-  // each pool to its own per-weekly-visit value first, then average those.
   const scheduledClients = clients.filter((c) => (c.service_days ?? []).length > 0);
-  const avgPerPool = scheduledClients.length > 0
-    ? scheduledClients.reduce((sum, c) => sum + Number(c.monthly_value || 0) / (c.service_days?.length || 1), 0) / scheduledClients.length
-    : 0;
   const totalWeeklyVisits = scheduledClients.reduce((sum, c) => sum + (c.service_days?.length || 0), 0);
   const avgPerVisit = totalWeeklyVisits > 0 ? stats.estimated_route_revenue / totalWeeklyVisits : 0;
 
@@ -1899,7 +1891,7 @@ function TecnicoHomeDashboard({
           <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#CCFBF1", color: "#0D9488" }}>
             <DollarSign className="h-4 w-4" />
           </div>
-          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerPool)}</div>
+          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerVisit)}</div>
           <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por piscina</div>
         </div>
         <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
