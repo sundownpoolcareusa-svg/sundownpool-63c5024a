@@ -22,7 +22,9 @@ export type Client = {
   filter_cleaning_count?: number;
   has_spa?: boolean;
   has_salt_system?: boolean;
-  notify_by_email?: boolean;
+  notify_on_way?: boolean;
+  notify_chemicals?: boolean;
+  notify_photo?: boolean;
   created_at: string;
 };
 
@@ -807,8 +809,8 @@ export async function logMyStopFilterCleaning(stopId: string) {
 }
 
 // A photo of this specific visit — separate from the client's general
-// pool_photos gallery — attached to clients.notify_by_email's completion
-// email alongside the chemical readings.
+// pool_photos gallery — attached to the client's photo notification email
+// (clients.notify_photo) when opted in.
 export async function saveMyStopVisitPhotos(stopId: string, photos: string[]) {
   const { error } = await supabase.rpc("save_my_stop_visit_photos", { p_stop_id: stopId, p_photos: photos });
   if (error) throw error;
