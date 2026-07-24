@@ -16,15 +16,17 @@ import {
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
   getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
-  initials, fmt, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
+  getMyServiceJobs, createMyServiceJob, completeMyServiceJob,
+  initials, fmt, fmtDate, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
+  type ServiceJob,
 } from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
 import { toast } from "sonner";
 import tecnicoIcon from "@/assets/tecnico-apple-touch-icon.png";
 
 export const Route = createFileRoute("/tecnico")({
-  validateSearch: (search: Record<string, unknown>): { view?: "inicio" | "rota" | "clientes" } => ({
-    view: search.view === "rota" || search.view === "clientes" ? search.view : undefined,
+  validateSearch: (search: Record<string, unknown>): { view?: "inicio" | "rota" | "clientes" | "servicos" } => ({
+    view: search.view === "rota" || search.view === "clientes" || search.view === "servicos" ? search.view : undefined,
   }),
   head: () => ({
     meta: [
@@ -235,7 +237,12 @@ function TecnicoPage() {
       setDate((d) => new Date(d.getTime() - 86400000));
     }
   };
-  const [view, setView] = useState<"inicio" | "rota" | "clientes">(search.view ?? "inicio");
+  const [view, setView] = useState<"inicio" | "rota" | "clientes" | "servicos">(search.view ?? "inicio");
+  const [newJobOpen, setNewJobOpen] = useState(false);
+  const [newJobClientId, setNewJobClientId] = useState("");
+  const [newJobTitle, setNewJobTitle] = useState("");
+  const [newJobNotes, setNewJobNotes] = useState("");
+  const [selectedJob, setSelectedJob] = useState<ServiceJob | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
   const [selectedClient, setSelectedClient] = useState<TechnicianClient | null>(null);
@@ -293,6 +300,35 @@ function TecnicoPage() {
     if (dashboardError) console.error("get_my_technician_dashboard failed", dashboardError);
     if (alertsError) console.error("get_my_technician_alerts failed", alertsError);
   }, [dashboardError, alertsError]);
+
+  const { data: serviceJobs = [], isLoading: isLoadingJobs } = useQuery({
+    queryKey: ["my-service-jobs"],
+    queryFn: () => getMyServiceJobs(),
+    enabled: checkedSession,
+  });
+
+  const createJobMut = useMutation({
+    mutationFn: () => createMyServiceJob(newJobClientId, newJobTitle.trim(), newJobNotes.trim() || null),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-service-jobs"] });
+      setNewJobOpen(false);
+      setNewJobClientId("");
+      setNewJobTitle("");
+      setNewJobNotes("");
+      toast.success("Serviço criado");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const completeJobMut = useMutation({
+    mutationFn: (jobId: string) => completeMyServiceJob(jobId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-service-jobs"] });
+      setSelectedJob(null);
+      toast.success("Serviço concluído");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const statusMut = useMutation({
     mutationFn: ({ stopId, status }: { stopId: string; status: StopStatus }) => updateMyStopStatus(stopId, status),
@@ -453,6 +489,13 @@ function TecnicoPage() {
           />
         ) : view === "clientes" ? (
           <TecnicoClientsList clients={myClients} isLoading={isLoadingClients} onSelectClient={setSelectedClient} />
+        ) : view === "servicos" ? (
+          <TecnicoServicesList
+            jobs={serviceJobs}
+            isLoading={isLoadingJobs}
+            onSelectJob={setSelectedJob}
+            onNewJob={() => setNewJobOpen(true)}
+          />
         ) : (
           <>
         <div
@@ -797,7 +840,11 @@ function TecnicoPage() {
         >
           <Plus className="h-5 w-5" />
         </button>
-        <button onClick={() => comingSoon("Serviços")} className="flex flex-col items-center gap-0.5 px-2 text-[10px] font-medium text-[var(--dash-text-muted-2)]">
+        <button
+          onClick={() => setView("servicos")}
+          className="flex flex-col items-center gap-0.5 px-2 text-[10px] font-bold"
+          style={{ color: view === "servicos" ? "var(--dash-navy)" : "var(--dash-text-muted-2)" }}
+        >
           <Wrench className="h-5 w-5" />
           Serviços
         </button>
@@ -850,9 +897,138 @@ function TecnicoPage() {
           </div>
         </Modal>
       )}
+
+      {newJobOpen && (
+        <Modal open onClose={() => setNewJobOpen(false)} title="Novo serviço" maxWidth="max-w-md">
+          <div className="space-y-4">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Cliente</label>
+              <select
+                value={newJobClientId}
+                onChange={(e) => setNewJobClientId(e.target.value)}
+                className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2 text-sm"
+              >
+                <option value="">Selecione um cliente</option>
+                {myClients
+                  .slice()
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((c) => (
+                    <option key={c.client_id} value={c.client_id}>{c.name}</option>
+                  ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">O que precisa ser feito</label>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {SERVICE_JOB_SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setNewJobTitle(s)}
+                    className="rounded-full border px-2.5 py-1 text-[11.5px] font-semibold"
+                    style={
+                      newJobTitle === s
+                        ? { borderColor: "var(--dash-navy)", background: "var(--dash-navy)", color: "#fff" }
+                        : { borderColor: "var(--dash-border)", color: "var(--dash-text-secondary)" }
+                    }
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <input
+                value={newJobTitle}
+                onChange={(e) => setNewJobTitle(e.target.value)}
+                placeholder="Ex: Troca de filtro"
+                className="mt-2 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Notas (opcional)</label>
+              <textarea
+                value={newJobNotes}
+                onChange={(e) => setNewJobNotes(e.target.value)}
+                rows={3}
+                className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+              />
+            </div>
+
+            <button
+              onClick={() => createJobMut.mutate()}
+              disabled={!newJobClientId || !newJobTitle.trim() || createJobMut.isPending}
+              className="flex w-full items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-bold text-white disabled:opacity-50"
+              style={{ background: "var(--dash-navy)" }}
+            >
+              {createJobMut.isPending ? "Criando..." : "Criar serviço"}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {selectedJob && (
+        <Modal open onClose={() => setSelectedJob(null)} title="Detalhes do serviço" maxWidth="max-w-md">
+          <div className="space-y-3">
+            <div>
+              <div className="text-[16px] font-extrabold text-[var(--dash-text)]">{selectedJob.title}</div>
+              <div className="text-[13px] text-[var(--dash-text-muted)]">{selectedJob.client_name}</div>
+            </div>
+
+            <span
+              className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold"
+              style={
+                selectedJob.status === "Concluído"
+                  ? { background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }
+                  : { background: "var(--dash-badge-sent-bg)", color: "var(--dash-badge-sent-text)" }
+              }
+            >
+              {selectedJob.status}
+            </span>
+
+            {selectedJob.notes && (
+              <div className="flex items-start gap-1.5 rounded-[10px] bg-[var(--dash-bg)] px-2.5 py-2 text-[12.5px] text-[var(--dash-text-secondary)]">
+                <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} />
+                {selectedJob.notes}
+              </div>
+            )}
+
+            <div className="space-y-1.5 text-[12.5px] text-[var(--dash-text-secondary)]">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} />
+                Aberto em {fmtDate(selectedJob.created_at)}
+              </div>
+              {selectedJob.status === "Concluído" ? (
+                <div className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 shrink-0" style={{ color: "#16A34A" }} />
+                  Concluído em {fmtDate(selectedJob.completed_at)}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <RouteIcon className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} />
+                  Próxima visita: {selectedJob.next_visit_date ? fmtDate(selectedJob.next_visit_date) : "Nenhuma agendada"}
+                </div>
+              )}
+            </div>
+
+            {selectedJob.status !== "Concluído" && (
+              <button
+                onClick={() => completeJobMut.mutate(selectedJob.job_id)}
+                disabled={completeJobMut.isPending}
+                className="flex w-full items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-bold text-white disabled:opacity-50"
+                style={{ background: "#16A34A" }}
+              >
+                <Check className="h-4 w-4" /> {completeJobMut.isPending ? "Concluindo..." : "Concluir serviço"}
+              </button>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
+
+const SERVICE_JOB_SUGGESTIONS = ["Troca de filtro", "Tratamento de fosfato", "Reparo de equipamento", "Outro"];
 
 const clientAvatarColors = [
   "bg-sky-200 text-sky-800", "bg-orange-200 text-orange-800", "bg-purple-200 text-purple-800",
@@ -975,6 +1151,97 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
             </div>
           );
         })
+      )}
+    </div>
+  );
+}
+
+function serviceJobAge(createdAt: string) {
+  const days = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000);
+  if (days <= 0) return "Hoje";
+  if (days === 1) return "Há 1 dia";
+  return `Há ${days} dias`;
+}
+
+function TecnicoServicesList({
+  jobs, isLoading, onSelectJob, onNewJob,
+}: { jobs: ServiceJob[]; isLoading: boolean; onSelectJob: (j: ServiceJob) => void; onNewJob: () => void }) {
+  const open = jobs.filter((j) => j.status !== "Concluído");
+  const done = jobs.filter((j) => j.status === "Concluído");
+
+  function JobCard({ job }: { job: ServiceJob }) {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onSelectJob(job)}
+        onKeyDown={(e) => { if (e.key === "Enter") onSelectJob(job); }}
+        className="cursor-pointer rounded-[14px] border border-[var(--dash-border)] bg-white p-3"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="truncate text-[14px] font-bold text-[var(--dash-text)]">{job.title}</div>
+            <div className="truncate text-[12.5px] text-[var(--dash-text-muted-2)]">{job.client_name}</div>
+          </div>
+          <span
+            className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
+            style={
+              job.status === "Concluído"
+                ? { background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }
+                : { background: "var(--dash-badge-sent-bg)", color: "var(--dash-badge-sent-text)" }
+            }
+          >
+            {job.status}
+          </span>
+        </div>
+        <div className="mt-2 flex items-center justify-between text-[11.5px] text-[var(--dash-text-muted-2)]">
+          <span>{job.status === "Concluído" ? `Concluído em ${fmtDate(job.completed_at)}` : serviceJobAge(job.created_at)}</span>
+          {job.status !== "Concluído" && (
+            <span>{job.next_visit_date ? `Próxima visita: ${fmtDate(job.next_visit_date)}` : "Sem visita agendada"}</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-extrabold text-[var(--dash-text)]">Serviços</h1>
+          <p className="text-[12px] text-[var(--dash-text-muted)]">Reparos e tarefas em aberto</p>
+        </div>
+        <button
+          onClick={onNewJob}
+          className="flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold text-white"
+          style={{ background: "var(--dash-navy)" }}
+        >
+          <Plus className="h-4 w-4" /> Novo
+        </button>
+      </div>
+
+      {isLoading ? (
+        <p className="py-10 text-center text-sm text-[var(--dash-text-muted)]">Carregando...</p>
+      ) : jobs.length === 0 ? (
+        <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white py-14 text-center">
+          <Wrench className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
+          <p className="mt-3 text-sm font-semibold text-[var(--dash-text-secondary)]">Nenhum serviço em aberto</p>
+        </div>
+      ) : (
+        <>
+          {open.length > 0 && (
+            <div className="space-y-2.5">
+              <h2 className="text-[12px] font-bold uppercase tracking-[.06em] text-[var(--dash-text-muted-2)]">Em aberto ({open.length})</h2>
+              {open.map((j) => <JobCard key={j.job_id} job={j} />)}
+            </div>
+          )}
+          {done.length > 0 && (
+            <div className="space-y-2.5">
+              <h2 className="text-[12px] font-bold uppercase tracking-[.06em] text-[var(--dash-text-muted-2)]">Concluídos ({done.length})</h2>
+              {done.map((j) => <JobCard key={j.job_id} job={j} />)}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
