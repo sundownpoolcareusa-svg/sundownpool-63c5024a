@@ -6,13 +6,14 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
+import { TechAvatar } from "@/components/TechAvatar";
 import {
   Plus, Phone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Play, Trash2, MapPin, CalendarDays,
   CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
-  addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, initials, clientFullAddress, setClientTechnician,
+  addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, clientFullAddress, setClientTechnician,
   type RouteStop, type StopStatus, type Technician, type Client, type RouteRow,
 } from "@/lib/db";
 import { geocodeAndSaveClient } from "@/lib/geocode";
@@ -310,9 +311,7 @@ function TechnicianChips({
               background: active ? "var(--dash-water-bg)" : "#fff",
             }}
           >
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[13px] font-bold text-white" style={{ background: t.color }}>
-              {initials(t.name)}
-            </div>
+            <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-10 w-10" textClassName="text-[13px]" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-bold text-[var(--dash-text)]">{t.name}</div>
               <div className="text-[11px] text-[var(--dash-text-muted-2)]">{stats.total} stops · {stats.completed} done</div>
@@ -518,9 +517,7 @@ function RotasPage() {
                   onClick={() => { selectTechnician(t.id); setSwitcherOpen(false); }}
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-[var(--dash-bg)]"
                 >
-                  <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white" style={{ background: t.color }}>
-                    {initials(t.name)}
-                  </div>
+                  <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-7 w-7" textClassName="text-[11px]" />
                   <span className="text-sm font-semibold text-[var(--dash-text)]">{t.name}</span>
                 </button>
               ))}
@@ -871,9 +868,7 @@ function TechnicianProgressCard({
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   return (
     <button onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl border border-[var(--dash-border)] bg-white p-4 text-left">
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[12px] font-bold text-white" style={{ background: technician.color }}>
-        {initials(technician.name)}
-      </div>
+      <TechAvatar name={technician.name} color={technician.color} photoPath={technician.photo_path} className="h-9 w-9" textClassName="text-[12px]" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-bold text-[var(--dash-text)]">{technician.name}</span>
@@ -1023,9 +1018,13 @@ function StopsList({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-full text-sm font-bold text-white" style={{ background: route.technician?.color || "var(--dash-navy)" }}>
-            {initials(route.technician?.name || "?")}
-          </div>
+          <TechAvatar
+            name={route.technician?.name || "?"}
+            color={route.technician?.color || "var(--dash-navy)"}
+            photoPath={route.technician?.photo_path}
+            className="h-11 w-11"
+            textClassName="text-sm"
+          />
           <div>
             <h2 className="text-lg font-extrabold text-[var(--dash-text)]">{route.technician?.name}</h2>
             <div className="text-xs text-[var(--dash-text-muted)]">
@@ -1325,9 +1324,7 @@ function TechniciansCard({ technicians, open, onOpenChange }: { technicians: Tec
       <div className="space-y-2">
         {technicians.map((t) => (
           <div key={t.id} className="flex items-center gap-3">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white" style={{ background: t.color }}>
-              {initials(t.name)}
-            </div>
+            <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-8 w-8" textClassName="text-xs" />
             <div>
               <div className="text-sm font-semibold text-[var(--dash-text)]">{t.name}</div>
               <div className="text-xs text-[var(--dash-text-muted)]">{t.phone || "—"}</div>

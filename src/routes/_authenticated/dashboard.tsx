@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
+import { TechAvatar } from "@/components/TechAvatar";
 import {
   Award, Users, DollarSign, BarChart3, FileText, ChevronDown, ChevronLeft, ChevronRight,
   Download, Plus, Bell, FlaskConical, Phone, MapPin, Play, Check,
@@ -691,9 +692,7 @@ function TopTechniciansSection() {
           {stats.map((s) => (
             <div key={s.technician.id}>
               <div className="flex items-center gap-2.5">
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[12px] font-bold text-white" style={{ background: s.technician.color }}>
-                  {initials(s.technician.name)}
-                </div>
+                <TechAvatar name={s.technician.name} color={s.technician.color} photoPath={s.technician.photo_path} className="h-9 w-9" textClassName="text-[12px]" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate text-[13px] font-bold text-[var(--dash-text)]">{s.technician.name}</span>

@@ -9,12 +9,14 @@ export function PhotoUploader({
   onChange,
   bucket = "client-photos",
   folder,
+  max,
 }: {
   label: string;
   value: string[];
   onChange: (paths: string[]) => void;
   bucket?: string;
   folder: string; // e.g. `${userId}/pool`
+  max?: number;
 }) {
   const [uploading, setUploading] = useState(false);
 
@@ -23,7 +25,8 @@ export function PhotoUploader({
     setUploading(true);
     try {
       const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
+      const room = max !== undefined ? Math.max(0, max - value.length) : files.length;
+      for (const file of Array.from(files).slice(0, room)) {
         const ext = file.name.split(".").pop() || "jpg";
         const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
@@ -51,17 +54,19 @@ export function PhotoUploader({
         {value.map((path, idx) => (
           <PhotoThumb key={path} path={path} bucket={bucket} onRemove={() => removeAt(idx)} />
         ))}
-        <label className="grid h-20 w-20 cursor-pointer place-items-center rounded-[10px] border-2 border-dashed border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-navy)] hover:text-[var(--dash-navy)]">
-          {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
-            disabled={uploading}
-          />
-        </label>
+        {(max === undefined || value.length < max) && (
+          <label className="grid h-20 w-20 cursor-pointer place-items-center rounded-[10px] border-2 border-dashed border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-navy)] hover:text-[var(--dash-navy)]">
+            {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+            <input
+              type="file"
+              accept="image/*"
+              multiple={max !== 1}
+              className="hidden"
+              onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
+              disabled={uploading}
+            />
+          </label>
+        )}
       </div>
     </div>
   );
