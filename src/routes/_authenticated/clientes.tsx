@@ -1336,7 +1336,14 @@ function ClientScheduledStops({ clientId }: { clientId: string }) {
                   Manual
                 </span>
               )}
-              <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
+              <span
+                className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                style={
+                  s.status === "Concluído"
+                    ? { background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }
+                    : { background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }
+                }
+              >
                 {s.status}
               </span>
             </div>
