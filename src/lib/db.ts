@@ -466,6 +466,8 @@ export type TechnicianStop = {
   client_lng: number | null;
   client_type: string;
   has_chemicals: boolean;
+  client_notify_photo: boolean;
+  has_visit_photo: boolean;
 };
 
 // Returns the technician record linked to the currently logged-in user, or
