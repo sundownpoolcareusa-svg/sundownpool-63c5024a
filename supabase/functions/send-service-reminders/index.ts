@@ -22,7 +22,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 // The business operates out of Sarasota, FL — technicians pick scheduled_date/
 // scheduled_time as their own local wall-clock, with no timezone attached (a
 // Postgres TIME column can't carry one). This edge function, though, always
-// runs in UTC. Naively doing `new Date(\`${date}T${time}\`)` would silently
+// runs in UTC. Naively doing `new Date(`${date}T${time}`)` would silently
 // treat that wall-clock string as UTC — off by 4-5 hours depending on
 // EDT/EST — which pushed every job's computed time outside the grace window
 // and meant reminders never fired. Convert explicitly via the IANA zone
