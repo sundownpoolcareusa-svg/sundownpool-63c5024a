@@ -8,6 +8,7 @@ import {
   ChevronDown, Square, Gem,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Modal } from "@/components/Modal";
 import {
   getMyTechnician, getMyStopDetail, getMyStopChemicals, saveMyStopChemicals, updateMyStopStatus,
   getMyStopChemicalsHistory, logMyStopFilterCleaning, fmtDate, formatProductQty, mergeSavedProducts,
@@ -105,17 +106,50 @@ function TechnicianChemicalsPage() {
 
   const { data: stop } = useQuery({ queryKey: ["my-stop-detail", stopId], queryFn: () => getMyStopDetail(stopId), enabled: checkedSession });
   const [bodyType, setBodyType] = useState<BodyType>("pool");
-  const { data: existing, isLoading } = useQuery({
-    queryKey: ["my-stop-chemicals", stopId, bodyType],
-    queryFn: () => getMyStopChemicals(stopId, bodyType),
+  const hasSpaOnly = !!stop?.has_spa;
+
+  const { data: existingPool, isLoading: poolLoading } = useQuery({
+    queryKey: ["my-stop-chemicals", stopId, "pool"],
+    queryFn: () => getMyStopChemicals(stopId, "pool"),
     enabled: checkedSession,
   });
+  const { data: existingSpa, isLoading: spaLoading } = useQuery({
+    queryKey: ["my-stop-chemicals", stopId, "spa"],
+    queryFn: () => getMyStopChemicals(stopId, "spa"),
+    enabled: checkedSession && hasSpaOnly,
+  });
 
-  const [readings, setReadings] = useState<ChemicalReadings>(DEFAULT_READINGS);
+  type BodyChemState = { readings: ChemicalReadings; products: Product[]; notes: string };
+  const EMPTY_BODY_STATE: BodyChemState = { readings: DEFAULT_READINGS, products: DEFAULT_PRODUCTS, notes: "" };
+
+  // Pool and Spa readings/products/notes are kept in memory for BOTH bodies at
+  // once (not just whichever tab is active) — switching tabs used to silently
+  // discard whatever was entered in the tab being left, since only one shared
+  // state cluster existed. Now each body has its own slot, so nothing is lost.
+  const [dataByBody, setDataByBody] = useState<Record<BodyType, BodyChemState>>({ pool: EMPTY_BODY_STATE, spa: EMPTY_BODY_STATE });
+  const [baselineByBody, setBaselineByBody] = useState<Record<BodyType, BodyChemState>>({ pool: EMPTY_BODY_STATE, spa: EMPTY_BODY_STATE });
+  const [loadedBody, setLoadedBody] = useState<Record<BodyType, boolean>>({ pool: false, spa: false });
+  const [confirmIncomplete, setConfirmIncomplete] = useState<{ which: string } | null>(null);
+
+  const readings = dataByBody[bodyType].readings;
+  const products = dataByBody[bodyType].products;
+  const notes = dataByBody[bodyType].notes;
+
+  function updateBody<K extends keyof BodyChemState>(
+    key: K,
+    updater: BodyChemState[K] | ((prev: BodyChemState[K]) => BodyChemState[K]),
+  ) {
+    setDataByBody((m) => {
+      const prevVal = m[bodyType][key];
+      const nextVal = typeof updater === "function" ? (updater as (p: BodyChemState[K]) => BodyChemState[K])(prevVal) : updater;
+      return { ...m, [bodyType]: { ...m[bodyType], [key]: nextVal } };
+    });
+  }
+  const setReadings = (u: ChemicalReadings | ((r: ChemicalReadings) => ChemicalReadings)) => updateBody("readings", u);
+  const setProducts = (u: Product[] | ((p: Product[]) => Product[])) => updateBody("products", u);
+  const setNotes = (u: string | ((n: string) => string)) => updateBody("notes", u);
+
   const [readingDrafts, setReadingDrafts] = useState<Partial<Record<ChemicalReadingKey, string>>>({});
-  const [products, setProducts] = useState<Product[]>(DEFAULT_PRODUCTS);
-  const [notes, setNotes] = useState("");
-  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [addProductOpen, setAddProductOpen] = useState(false);
   const [newProductName, setNewProductName] = useState("");
   const [newProductUnit, setNewProductUnit] = useState("");
@@ -139,29 +173,45 @@ function TechnicianChemicalsPage() {
   const historyForBody = (history ?? []).filter((h) => h.chemicals.body_type === historyBodyType);
 
   useEffect(() => {
-    if (!checkedSession || isLoading || loadedKey === bodyType) return;
-    if (existing) {
-      setReadings({
+    setReadingDrafts({});
+  }, [bodyType]);
+
+  function loadBodyState(existing: Awaited<ReturnType<typeof getMyStopChemicals>>): BodyChemState {
+    if (!existing) return EMPTY_BODY_STATE;
+    return {
+      readings: {
         free_chlorine: existing.free_chlorine ?? DEFAULT_READINGS.free_chlorine,
         ph: existing.ph ?? DEFAULT_READINGS.ph,
         total_alkalinity: existing.total_alkalinity ?? DEFAULT_READINGS.total_alkalinity,
         calcium_hardness: existing.calcium_hardness ?? DEFAULT_READINGS.calcium_hardness,
         stabilizer: existing.stabilizer ?? DEFAULT_READINGS.stabilizer,
         salt: existing.salt ?? DEFAULT_READINGS.salt,
-      });
-      setProducts(existing.products.length > 0 ? mergeSavedProducts(existing.products) : DEFAULT_PRODUCTS);
-      setNotes(existing.notes ?? "");
-    } else {
-      setReadings(DEFAULT_READINGS);
-      setProducts(DEFAULT_PRODUCTS);
-      setNotes("");
-    }
-    setLoadedKey(bodyType);
-  }, [checkedSession, existing, isLoading, loadedKey, bodyType]);
+      },
+      products: existing.products.length > 0 ? mergeSavedProducts(existing.products) : DEFAULT_PRODUCTS,
+      notes: existing.notes ?? "",
+    };
+  }
+
+  useEffect(() => {
+    if (!checkedSession || poolLoading || loadedBody.pool) return;
+    const loaded = loadBodyState(existingPool ?? null);
+    setDataByBody((m) => ({ ...m, pool: loaded }));
+    setBaselineByBody((b) => ({ ...b, pool: loaded }));
+    setLoadedBody((l) => ({ ...l, pool: true }));
+  }, [checkedSession, existingPool, poolLoading, loadedBody.pool]);
+
+  useEffect(() => {
+    if (!checkedSession || !hasSpaOnly || spaLoading || loadedBody.spa) return;
+    const loaded = loadBodyState(existingSpa ?? null);
+    setDataByBody((m) => ({ ...m, spa: loaded }));
+    setBaselineByBody((b) => ({ ...b, spa: loaded }));
+    setLoadedBody((l) => ({ ...l, spa: true }));
+  }, [checkedSession, existingSpa, spaLoading, loadedBody.spa, hasSpaOnly]);
 
   const saveMut = useMutation({
     mutationFn: async () => {
-      await saveMyStopChemicals(stopId, { readings, products, notes }, bodyType);
+      await saveMyStopChemicals(stopId, dataByBody.pool, "pool");
+      if (hasSpaOnly) await saveMyStopChemicals(stopId, dataByBody.spa, "spa");
       await updateMyStopStatus(stopId, "Concluído");
     },
     onSuccess: () => {
@@ -172,19 +222,22 @@ function TechnicianChemicalsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  // For clients with both Pool and Spa, saving must not immediately complete
-  // the stop — switching tabs discards the other body's unsaved edits, so a
-  // single "save & complete" button only ever persisted whichever tab was
-  // active, silently dropping the other one. This saves just the active tab
-  // and stays on the page so both can be recorded before finishing the visit.
-  const saveOnlyMut = useMutation({
-    mutationFn: () => saveMyStopChemicals(stopId, { readings, products, notes }, bodyType),
-    onSuccess: () => {
-      toast.success(`Químicos da ${bodyType === "pool" ? "piscina" : "spa"} salvos!`);
-      qc.invalidateQueries({ queryKey: ["my-stop-chemicals", stopId, bodyType] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+  function isBodyUnchanged(bt: BodyType) {
+    return JSON.stringify(dataByBody[bt]) === JSON.stringify(baselineByBody[bt]);
+  }
+
+  function attemptComplete() {
+    if (hasSpaOnly) {
+      const poolUnchanged = isBodyUnchanged("pool");
+      const spaUnchanged = isBodyUnchanged("spa");
+      if (poolUnchanged || spaUnchanged) {
+        const which = poolUnchanged && spaUnchanged ? "Piscina e Spa" : poolUnchanged ? "Piscina" : "Spa";
+        setConfirmIncomplete({ which });
+        return;
+      }
+    }
+    saveMut.mutate();
+  }
 
   const filterCleanMut = useMutation({
     mutationFn: () => logMyStopFilterCleaning(stopId),
@@ -461,54 +514,54 @@ function TechnicianChemicalsPage() {
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--dash-border)] bg-[var(--dash-surface)] p-3">
-        <div className="mx-auto max-w-3xl space-y-2">
-          {stop?.has_spa ? (
-            <>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => navigate({ to: "/tecnico", search: { view: "rota" } })}
-                  className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-3 text-sm font-bold text-[var(--dash-text-secondary)]"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => saveOnlyMut.mutate()}
-                  disabled={saveOnlyMut.isPending}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-[12px] border-2 py-3 text-sm font-bold disabled:opacity-50"
-                  style={{ borderColor: "var(--dash-navy)", color: "var(--dash-navy)" }}
-                >
-                  <Check className="h-4 w-4" /> {saveOnlyMut.isPending ? "Salvando..." : `Salvar ${bodyType === "pool" ? "Piscina" : "Spa"}`}
-                </button>
-              </div>
-              <button
-                onClick={() => saveMut.mutate()}
-                disabled={saveMut.isPending}
-                className="flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white disabled:opacity-50"
-                style={{ background: "var(--dash-green)" }}
-              >
-                <Check className="h-4 w-4" /> {saveMut.isPending ? "Concluindo..." : "Concluir Visita"}
-              </button>
-            </>
-          ) : (
-            <div className="flex gap-3">
-              <button
-                onClick={() => navigate({ to: "/tecnico", search: { view: "rota" } })}
-                className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-3 text-sm font-bold text-[var(--dash-text-secondary)]"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => saveMut.mutate()}
-                disabled={saveMut.isPending}
-                className="flex flex-1 items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white disabled:opacity-50"
-                style={{ background: "var(--dash-green)" }}
-              >
-                <Check className="h-4 w-4" /> {saveMut.isPending ? "Salvando..." : "Salvar e Concluir"}
-              </button>
-            </div>
-          )}
+        <div className="mx-auto flex max-w-3xl gap-3">
+          <button
+            onClick={() => navigate({ to: "/tecnico", search: { view: "rota" } })}
+            className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-3 text-sm font-bold text-[var(--dash-text-secondary)]"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={attemptComplete}
+            disabled={saveMut.isPending}
+            className="flex flex-1 items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white disabled:opacity-50"
+            style={{ background: "var(--dash-green)" }}
+          >
+            <Check className="h-4 w-4" /> {saveMut.isPending ? "Salvando..." : "Salvar e Concluir"}
+          </button>
         </div>
       </footer>
+
+      <Modal
+        open={!!confirmIncomplete}
+        onClose={() => setConfirmIncomplete(null)}
+        title="Continuar mesmo assim?"
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4 p-4">
+          <p className="text-sm text-[var(--dash-text-secondary)]">
+            Você não alterou nenhuma medição da {confirmIncomplete?.which} em relação ao que já estava salvo. Deseja continuar mesmo assim?
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setConfirmIncomplete(null)}
+              className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-3 text-sm font-bold text-[var(--dash-text-secondary)]"
+            >
+              Voltar
+            </button>
+            <button
+              onClick={() => {
+                setConfirmIncomplete(null);
+                saveMut.mutate();
+              }}
+              className="flex-1 rounded-[12px] py-3 text-sm font-bold text-white"
+              style={{ background: "var(--dash-green)" }}
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {historyOpen && (
         <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/40 sm:items-center" onClick={() => setHistoryOpen(false)}>
