@@ -75,15 +75,19 @@ function toDateStr(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-// Horizontally scrollable calendar strip (drag/swipe with a finger to move
-// between weeks) covering 30 days before/after today, so more than one day
-// is visible at a time instead of a single date label with prev/next arrows.
+// Horizontally scrollable calendar strip, 7 days per screen-width "page".
+// Weeks are aligned to start on Sunday and only week-start tiles are scroll
+// snap points (mandatory snap), so a single swipe advances a whole week at
+// a time instead of stopping at an arbitrary day mid-week.
 function DateStrip({ selected, onSelect }: { selected: Date; onSelect: (d: Date) => void }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const days = useMemo(() => {
-    const start = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(today);
     start.setDate(start.getDate() - 30);
-    return Array.from({ length: 61 }, (_, i) => {
+    start.setDate(start.getDate() - start.getDay()); // back up to that week's Sunday
+    return Array.from({ length: 70 }, (_, i) => {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
       return d;
@@ -92,19 +96,23 @@ function DateStrip({ selected, onSelect }: { selected: Date; onSelect: (d: Date)
 
   useEffect(() => {
     const container = scrollRef.current;
-    const el = container?.querySelector<HTMLElement>(`[data-date="${selected.toDateString()}"]`);
-    el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  }, [selected]);
+    if (!container) return;
+    const idx = days.findIndex((d) => d.toDateString() === selected.toDateString());
+    if (idx < 0) return;
+    const weekStartIdx = idx - (idx % 7);
+    const weekStartEl = container.querySelector<HTMLElement>(`[data-index="${weekStartIdx}"]`);
+    weekStartEl?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+  }, [selected, days]);
 
   const todayStr = new Date().toDateString();
 
   return (
     <div
       ref={scrollRef}
-      className="flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      style={{ scrollSnapType: "x proximity" }}
+      className="flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style={{ scrollSnapType: "x mandatory" }}
     >
-      {days.map((d) => {
+      {days.map((d, i) => {
         const dStr = d.toDateString();
         const isSelected = dStr === selected.toDateString();
         const isToday = dStr === todayStr;
@@ -114,24 +122,30 @@ function DateStrip({ selected, onSelect }: { selected: Date; onSelect: (d: Date)
             key={dStr}
             type="button"
             data-date={dStr}
+            data-index={i}
             onClick={() => onSelect(d)}
-            className="flex w-11 shrink-0 flex-col items-center gap-0.5 rounded-[12px] py-2"
+            className="flex shrink-0 flex-col items-center gap-0.5 py-2"
             style={{
-              scrollSnapAlign: "center",
-              background: isSelected ? "var(--dash-navy)" : isToday ? "var(--dash-water-bg)" : "transparent",
+              flex: "0 0 14.2857%",
+              scrollSnapAlign: i % 7 === 0 ? "start" : "none",
             }}
           >
             <span
-              className="text-[10px] font-semibold uppercase"
-              style={{ color: isSelected ? "rgba(255,255,255,0.75)" : "var(--dash-text-muted-2)" }}
+              className="rounded-[12px] px-1.5 py-1.5"
+              style={{ background: isSelected ? "var(--dash-navy)" : isToday ? "var(--dash-water-bg)" : "transparent" }}
             >
-              {weekday}
-            </span>
-            <span
-              className="text-[15px] font-extrabold"
-              style={{ color: isSelected ? "#fff" : "var(--dash-text)" }}
-            >
-              {d.getDate()}
+              <span
+                className="block text-[10px] font-semibold uppercase"
+                style={{ color: isSelected ? "rgba(255,255,255,0.75)" : "var(--dash-text-muted-2)" }}
+              >
+                {weekday}
+              </span>
+              <span
+                className="block text-center text-[15px] font-extrabold"
+                style={{ color: isSelected ? "#fff" : "var(--dash-text)" }}
+              >
+                {d.getDate()}
+              </span>
             </span>
           </button>
         );
