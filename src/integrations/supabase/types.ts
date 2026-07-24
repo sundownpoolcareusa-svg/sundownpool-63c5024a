@@ -504,6 +504,60 @@ export type Database = {
         }
         Relationships: []
       }
+      service_jobs: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+          technician_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          technician_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          technician_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_jobs_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stop_chemicals: {
         Row: {
           body_type: string
@@ -610,6 +664,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      complete_my_service_job: {
+        Args: { p_job_id: string }
+        Returns: undefined
+      }
+      create_my_service_job: {
+        Args: { p_client_id: string; p_notes?: string; p_title: string }
+        Returns: string
+      }
       ensure_my_technician_stops: {
         Args: { p_date: string }
         Returns: undefined
@@ -650,6 +712,20 @@ export type Database = {
           route_stop_id: string
           started_at: string
           status: string
+        }[]
+      }
+      get_my_service_jobs: {
+        Args: { p_status?: string }
+        Returns: {
+          client_id: string
+          client_name: string
+          completed_at: string
+          created_at: string
+          job_id: string
+          next_visit_date: string
+          notes: string
+          status: string
+          title: string
         }[]
       }
       get_my_stop_chemicals: {

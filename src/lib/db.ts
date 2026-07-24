@@ -651,6 +651,46 @@ export async function getMyTechnicianAlerts(date: string) {
   return (data ?? []) as TechnicianAlert[];
 }
 
+export type ServiceJobStatus = "Em serviço" | "Concluído";
+
+export type ServiceJob = {
+  job_id: string;
+  client_id: string;
+  client_name: string;
+  title: string;
+  notes: string | null;
+  status: ServiceJobStatus;
+  created_at: string;
+  completed_at: string | null;
+  next_visit_date: string | null;
+};
+
+// Ad-hoc jobs (e.g. "Troca de filtro") a technician opens against a client,
+// separate from the daily recurring route stop — a job can span more than
+// one visit before it's marked done. Pass a status to filter, or omit for
+// everything (open jobs first, each group oldest-created first so the
+// longest-open job reads as the highest priority).
+export async function getMyServiceJobs(status?: ServiceJobStatus) {
+  const { data, error } = await supabase.rpc("get_my_service_jobs", { p_status: status ?? undefined });
+  if (error) throw error;
+  return (data ?? []) as ServiceJob[];
+}
+
+export async function createMyServiceJob(clientId: string, title: string, notes: string | null) {
+  const { data, error } = await supabase.rpc("create_my_service_job", {
+    p_client_id: clientId,
+    p_title: title,
+    p_notes: notes ?? undefined,
+  });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function completeMyServiceJob(jobId: string) {
+  const { error } = await supabase.rpc("complete_my_service_job", { p_job_id: jobId });
+  if (error) throw error;
+}
+
 export async function updateMyStopStatus(stopId: string, status: StopStatus) {
   const { error } = await supabase.rpc("update_my_stop_status", {
     p_stop_id: stopId,
