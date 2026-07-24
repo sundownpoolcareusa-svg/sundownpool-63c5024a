@@ -12,12 +12,12 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Home, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
   AlertTriangle, DollarSign, Filter, FileText, X, RotateCcw,
-  Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal,
+  Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal, Pencil,
 } from "lucide-react";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
   getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
-  getMyServiceJobs, createMyServiceJob, completeMyServiceJob, saveMyPushSubscription,
+  getMyServiceJobs, createMyServiceJob, updateMyServiceJob, completeMyServiceJob, saveMyPushSubscription,
   initials, fmt, fmtDate, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
   type ServiceJob, type ServiceJobPriority,
 } from "@/lib/db";
@@ -249,6 +249,7 @@ function TecnicoPage() {
   };
   const [view, setView] = useState<"inicio" | "rota" | "clientes" | "servicos" | "acoes">(search.view ?? "inicio");
   const [newJobOpen, setNewJobOpen] = useState(false);
+  const [editingJob, setEditingJob] = useState<ServiceJob | null>(null);
   const [selectedJob, setSelectedJob] = useState<ServiceJob | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
@@ -324,6 +325,16 @@ function TecnicoPage() {
       qc.invalidateQueries({ queryKey: ["my-service-jobs"] });
       setNewJobOpen(false);
       toast.success("Serviço criado");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateJobMut = useMutation({
+    mutationFn: ({ jobId, values }: { jobId: string; values: Parameters<typeof createMyServiceJob>[0] }) => updateMyServiceJob(jobId, values),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-service-jobs"] });
+      setEditingJob(null);
+      toast.success("Serviço atualizado");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -968,12 +979,16 @@ function TecnicoPage() {
         </Modal>
       )}
 
-      {newJobOpen && (
+      {(newJobOpen || editingJob) && (
         <NewServiceWizard
           clients={myClients}
-          isSubmitting={createJobMut.isPending}
-          onClose={() => setNewJobOpen(false)}
-          onSubmit={(values) => createJobMut.mutate(values)}
+          editingJob={editingJob}
+          isSubmitting={editingJob ? updateJobMut.isPending : createJobMut.isPending}
+          onClose={() => { setNewJobOpen(false); setEditingJob(null); }}
+          onSubmit={(values) => {
+            if (editingJob) updateJobMut.mutate({ jobId: editingJob.job_id, values });
+            else createJobMut.mutate(values);
+          }}
         />
       )}
 
@@ -1022,14 +1037,22 @@ function TecnicoPage() {
             </div>
 
             {selectedJob.status !== "Concluído" && (
-              <button
-                onClick={() => completeJobMut.mutate(selectedJob.job_id)}
-                disabled={completeJobMut.isPending}
-                className="flex w-full items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-bold text-white disabled:opacity-50"
-                style={{ background: "#16A34A" }}
-              >
-                <Check className="h-4 w-4" /> {completeJobMut.isPending ? "Concluindo..." : "Concluir serviço"}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setEditingJob(selectedJob); setSelectedJob(null); }}
+                  className="flex items-center justify-center gap-2 rounded-[14px] border border-[var(--dash-border)] px-4 py-3.5 text-[15px] font-bold text-[var(--dash-text-secondary)]"
+                >
+                  <Pencil className="h-4 w-4" /> Editar
+                </button>
+                <button
+                  onClick={() => completeJobMut.mutate(selectedJob.job_id)}
+                  disabled={completeJobMut.isPending}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-bold text-white disabled:opacity-50"
+                  style={{ background: "#16A34A" }}
+                >
+                  <Check className="h-4 w-4" /> {completeJobMut.isPending ? "Concluindo..." : "Concluir serviço"}
+                </button>
+              </div>
             )}
           </div>
         </Modal>
@@ -1068,24 +1091,26 @@ const REMINDER_OPTIONS = [
 // Full-screen 4-step "Novo serviço" wizard (Cliente > Informações > Data e
 // hora > Revisão), matching the reference design the owner provided.
 function NewServiceWizard({
-  clients, isSubmitting, onClose, onSubmit,
+  clients, editingJob, isSubmitting, onClose, onSubmit,
 }: {
   clients: TechnicianClient[];
+  editingJob?: ServiceJob | null;
   isSubmitting: boolean;
   onClose: () => void;
   onSubmit: (values: Parameters<typeof createMyServiceJob>[0]) => void;
 }) {
-  const [step, setStep] = useState<"cliente" | "info" | "data" | "revisao">("cliente");
+  const isEditing = !!editingJob;
+  const [step, setStep] = useState<"cliente" | "info" | "data" | "revisao">(isEditing ? "info" : "cliente");
   const [clientSearch, setClientSearch] = useState("");
-  const [clientId, setClientId] = useState("");
-  const [serviceTypes, setServiceTypes] = useState<string[]>([]);
-  const [notesText, setNotesText] = useState("");
-  const [priority, setPriority] = useState<ServiceJobPriority | null>(null);
-  const [schedDate, setSchedDate] = useState(() => toDateStr(new Date()));
-  const [schedTime, setSchedTime] = useState("09:00");
-  const [duration, setDuration] = useState("60");
-  const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [reminderMinutes, setReminderMinutes] = useState("30");
+  const [clientId, setClientId] = useState(editingJob?.client_id ?? "");
+  const [serviceTypes, setServiceTypes] = useState<string[]>(editingJob?.service_types ?? []);
+  const [notesText, setNotesText] = useState(editingJob?.notes ?? "");
+  const [priority, setPriority] = useState<ServiceJobPriority | null>(editingJob?.priority ?? null);
+  const [schedDate, setSchedDate] = useState(editingJob?.scheduled_date ?? (() => toDateStr(new Date()))());
+  const [schedTime, setSchedTime] = useState(editingJob?.scheduled_time?.slice(0, 5) ?? "09:00");
+  const [duration, setDuration] = useState(editingJob?.duration_minutes != null ? String(editingJob.duration_minutes) : "60");
+  const [reminderEnabled, setReminderEnabled] = useState(editingJob?.reminder_enabled ?? true);
+  const [reminderMinutes, setReminderMinutes] = useState(editingJob?.reminder_minutes_before != null ? String(editingJob.reminder_minutes_before) : "30");
 
   const client = clients.find((c) => c.client_id === clientId) ?? null;
   const activeClients = clients.filter((c) => c.status === "Ativo");
@@ -1137,10 +1162,12 @@ function NewServiceWizard({
             {step === "cliente" || step === "info" ? <X className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </button>
           <div className="flex-1 pr-9 text-center">
-            <h1 className="text-lg font-extrabold text-[var(--dash-text)]">{step === "cliente" ? "Adicionar Serviço" : "Novo serviço"}</h1>
+            <h1 className="text-lg font-extrabold text-[var(--dash-text)]">
+              {step === "cliente" ? "Adicionar Serviço" : isEditing ? "Editar serviço" : "Novo serviço"}
+            </h1>
             <p className="mt-0.5 text-[12.5px] text-[var(--dash-text-muted)]">
               {step === "cliente" && "Selecione o cliente para continuar"}
-              {(step === "info" || step === "data") && "Preencha os detalhes para criar o serviço"}
+              {(step === "info" || step === "data") && "Preencha os detalhes do serviço"}
               {step === "revisao" && "Revise os detalhes antes de finalizar"}
             </p>
           </div>
@@ -1476,7 +1503,7 @@ function NewServiceWizard({
 
               <div className="flex items-start gap-2 rounded-[14px] p-3 text-[12px]" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>Ao confirmar, o serviço aparecerá na sua lista de Serviços em aberto.</span>
+                <span>{isEditing ? "As alterações serão salvas no serviço." : "Ao confirmar, o serviço aparecerá na sua lista de Serviços em aberto."}</span>
               </div>
             </>
           )}
@@ -1526,7 +1553,7 @@ function NewServiceWizard({
                 className="flex-1 rounded-[14px] py-3 text-[14px] font-bold text-white disabled:opacity-50"
                 style={{ background: "var(--dash-navy)" }}
               >
-                {isSubmitting ? "Criando..." : "Confirmar serviço"}
+                {isSubmitting ? "Salvando..." : isEditing ? "Salvar alterações" : "Confirmar serviço"}
               </button>
             </>
           )}

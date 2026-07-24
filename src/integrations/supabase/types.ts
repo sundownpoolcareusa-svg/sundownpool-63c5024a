@@ -982,6 +982,22 @@ export type Database = {
         Args: { p_client_id: string; p_photos: string[] }
         Returns: undefined
       }
+      update_my_service_job: {
+        Args: {
+          p_client_id: string
+          p_duration_minutes?: number
+          p_job_id: string
+          p_notes?: string
+          p_priority?: string
+          p_reminder_enabled?: boolean
+          p_reminder_minutes_before?: number
+          p_scheduled_date?: string
+          p_scheduled_time?: string
+          p_service_types?: string[]
+          p_title: string
+        }
+        Returns: undefined
+      }
       update_my_stop_status: {
         Args: { p_status: string; p_stop_id: string }
         Returns: undefined
