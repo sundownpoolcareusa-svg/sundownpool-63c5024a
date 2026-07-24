@@ -75,77 +75,58 @@ function toDateStr(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-// Horizontally scrollable calendar strip, 7 days per screen-width "page".
-// Weeks are aligned to start on Sunday and only week-start tiles are scroll
-// snap points (mandatory snap), so a single swipe advances a whole week at
-// a time instead of stopping at an arbitrary day mid-week.
+const WEEKDAY_LONG = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
+
+// 4 weeks before/after the selected day, aligned to start on Sunday —
+// mirrors the owner dashboard's MobileDaySelector (rotas.tsx) so both apps'
+// date pickers behave and look the same. Recomputed around the selection
+// (not a fixed range anchored to today) so scrolling stays centered as the
+// technician moves further out; native overflow-x scrolling handles the
+// swipe gesture, no gesture library needed.
+const SWIPE_WEEKS_BEFORE = 4;
+const SWIPE_WEEKS_AFTER = 4;
+
+function swipeDays(anchor: Date) {
+  const start = new Date(anchor);
+  start.setDate(start.getDate() - start.getDay() - SWIPE_WEEKS_BEFORE * 7);
+  const total = (SWIPE_WEEKS_BEFORE + SWIPE_WEEKS_AFTER + 1) * 7;
+  return Array.from({ length: total }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return d;
+  });
+}
+
 function DateStrip({ selected, onSelect }: { selected: Date; onSelect: (d: Date) => void }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const days = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const start = new Date(today);
-    start.setDate(start.getDate() - 30);
-    start.setDate(start.getDate() - start.getDay()); // back up to that week's Sunday
-    return Array.from({ length: 70 }, (_, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      return d;
-    });
-  }, []);
+  const days = useMemo(() => swipeDays(selected), [selected]);
+  const dateStr = toDateStr(selected);
+  const today = toDateStr(new Date());
+  const activeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const idx = days.findIndex((d) => d.toDateString() === selected.toDateString());
-    if (idx < 0) return;
-    const weekStartIdx = idx - (idx % 7);
-    const weekStartEl = container.querySelector<HTMLElement>(`[data-index="${weekStartIdx}"]`);
-    weekStartEl?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
-  }, [selected, days]);
-
-  const todayStr = new Date().toDateString();
+    activeRef.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [dateStr]);
 
   return (
-    <div
-      ref={scrollRef}
-      className="flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      style={{ scrollSnapType: "x mandatory" }}
-    >
-      {days.map((d, i) => {
-        const dStr = d.toDateString();
-        const isSelected = dStr === selected.toDateString();
-        const isToday = dStr === todayStr;
-        const weekday = d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+    <div className="-mx-1 flex snap-x snap-mandatory gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {days.map((d) => {
+        const ds = toDateStr(d);
+        const active = ds === dateStr;
+        const isToday = ds === today;
         return (
           <button
-            key={dStr}
-            type="button"
-            data-date={dStr}
-            data-index={i}
+            key={ds}
+            ref={active ? activeRef : undefined}
             onClick={() => onSelect(d)}
-            className="flex shrink-0 flex-col items-center gap-0.5 py-2"
-            style={{
-              flex: "0 0 14.2857%",
-              scrollSnapAlign: i % 7 === 0 ? "start" : "none",
-            }}
+            className="flex w-11 shrink-0 snap-center flex-col items-center gap-1 rounded-xl py-2"
+            style={{ background: active ? "var(--dash-navy)" : "transparent", color: active ? "#fff" : "var(--dash-text-secondary-2)" }}
           >
-            <span
-              className="rounded-[12px] px-1.5 py-1.5"
-              style={{ background: isSelected ? "var(--dash-navy)" : isToday ? "var(--dash-water-bg)" : "transparent" }}
-            >
-              <span
-                className="block text-[10px] font-semibold uppercase"
-                style={{ color: isSelected ? "rgba(255,255,255,0.75)" : "var(--dash-text-muted-2)" }}
-              >
-                {weekday}
-              </span>
-              <span
-                className="block text-center text-[15px] font-extrabold"
-                style={{ color: isSelected ? "#fff" : "var(--dash-text)" }}
-              >
-                {d.getDate()}
-              </span>
+            <span className="text-[11px] font-semibold opacity-80">{WEEKDAY_LONG[d.getDay()]}</span>
+            <span className="relative text-[13px] font-bold">
+              {d.getDate()}
+              {isToday && !active && (
+                <span className="absolute -bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[var(--dash-navy)]" />
+              )}
             </span>
           </button>
         );
