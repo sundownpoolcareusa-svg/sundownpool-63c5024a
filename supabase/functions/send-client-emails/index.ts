@@ -49,11 +49,17 @@ Deno.serve(async () => {
   let completionSent = 0;
   const errors: string[] = [];
 
-  // 1. "On the way" — stop just started, client opted in, not yet sent.
+  // 1. "On the way" — stop has been started (started_at set), client opted
+  // in, not yet sent. Checked via started_at rather than the current status
+  // = 'Em serviço' — a fast technician can start and finish a visit within
+  // one cron cycle, and by the time this runs the stop may already be
+  // 'Concluído'. started_at only gets set on a genuine Em serviço
+  // transition, so this never fires for a stop that skipped straight to
+  // Concluído without one.
   const { data: startedStops, error: startedErr } = await supabase
     .from("route_stops")
     .select("id, client:clients!inner(id, name, email, notify_by_email)")
-    .eq("status", "Em serviço")
+    .not("started_at", "is", null)
     .is("on_way_email_sent_at", null)
     .eq("clients.notify_by_email", true);
 
