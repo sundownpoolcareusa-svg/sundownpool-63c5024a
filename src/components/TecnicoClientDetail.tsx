@@ -179,8 +179,7 @@ export function TecnicoClientDetail({
                     <span className="truncate text-lg font-extrabold text-[var(--dash-text)]">{client.name}</span>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="text-base font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(client.monthly_value || 0))}</div>
-                    <div className="text-[10.5px] text-[var(--dash-text-muted)]">Valor mensal</div>
+                    <div className="text-[13.5px] font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(client.monthly_value || 0))}</div>
                   </div>
                 </div>
 
@@ -209,14 +208,6 @@ export function TecnicoClientDetail({
                     </a>
                   )}
                 </div>
-
-                <span
-                  className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold"
-                  style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "#DBEAFE", color: "#2563EB" }}
-                >
-                  {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
-                  {commercial ? "Comercial" : "Residencial"}
-                </span>
               </div>
             </div>
           </div>
