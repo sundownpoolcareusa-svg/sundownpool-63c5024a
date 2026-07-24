@@ -536,7 +536,6 @@ function TecnicoPage() {
   const pendingCount = sorted.filter((s) => s.status !== "Concluído").length;
   const etaMinutes = pendingCount * AVG_MINUTES_PER_STOP;
   const etaLabel = etaMinutes >= 60 ? `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60}m` : `${etaMinutes}m`;
-  const dateLabel = date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 
   const statCards = [
     { icon: CheckCircle2, tint: "#16A34A", value: completedCount, label: "Concluídas" },
@@ -602,12 +601,6 @@ function TecnicoPage() {
           <>
         <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
           <DateStrip selected={date} onSelect={setDate} />
-          <div className="mt-2 text-center">
-            <div className="flex items-center justify-center gap-1.5 text-[13px] font-bold capitalize text-[var(--dash-text)]">
-              <CalendarDays className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> {dateLabel}
-            </div>
-            <div className="text-[11px] text-[var(--dash-text-muted)]">{completedCount} de {sorted.length} concluídas</div>
-          </div>
         </div>
 
         <div className="grid grid-cols-4 gap-2">
