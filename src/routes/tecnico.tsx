@@ -1849,7 +1849,8 @@ function TecnicoHomeDashboard({
 
   const scheduledClients = clients.filter((c) => (c.service_days ?? []).length > 0);
   const totalWeeklyVisits = scheduledClients.reduce((sum, c) => sum + (c.service_days?.length || 0), 0);
-  const avgPerVisit = totalWeeklyVisits > 0 ? stats.estimated_route_revenue / totalWeeklyVisits : 0;
+  const avgPerPool = totalWeeklyVisits > 0 ? stats.estimated_route_revenue / totalWeeklyVisits : 0;
+  const avgPerVisit = totalWeeklyVisits > 0 ? stats.estimated_route_revenue / (totalWeeklyVisits * 4) : 0;
 
   return (
     <div className="space-y-4">
@@ -1891,7 +1892,7 @@ function TecnicoHomeDashboard({
           <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#CCFBF1", color: "#0D9488" }}>
             <DollarSign className="h-4 w-4" />
           </div>
-          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerVisit)}</div>
+          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerPool)}</div>
           <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por piscina</div>
         </div>
         <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
