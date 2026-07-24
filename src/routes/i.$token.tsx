@@ -4,8 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useRef } from "react";
 import { getPublicInvoice } from "@/lib/public-invoice.functions";
 import { DocCardHeader } from "@/components/InvoiceCard";
-import { fmt, fmtDate } from "@/lib/db";
-import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
+import { fmt, fmtDate, formatPhone } from "@/lib/db";
+import { downloadElementAsPdf } from "@/lib/pdf";
 import { Wrench, Download } from "lucide-react";
 
 export const Route = createFileRoute("/i/$token")({

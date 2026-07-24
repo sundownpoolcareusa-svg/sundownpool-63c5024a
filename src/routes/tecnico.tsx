@@ -21,10 +21,9 @@ import {
   getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
   getMyServiceJobs, createMyServiceJob, updateMyServiceJob, completeMyServiceJob, saveMyPushSubscription,
   saveMyStopVisitPhotos,
-  initials, fmt, fmtDate, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
+  initials, fmt, fmtDate, formatPhone, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
   type ServiceJob, type ServiceJobPriority,
 } from "@/lib/db";
-import { formatPhone } from "@/lib/pdf";
 import { toast } from "sonner";
 import tecnicoIcon from "@/assets/tecnico-apple-touch-icon.png";
 

@@ -1233,6 +1233,16 @@ export function nextNumber(prefix: string, existing: string[]) {
   return `${prefix}-${year}-${String(max + 1).padStart(3, "0")}`;
 }
 
+// Lives here (not in lib/pdf.ts) so pages that only need to display a phone
+// number — like the technician PWA — don't drag jsPDF/html2canvas into
+// their bundle just for this one formatter.
+export function formatPhone(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const digits = raw.replace(/\D/g, "").slice(-10);
+  if (digits.length !== 10) return raw;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export function initials(name: string) {
   return name
     .split(/\s+/)
