@@ -10,7 +10,7 @@ import {
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
   CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, Waves, User,
 } from "lucide-react";
-import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
+import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, deleteStop, rescheduleStop, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -1273,6 +1273,10 @@ function ClientFormModal({
 }
 
 function ClientScheduledStops({ clientId }: { clientId: string }) {
+  const qc = useQueryClient();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDate, setEditDate] = useState("");
+
   const { data: stops = [], isLoading } = useQuery({
     queryKey: ["client-scheduled-stops", clientId],
     queryFn: async () => {
@@ -1288,6 +1292,34 @@ function ClientScheduledStops({ clientId }: { clientId: string }) {
         .sort((a, b) => b.route_date.localeCompare(a.route_date));
     },
   });
+
+  const rescheduleMut = useMutation({
+    mutationFn: ({ stopId, date }: { stopId: string; date: string }) => rescheduleStop(stopId, date),
+    onSuccess: () => {
+      toast.success("Visit date updated!");
+      qc.invalidateQueries({ queryKey: ["client-scheduled-stops", clientId] });
+      setEditingId(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (stopId: string) => deleteStop(stopId),
+    onSuccess: () => {
+      toast.success("Visit removed!");
+      qc.invalidateQueries({ queryKey: ["client-scheduled-stops", clientId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function startEdit(s: { id: string; route_date: string }) {
+    setEditingId(s.id);
+    setEditDate(s.route_date);
+  }
+
+  function handleDelete(stopId: string) {
+    if (confirm("Remove this scheduled visit?")) deleteMut.mutate(stopId);
+  }
 
   if (isLoading) return <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">Loading...</p>;
   if (stops.length === 0) return <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">No visits scheduled yet.</p>;
@@ -1310,6 +1342,57 @@ function ClientScheduledStops({ clientId }: { clientId: string }) {
             </div>
           </div>
           {s.notes && <div className="mt-1 text-xs text-[var(--dash-text-secondary)]">{s.notes}</div>}
+          <div className="mt-2 flex justify-end gap-1.5">
+            <button
+              type="button"
+              onClick={() => startEdit(s)}
+              className="grid h-8 w-8 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]"
+              aria-label="Edit visit date"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDelete(s.id)}
+              disabled={deleteMut.isPending}
+              className="grid h-8 w-8 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-red)] hover:bg-[var(--dash-bg)] disabled:opacity-50"
+              aria-label="Delete visit"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {editingId === s.id && (
+            <div className="mt-2 rounded-[10px] bg-[var(--dash-bg)] p-3">
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Edit visit date</label>
+              <div className="relative mt-1.5">
+                <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="w-full rounded-[10px] border border-[var(--dash-border-input)] bg-white py-2 pl-9 pr-3 text-sm"
+                />
+              </div>
+              <div className="mt-2.5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  className="rounded-[10px] border border-[var(--dash-border)] px-3 py-1.5 text-sm font-semibold text-[var(--dash-text-secondary)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => rescheduleMut.mutate({ stopId: s.id, date: editDate })}
+                  disabled={rescheduleMut.isPending}
+                  className="rounded-[10px] bg-[var(--dash-navy)] px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {rescheduleMut.isPending ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ))}
     </div>
