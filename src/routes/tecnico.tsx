@@ -1328,33 +1328,45 @@ function NewServiceWizard({
 
               <div className="mt-3">
                 <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Data do serviço</label>
-                <input
-                  type="date"
-                  value={schedDate}
-                  onChange={(e) => setSchedDate(e.target.value)}
-                  className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-                />
+                <div className="relative mt-1">
+                  <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+                  <input
+                    type="date"
+                    value={schedDate}
+                    onChange={(e) => setSchedDate(e.target.value)}
+                    className="w-full appearance-none rounded-[10px] border border-[var(--dash-border-input)] py-2 pl-9 pr-8 text-sm"
+                  />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+                </div>
               </div>
 
               <div className="mt-3">
                 <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Hora do serviço</label>
-                <input
-                  type="time"
-                  value={schedTime}
-                  onChange={(e) => setSchedTime(e.target.value)}
-                  className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-                />
+                <div className="relative mt-1">
+                  <Clock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+                  <input
+                    type="time"
+                    value={schedTime}
+                    onChange={(e) => setSchedTime(e.target.value)}
+                    className="w-full appearance-none rounded-[10px] border border-[var(--dash-border-input)] py-2 pl-9 pr-8 text-sm"
+                  />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+                </div>
               </div>
 
               <div className="mt-3">
                 <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Duração estimada (opcional)</label>
-                <select
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2 text-sm"
-                >
-                  {DURATION_OPTIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                </select>
+                <div className="relative mt-1">
+                  <Timer className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+                  <select
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    className="w-full appearance-none rounded-[10px] border border-[var(--dash-border-input)] bg-white py-2 pl-9 pr-8 text-sm"
+                  >
+                    {DURATION_OPTIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+                </div>
               </div>
 
               <div className="mt-4 flex items-center justify-between">
@@ -1365,8 +1377,8 @@ function NewServiceWizard({
                   style={{ background: reminderEnabled ? "var(--dash-navy)" : "var(--dash-border)" }}
                 >
                   <span
-                    className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
-                    style={{ transform: reminderEnabled ? "translateX(22px)" : "translateX(2px)" }}
+                    className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
+                    style={{ transform: reminderEnabled ? "translateX(20px)" : "translateX(0)" }}
                   />
                 </button>
               </div>
@@ -1377,13 +1389,16 @@ function NewServiceWizard({
                     <Bell className="mt-0.5 h-4 w-4 shrink-0" />
                     <span>Enviaremos um lembrete para o técnico antes do horário do serviço.</span>
                   </div>
-                  <select
-                    value={reminderMinutes}
-                    onChange={(e) => setReminderMinutes(e.target.value)}
-                    className="mt-2 w-full rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2 text-sm"
-                  >
-                    {REMINDER_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-                  </select>
+                  <div className="relative mt-2">
+                    <select
+                      value={reminderMinutes}
+                      onChange={(e) => setReminderMinutes(e.target.value)}
+                      className="w-full appearance-none rounded-[10px] border border-[var(--dash-border-input)] bg-white py-2 pl-3 pr-8 text-sm"
+                    >
+                      {REMINDER_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+                  </div>
                 </div>
               )}
 
