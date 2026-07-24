@@ -214,6 +214,7 @@ function PoolChemicalsPage() {
   }
 
   const initials = (email[0] || "A").toUpperCase();
+  const visibleReadingOrder = READING_ORDER.filter((k) => k !== "salt" || stop?.client?.has_salt_system);
 
   return (
     <div className="dash min-h-screen bg-[var(--dash-bg)] pb-28">
@@ -288,7 +289,7 @@ function PoolChemicalsPage() {
           </div>
 
           <div className="divide-y divide-[var(--dash-border-table)]">
-            {READING_ORDER.map((key) => {
+            {visibleReadingOrder.map((key) => {
               const meta = CHEMICAL_READING_META[key];
               const { icon: Icon, gradient } = READING_ICONS[key];
               const value = readings[key];

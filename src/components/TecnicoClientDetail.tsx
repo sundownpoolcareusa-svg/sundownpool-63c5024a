@@ -385,6 +385,7 @@ function ChemistryReadingsView({
   }
 
   const address = clientFullAddress(client);
+  const visibleReadingKeys = READING_KEYS.filter((k) => k !== "salt" || client.has_salt_system);
   // Pool is the "default" body for this summary/history view — the Spa
   // gets its own independent readings, browsable via the toggle on the
   // main Chemicals page where they're actually logged.
@@ -398,7 +399,7 @@ function ChemistryReadingsView({
     : null;
 
   const outOfRange = latest
-    ? READING_KEYS.map((k) => ({ key: k, status: readingStatus(k, latest[k]) })).filter(
+    ? visibleReadingKeys.map((k) => ({ key: k, status: readingStatus(k, latest[k]) })).filter(
         (r): r is { key: ChemicalReadingKey; status: "high" | "low" } => r.status === "high" || r.status === "low",
       )
     : [];
@@ -449,7 +450,7 @@ function ChemistryReadingsView({
       </div>
 
       <div className="grid grid-cols-3 divide-x divide-[var(--dash-border)] rounded-[14px] border border-[var(--dash-border)] bg-white py-3">
-        <StatCell icon={FlaskConical} bg="#EDE4FB" fg="#7C3AED" value={READING_KEYS.length} label="Chemicals Tracked" />
+        <StatCell icon={FlaskConical} bg="#EDE4FB" fg="#7C3AED" value={visibleReadingKeys.length} label="Chemicals Tracked" />
         <StatCell icon={CheckCircle2} bg="#DCFCE7" fg="#16A34A" value={completedVisits} label="Completed Visits" />
         <div className="flex flex-col items-center gap-1 px-2 text-center">
           <div className="grid h-9 w-9 place-items-center rounded-full" style={{ background: "#FFEDD5", color: "#C2410C" }}>
@@ -485,7 +486,7 @@ function ChemistryReadingsView({
                 </tr>
               </thead>
               <tbody>
-                {READING_KEYS.map((k) => {
+                {visibleReadingKeys.map((k) => {
                   const value = latest[k];
                   const status = readingStatus(k, value);
                   const badge = READING_BADGE[k];
@@ -549,7 +550,7 @@ function ChemistryReadingsView({
               <thead>
                 <tr className="border-b border-[var(--dash-border)] text-[10px] uppercase tracking-wide text-[var(--dash-text-muted)]">
                   <th className="px-2.5 py-2 font-bold">Date</th>
-                  {READING_KEYS.map((k) => (
+                  {visibleReadingKeys.map((k) => (
                     <th key={k} className="px-2 py-2 font-bold">{READING_BADGE[k].abbr}</th>
                   ))}
                   <th className="px-2.5 py-2 font-bold">Status</th>
@@ -557,12 +558,12 @@ function ChemistryReadingsView({
               </thead>
               <tbody>
                 {visible.map((entry) => {
-                  const statuses = READING_KEYS.map((k) => readingStatus(k, entry[k]));
+                  const statuses = visibleReadingKeys.map((k) => readingStatus(k, entry[k]));
                   const anyOut = statuses.some((s) => s === "high" || s === "low");
                   return (
                     <tr key={entry.route_stop_id} className="border-b border-[var(--dash-border)] last:border-0">
                       <td className="px-2.5 py-2 font-semibold text-[var(--dash-text)]">{fmtDate(entry.route_date)}</td>
-                      {READING_KEYS.map((k) => {
+                      {visibleReadingKeys.map((k) => {
                         const status = readingStatus(k, entry[k]);
                         const color = status === "good" ? "var(--dash-green)" : status ? "#C2410C" : "var(--dash-text-muted)";
                         return (

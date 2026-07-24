@@ -883,6 +883,7 @@ function ClientFormModal({
     gate_code: "",
     contacts: [] as ClientContact[],
     has_spa: false,
+    has_salt_system: false,
     notes: "",
   };
   const [form, setForm] = useState(empty);
@@ -922,6 +923,7 @@ function ClientFormModal({
         gate_code: editing.gate_code || "",
         contacts: editing.contacts || [],
         has_spa: editing.has_spa ?? false,
+        has_salt_system: editing.has_salt_system ?? false,
         notes: editing.notes || "",
       });
     } else {
@@ -1082,6 +1084,15 @@ function ClientFormModal({
                 className="h-4 w-4"
               />
               This client has a Spa (tracked independently from the Pool)
+            </label>
+            <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+              <input
+                type="checkbox"
+                checked={form.has_salt_system}
+                onChange={(e) => setForm({ ...form, has_salt_system: e.target.checked })}
+                className="h-4 w-4"
+              />
+              This pool has a Salt chlorination system
             </label>
             <PhotoUploader
               label="Pool photos"

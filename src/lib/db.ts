@@ -21,6 +21,7 @@ export type Client = {
   filter_last_cleaned_at?: string | null;
   filter_cleaning_count?: number;
   has_spa?: boolean;
+  has_salt_system?: boolean;
   created_at: string;
 };
 
@@ -536,6 +537,7 @@ export type TechnicianClient = {
   equipment_photos: string[] | null;
   equipment_notes: string | null;
   has_spa: boolean;
+  has_salt_system: boolean;
 };
 
 // Every client assigned to the signed-in technician (technician_id on the
