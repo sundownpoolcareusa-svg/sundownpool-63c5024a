@@ -376,6 +376,44 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          technician_id: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          technician_id: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          technician_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       route_stops: {
         Row: {
           client_id: string
@@ -515,6 +553,7 @@ export type Database = {
           priority: string | null
           reminder_enabled: boolean
           reminder_minutes_before: number | null
+          reminder_sent_at: string | null
           scheduled_date: string | null
           scheduled_time: string | null
           service_types: string[]
@@ -534,6 +573,7 @@ export type Database = {
           priority?: string | null
           reminder_enabled?: boolean
           reminder_minutes_before?: number | null
+          reminder_sent_at?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
           service_types?: string[]
@@ -553,6 +593,7 @@ export type Database = {
           priority?: string | null
           reminder_enabled?: boolean
           reminder_minutes_before?: number | null
+          reminder_sent_at?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
           service_types?: string[]
@@ -687,6 +728,10 @@ export type Database = {
     Functions: {
       complete_my_service_job: {
         Args: { p_job_id: string }
+        Returns: undefined
+      }
+      delete_my_push_subscription: {
+        Args: { p_endpoint: string }
         Returns: undefined
       }
       create_my_service_job: {
@@ -891,6 +936,10 @@ export type Database = {
           filter_cleaning_count: number
           filter_last_cleaned_at: string
         }[]
+      }
+      save_my_push_subscription: {
+        Args: { p_auth: string; p_endpoint: string; p_p256dh: string }
+        Returns: undefined
       }
       save_my_stop_chemicals: {
         Args: {

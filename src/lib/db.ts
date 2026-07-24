@@ -717,6 +717,23 @@ export async function completeMyServiceJob(jobId: string) {
   if (error) throw error;
 }
 
+// Registers this device's Web Push subscription so the send-service-reminders
+// Edge Function can notify the technician about scheduled service jobs, even
+// with the app closed. Upserted by (technician, endpoint).
+export async function saveMyPushSubscription(sub: { endpoint: string; p256dh: string; auth: string }) {
+  const { error } = await supabase.rpc("save_my_push_subscription", {
+    p_endpoint: sub.endpoint,
+    p_p256dh: sub.p256dh,
+    p_auth: sub.auth,
+  });
+  if (error) throw error;
+}
+
+export async function deleteMyPushSubscription(endpoint: string) {
+  const { error } = await supabase.rpc("delete_my_push_subscription", { p_endpoint: endpoint });
+  if (error) throw error;
+}
+
 export async function updateMyStopStatus(stopId: string, status: StopStatus) {
   const { error } = await supabase.rpc("update_my_stop_status", {
     p_stop_id: stopId,
