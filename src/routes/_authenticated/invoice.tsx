@@ -10,11 +10,11 @@ import {
   Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, createService, type Invoice } from "@/lib/db";
+import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, type Invoice } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
-import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
+import { downloadElementAsPdf } from "@/lib/pdf";
 import { useShareLink } from "@/components/ShareLink";
 import { ServicePicker } from "@/components/ServicePicker";
 import { ServiceCatalogModal } from "@/components/ServiceCatalogModal";

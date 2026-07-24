@@ -11,10 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   getMyClientInvoices, getMyClientVisitHistory, getMyClientChemicalsHistory, updateMyClientPoolPhotos, updateMyClientEquipment,
   updateMyClientNotes, logMyClientFilterChange,
-  fmt, fmtDate, initials, formatProductQty, CHEMICAL_READING_META,
+  fmt, fmtDate, initials, formatPhone, formatProductQty, CHEMICAL_READING_META,
   type TechnicianClient, type ClientVisitHistoryEntry, type ChemicalReadingKey,
 } from "@/lib/db";
-import { formatPhone } from "@/lib/pdf";
 import { toast } from "sonner";
 
 const avatarColors = [

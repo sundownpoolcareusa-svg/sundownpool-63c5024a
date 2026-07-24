@@ -10,11 +10,11 @@ import {
   Wrench, ListChecks, CalendarDays, Clock, ShieldCheck, Phone, CheckCircle2, Trash2, Pencil, Save,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listEstimates, listClients, nextNumber, fmt, fmtDate, createService, type Estimate, type BillingType } from "@/lib/db";
+import { listEstimates, listClients, nextNumber, fmt, fmtDate, formatPhone, createService, type Estimate, type BillingType } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
-import { formatPhone, downloadElementAsPdf } from "@/lib/pdf";
+import { downloadElementAsPdf } from "@/lib/pdf";
 import { useShareLink } from "@/components/ShareLink";
 import { Link2 } from "lucide-react";
 import { ServicePicker } from "@/components/ServicePicker";

@@ -1,13 +1,6 @@
 import html2canvas from "html2canvas-pro";
 import { jsPDF } from "jspdf";
 
-export function formatPhone(raw: string | null | undefined): string {
-  if (!raw) return "";
-  const digits = raw.replace(/\D/g, "").slice(-10);
-  if (digits.length !== 10) return raw;
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-}
-
 // Renders the element to a clean PDF (no browser print headers/footers).
 export async function downloadElementAsPdf(el: HTMLElement, filename: string) {
   const canvas = await html2canvas(el, {
