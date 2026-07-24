@@ -532,6 +532,7 @@ function TecnicoPage() {
           <TecnicoHomeDashboard
             date={date}
             stats={dashboard ?? null}
+            clients={myClients}
             alerts={alerts}
             serviceJobs={serviceJobs}
             isLoading={isLoadingDashboard || isLoadingAlerts}
@@ -1812,9 +1813,9 @@ const ALERT_META: Record<TechnicianAlert["alert_type"], { label: string; icon: t
 // All numbers come from SECURITY DEFINER RPCs since the technician has no
 // direct read access to clients' financial fields, chemicals, or invoices.
 function TecnicoHomeDashboard({
-  date, stats, alerts, serviceJobs, isLoading, error, onJumpToday, onSelectJob, onOpenActions,
+  date, stats, clients, alerts, serviceJobs, isLoading, error, onJumpToday, onSelectJob, onOpenActions,
 }: {
-  date: Date; stats: TechnicianDashboardStats | null; alerts: TechnicianAlert[]; serviceJobs: ServiceJob[];
+  date: Date; stats: TechnicianDashboardStats | null; clients: TechnicianClient[]; alerts: TechnicianAlert[]; serviceJobs: ServiceJob[];
   isLoading: boolean; error: Error | null; onJumpToday: () => void; onSelectJob: (j: ServiceJob) => void; onOpenActions: () => void;
 }) {
   if (error) {
@@ -1845,6 +1846,16 @@ function TecnicoHomeDashboard({
     { icon: DollarSign, tint: "#0891B2", value: fmt(stats.avg_cost_per_visit), label: "Custo médio/visita" },
   ];
   const openJobs = serviceJobs.filter((j) => j.status !== "Concluído");
+
+  // A straight sum(value)/count(pools) skews high for pools visited more
+  // than once a week (e.g. a commercial account serviced 3x vs. a
+  // residential pool serviced 1x) — they'd out-earn a typical pool just by
+  // being visited more often, not by being worth more per visit. Normalize
+  // each pool to its own per-weekly-visit value first, then average those.
+  const scheduledClients = clients.filter((c) => (c.service_days ?? []).length > 0);
+  const avgPerPool = scheduledClients.length > 0
+    ? scheduledClients.reduce((sum, c) => sum + Number(c.monthly_value || 0) / (c.service_days?.length || 1), 0) / scheduledClients.length
+    : 0;
 
   return (
     <div className="space-y-4">
@@ -1886,9 +1897,7 @@ function TecnicoHomeDashboard({
           <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#CCFBF1", color: "#0D9488" }}>
             <DollarSign className="h-4 w-4" />
           </div>
-          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">
-            {fmt(stats.total_pools > 0 ? stats.estimated_route_revenue / stats.total_pools : 0)}
-          </div>
+          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerPool)}</div>
           <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por piscina</div>
         </div>
         <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
