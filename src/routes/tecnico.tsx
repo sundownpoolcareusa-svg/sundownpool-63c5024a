@@ -1626,7 +1626,7 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
           <p className="mt-3 text-sm font-semibold text-[var(--dash-text-secondary)]">Nenhum cliente atribuído</p>
         </div>
       ) : (
-        clients.map((c, idx) => {
+        clients.map((c) => {
           const address = clientFullAddress(c);
           const isOnRoute = (c.service_days ?? []).length > 0;
           const commercial = isCommercial(c.client_type);
