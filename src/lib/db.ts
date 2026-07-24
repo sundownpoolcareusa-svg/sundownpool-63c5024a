@@ -652,6 +652,7 @@ export async function getMyTechnicianAlerts(date: string) {
 }
 
 export type ServiceJobStatus = "Em serviço" | "Concluído";
+export type ServiceJobPriority = "Baixa" | "Média" | "Alta";
 
 export type ServiceJob = {
   job_id: string;
@@ -660,6 +661,13 @@ export type ServiceJob = {
   title: string;
   notes: string | null;
   status: ServiceJobStatus;
+  service_types: string[];
+  priority: ServiceJobPriority | null;
+  scheduled_date: string | null;
+  scheduled_time: string | null;
+  duration_minutes: number | null;
+  reminder_enabled: boolean;
+  reminder_minutes_before: number | null;
   created_at: string;
   completed_at: string | null;
   next_visit_date: string | null;
@@ -676,11 +684,29 @@ export async function getMyServiceJobs(status?: ServiceJobStatus) {
   return (data ?? []) as ServiceJob[];
 }
 
-export async function createMyServiceJob(clientId: string, title: string, notes: string | null) {
+export async function createMyServiceJob(values: {
+  clientId: string;
+  title: string;
+  notes: string | null;
+  serviceTypes: string[];
+  priority: ServiceJobPriority | null;
+  scheduledDate: string | null;
+  scheduledTime: string | null;
+  durationMinutes: number | null;
+  reminderEnabled: boolean;
+  reminderMinutesBefore: number | null;
+}) {
   const { data, error } = await supabase.rpc("create_my_service_job", {
-    p_client_id: clientId,
-    p_title: title,
-    p_notes: notes ?? undefined,
+    p_client_id: values.clientId,
+    p_title: values.title,
+    p_notes: values.notes ?? undefined,
+    p_service_types: values.serviceTypes,
+    p_priority: values.priority ?? undefined,
+    p_scheduled_date: values.scheduledDate ?? undefined,
+    p_scheduled_time: values.scheduledTime ?? undefined,
+    p_duration_minutes: values.durationMinutes ?? undefined,
+    p_reminder_enabled: values.reminderEnabled,
+    p_reminder_minutes_before: values.reminderMinutesBefore ?? undefined,
   });
   if (error) throw error;
   return data as string;
