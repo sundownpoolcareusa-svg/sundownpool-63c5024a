@@ -37,7 +37,9 @@ export type Database = {
           monthly_value: number
           name: string
           notes: string | null
-          notify_by_email: boolean
+          notify_chemicals: boolean
+          notify_on_way: boolean
+          notify_photo: boolean
           phone: string | null
           pool_capacity_gallons: number | null
           pool_filter_type: string | null
@@ -74,7 +76,9 @@ export type Database = {
           monthly_value?: number
           name: string
           notes?: string | null
-          notify_by_email?: boolean
+          notify_chemicals?: boolean
+          notify_on_way?: boolean
+          notify_photo?: boolean
           phone?: string | null
           pool_capacity_gallons?: number | null
           pool_filter_type?: string | null
@@ -111,7 +115,9 @@ export type Database = {
           monthly_value?: number
           name?: string
           notes?: string | null
-          notify_by_email?: boolean
+          notify_chemicals?: boolean
+          notify_on_way?: boolean
+          notify_photo?: boolean
           phone?: string | null
           pool_capacity_gallons?: number | null
           pool_filter_type?: string | null
@@ -425,14 +431,15 @@ export type Database = {
       }
       route_stops: {
         Row: {
+          chemicals_email_sent_at: string | null
           client_id: string
           completed_at: string | null
-          completion_email_sent_at: string | null
           created_at: string
           id: string
           manual: boolean
           notes: string | null
           on_way_email_sent_at: string | null
+          photo_email_sent_at: string | null
           position: number
           route_id: string
           scheduled_time: string | null
@@ -442,14 +449,15 @@ export type Database = {
           visit_photos: string[]
         }
         Insert: {
+          chemicals_email_sent_at?: string | null
           client_id: string
           completed_at?: string | null
-          completion_email_sent_at?: string | null
           created_at?: string
           id?: string
           manual?: boolean
           notes?: string | null
           on_way_email_sent_at?: string | null
+          photo_email_sent_at?: string | null
           position?: number
           route_id: string
           scheduled_time?: string | null
@@ -459,14 +467,15 @@ export type Database = {
           visit_photos?: string[]
         }
         Update: {
+          chemicals_email_sent_at?: string | null
           client_id?: string
           completed_at?: string | null
-          completion_email_sent_at?: string | null
           created_at?: string
           id?: string
           manual?: boolean
           notes?: string | null
           on_way_email_sent_at?: string | null
+          photo_email_sent_at?: string | null
           position?: number
           route_id?: string
           scheduled_time?: string | null

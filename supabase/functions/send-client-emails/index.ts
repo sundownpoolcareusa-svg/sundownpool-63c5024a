@@ -1,10 +1,11 @@
 // Scheduled Edge Function (set up a Cron trigger for this function in the
 // Supabase Dashboard — every 5 minutes is a good default, same as
-// send-service-reminders). Emails clients who opted in (clients.notify_by_email)
-// at two points in their visit:
+// send-service-reminders). Sends up to three separate emails per visit,
+// each independently opted into per client (clients.notify_on_way /
+// notify_chemicals / notify_photo):
 //   1. As soon as the technician starts the stop ("on the way").
-//   2. Once the visit is completed AND chemicals have been logged for it
-//      (includes the readings + an optional visit photo).
+//   2. Once chemicals are logged for the completed visit (readings only).
+//   3. Once a visit photo is attached to the completed visit (photo only).
 //
 // Requires one secret set on this function (Dashboard > Edge Functions >
 // send-client-emails > Secrets): RESEND_API_KEY.
@@ -42,11 +43,16 @@ const CHEMICAL_LABELS: Record<string, string> = {
   salt: "Salt (ppm)",
 };
 
-type ClientRow = { id: string; name: string; email: string | null; notify_by_email: boolean };
+function firstOf<T>(v: T | T[]): T {
+  return Array.isArray(v) ? v[0] : v;
+}
+
+type ClientRow = { id: string; name: string; email: string | null };
 
 Deno.serve(async () => {
   let onWaySent = 0;
-  let completionSent = 0;
+  let chemicalsSent = 0;
+  let photoSent = 0;
   const errors: string[] = [];
 
   // 1. "On the way" — stop has been started (started_at set), client opted
@@ -58,15 +64,15 @@ Deno.serve(async () => {
   // Concluído without one.
   const { data: startedStops, error: startedErr } = await supabase
     .from("route_stops")
-    .select("id, client:clients!inner(id, name, email, notify_by_email)")
+    .select("id, client:clients!inner(id, name, email, notify_on_way)")
     .not("started_at", "is", null)
     .is("on_way_email_sent_at", null)
-    .eq("clients.notify_by_email", true);
+    .eq("clients.notify_on_way", true);
 
   if (startedErr) return new Response(JSON.stringify({ error: startedErr.message }), { status: 500 });
 
-  for (const stop of (startedStops ?? []) as { id: string; client: ClientRow | ClientRow[] }[]) {
-    const client = Array.isArray(stop.client) ? stop.client[0] : stop.client;
+  for (const stop of (startedStops ?? []) as { id: string; client: (ClientRow & { notify_on_way: boolean }) | (ClientRow & { notify_on_way: boolean })[] }[]) {
+    const client = firstOf(stop.client);
     if (!client?.email) continue;
     try {
       await sendEmail(
@@ -83,24 +89,24 @@ Deno.serve(async () => {
     }
   }
 
-  // 2. Completion — stop completed, client opted in, not yet sent. Chemicals
-  // may not be logged yet (technician still finishing up), so this is
-  // checked per-stop below and simply skipped until they are — the next
-  // cron run picks it up once saved.
-  const { data: completedStops, error: completedErr } = await supabase
+  // 2. Chemical readings — stop completed, client opted in, not yet sent.
+  // Waits for the stop_chemicals row to exist (technician may still be
+  // finishing up when the stop first flips to Concluído) — simply skipped
+  // until it does, picked up on a later cron run.
+  const { data: chemStops, error: chemErr } = await supabase
     .from("route_stops")
-    .select("id, completed_at, visit_photos, client:clients!inner(id, name, email, notify_by_email, has_salt_system)")
+    .select("id, completed_at, client:clients!inner(id, name, email, notify_chemicals, has_salt_system)")
     .eq("status", "Concluído")
-    .is("completion_email_sent_at", null)
-    .eq("clients.notify_by_email", true);
+    .is("chemicals_email_sent_at", null)
+    .eq("clients.notify_chemicals", true);
 
-  if (completedErr) return new Response(JSON.stringify({ error: completedErr.message }), { status: 500 });
+  if (chemErr) return new Response(JSON.stringify({ error: chemErr.message }), { status: 500 });
 
-  for (const stop of (completedStops ?? []) as {
-    id: string; completed_at: string | null; visit_photos: string[] | null;
-    client: (ClientRow & { has_salt_system: boolean }) | (ClientRow & { has_salt_system: boolean })[];
+  for (const stop of (chemStops ?? []) as {
+    id: string; completed_at: string | null;
+    client: (ClientRow & { notify_chemicals: boolean; has_salt_system: boolean }) | (ClientRow & { notify_chemicals: boolean; has_salt_system: boolean })[];
   }[]) {
-    const client = Array.isArray(stop.client) ? stop.client[0] : stop.client;
+    const client = firstOf(stop.client);
     if (!client?.email) continue;
 
     const { data: chem } = await supabase
@@ -111,17 +117,6 @@ Deno.serve(async () => {
       .maybeSingle();
 
     if (!chem) continue;
-
-    let photoHtml = "";
-    const photoPath = stop.visit_photos?.[0];
-    if (photoPath) {
-      const { data: signed } = await supabase.storage
-        .from("client-photos")
-        .createSignedUrl(photoPath, 60 * 60 * 24 * 7);
-      if (signed?.signedUrl) {
-        photoHtml = `<p><img src="${signed.signedUrl}" alt="Visit photo" style="max-width:100%;border-radius:8px;" /></p>`;
-      }
-    }
 
     // Salt is only ever shown to the technician for pools flagged as having
     // a salt system — the reading still gets saved regardless (defaults to
@@ -142,21 +137,68 @@ Deno.serve(async () => {
     try {
       await sendEmail(
         client.email,
-        "Your pool service is complete",
+        "Your pool chemical readings",
         `<p>Hi ${client.name},</p>
          <p>Your pool was serviced on ${dateLabel} at ${timeLabel}. Here are the chemical readings from today's visit:</p>
          <table cellspacing="0" cellpadding="0">${readingsRows}</table>
-         ${photoHtml}
          <p>Thanks for choosing Sundown Pool Care!</p>`,
       );
-      await supabase.from("route_stops").update({ completion_email_sent_at: new Date().toISOString() }).eq("id", stop.id);
-      completionSent++;
+      await supabase.from("route_stops").update({ chemicals_email_sent_at: new Date().toISOString() }).eq("id", stop.id);
+      chemicalsSent++;
     } catch (err) {
-      errors.push(`completion ${stop.id}: ${err instanceof Error ? err.message : String(err)}`);
+      errors.push(`chemicals ${stop.id}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
-  return new Response(JSON.stringify({ onWaySent, completionSent, errors }), {
+  // 3. Visit photo — stop completed, client opted in, a photo attached, not
+  // yet sent. Independent of the chemicals email — a photo added later (or
+  // not at all) doesn't hold up or merge with the readings email.
+  const { data: photoStops, error: photoErr } = await supabase
+    .from("route_stops")
+    .select("id, completed_at, visit_photos, client:clients!inner(id, name, email, notify_photo)")
+    .eq("status", "Concluído")
+    .is("photo_email_sent_at", null)
+    .not("visit_photos", "eq", "{}")
+    .eq("clients.notify_photo", true);
+
+  if (photoErr) return new Response(JSON.stringify({ error: photoErr.message }), { status: 500 });
+
+  for (const stop of (photoStops ?? []) as {
+    id: string; completed_at: string | null; visit_photos: string[] | null;
+    client: (ClientRow & { notify_photo: boolean }) | (ClientRow & { notify_photo: boolean })[];
+  }[]) {
+    const client = firstOf(stop.client);
+    if (!client?.email) continue;
+
+    const photoPath = stop.visit_photos?.[0];
+    if (!photoPath) continue;
+
+    const { data: signed } = await supabase.storage
+      .from("client-photos")
+      .createSignedUrl(photoPath, 60 * 60 * 24 * 7);
+    if (!signed?.signedUrl) continue;
+
+    const visitDate = stop.completed_at ? new Date(stop.completed_at) : new Date();
+    const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+
+    try {
+      await sendEmail(
+        client.email,
+        "A photo from your pool visit",
+        `<p>Hi ${client.name},</p>
+         <p>Here's a photo from your pool visit on ${dateLabel} at ${timeLabel}.</p>
+         <p><img src="${signed.signedUrl}" alt="Visit photo" style="max-width:100%;border-radius:8px;" /></p>
+         <p>Thanks for choosing Sundown Pool Care!</p>`,
+      );
+      await supabase.from("route_stops").update({ photo_email_sent_at: new Date().toISOString() }).eq("id", stop.id);
+      photoSent++;
+    } catch (err) {
+      errors.push(`photo ${stop.id}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  return new Response(JSON.stringify({ onWaySent, chemicalsSent, photoSent, errors }), {
     headers: { "Content-Type": "application/json" },
   });
 });

@@ -9,6 +9,7 @@ import {
   ChevronRight, Pencil, Trash2, Users, CalendarDays,
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
   CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, Waves, User,
+  Navigation, FlaskConical, Camera,
 } from "lucide-react";
 import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, deleteStop, rescheduleStop, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -884,7 +885,9 @@ function ClientFormModal({
     contacts: [] as ClientContact[],
     has_spa: false,
     has_salt_system: false,
-    notify_by_email: false,
+    notify_on_way: false,
+    notify_chemicals: false,
+    notify_photo: false,
     notes: "",
   };
   const [form, setForm] = useState(empty);
@@ -925,7 +928,9 @@ function ClientFormModal({
         contacts: editing.contacts || [],
         has_spa: editing.has_spa ?? false,
         has_salt_system: editing.has_salt_system ?? false,
-        notify_by_email: editing.notify_by_email ?? false,
+        notify_on_way: editing.notify_on_way ?? false,
+        notify_chemicals: editing.notify_chemicals ?? false,
+        notify_photo: editing.notify_photo ?? false,
         notes: editing.notes || "",
       });
     } else {
@@ -1096,15 +1101,41 @@ function ClientFormModal({
               />
               This pool has a Salt chlorination system
             </label>
-            <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
-              <input
-                type="checkbox"
-                checked={form.notify_by_email}
-                onChange={(e) => setForm({ ...form, notify_by_email: e.target.checked })}
-                className="h-4 w-4"
-              />
-              Email this client when the technician is on the way and when the visit is complete
-            </label>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Email notifications</label>
+              <div className="mt-1 space-y-2">
+                <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+                  <input
+                    type="checkbox"
+                    checked={form.notify_on_way}
+                    onChange={(e) => setForm({ ...form, notify_on_way: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Navigation className="h-4 w-4 shrink-0" />
+                  Email when the technician is on the way
+                </label>
+                <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+                  <input
+                    type="checkbox"
+                    checked={form.notify_chemicals}
+                    onChange={(e) => setForm({ ...form, notify_chemicals: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <FlaskConical className="h-4 w-4 shrink-0" />
+                  Email the pool's chemical readings after the visit
+                </label>
+                <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+                  <input
+                    type="checkbox"
+                    checked={form.notify_photo}
+                    onChange={(e) => setForm({ ...form, notify_photo: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Camera className="h-4 w-4 shrink-0" />
+                  Email a photo from the visit
+                </label>
+              </div>
+            </div>
             <PhotoUploader
               label="Pool photos"
               value={form.pool_photos}
