@@ -1630,6 +1630,7 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
           const address = clientFullAddress(c);
           const isOnRoute = (c.service_days ?? []).length > 0;
           const commercial = isCommercial(c.client_type);
+          const avatarColor = clientAvatarColors[idx % clientAvatarColors.length];
           return (
             <div
               key={c.client_id}
@@ -1639,26 +1640,34 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
               onKeyDown={(e) => { if (e.key === "Enter") onSelectClient(c); }}
               className="cursor-pointer rounded-[14px] border border-[var(--dash-border)] bg-white p-3"
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-[13px] font-bold ${clientAvatarColors[idx % clientAvatarColors.length]}`}>
-                    {initials(c.name)}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${avatarColor}`}>
+                    {commercial ? <Building2 className="h-4 w-4" /> : <Home className="h-4 w-4" />}
                   </div>
-                  <div>
-                    <span className="block text-[14px] font-bold text-[var(--dash-text)] underline decoration-dotted underline-offset-2">
-                      {c.name}
-                    </span>
-                    <span
-                      title={commercial ? "Comercial" : "Residencial"}
-                      className="grid h-5 w-5 shrink-0 place-items-center rounded-full"
-                      style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
-                    >
-                      {commercial ? <Building2 className="h-3 w-3" /> : <Home className="h-3 w-3" />}
-                    </span>
-                  </div>
+                  <span className="truncate text-[15px] font-bold text-[var(--dash-text)]">{c.name}</span>
                 </div>
-                <div className="shrink-0 text-right">
-                  <div className="text-[15px] font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(c.monthly_value || 0))}</div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {c.status !== "Ativo" ? (
+                    <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
+                      Inativo
+                    </span>
+                  ) : isOnRoute ? (
+                    (c.service_days ?? []).map((day) => {
+                      const badge = WEEKDAY_BADGE[day] ?? { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
+                      return (
+                        <span key={day} className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: badge.bg, color: badge.text }}>
+                          {day}
+                        </span>
+                      );
+                    })
+                  ) : (
+                    <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
+                      Cliente
+                    </span>
+                  )}
+                  <span className="text-[15px] font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(c.monthly_value || 0))}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
                 </div>
               </div>
 
@@ -1669,7 +1678,7 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
                   </a>
                 )}
                 {c.email && (
-                  <a href={`mailto:${c.email}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 truncate text-[var(--dash-link)]">
+                  <a href={`mailto:${c.email}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 truncate text-[var(--dash-text-secondary)]">
                     <Mail className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">{c.email}</span>
                   </a>
                 )}
@@ -1683,27 +1692,6 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
                   >
                     <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> {address}
                   </a>
-                )}
-              </div>
-
-              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                {c.status !== "Ativo" ? (
-                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
-                    Inativo
-                  </span>
-                ) : isOnRoute ? (
-                  (c.service_days ?? []).map((day) => {
-                    const badge = WEEKDAY_BADGE[day] ?? { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
-                    return (
-                      <span key={day} className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: badge.bg, color: badge.text }}>
-                        {day}
-                      </span>
-                    );
-                  })
-                ) : (
-                  <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
-                    Cliente
-                  </span>
                 )}
               </div>
             </div>
