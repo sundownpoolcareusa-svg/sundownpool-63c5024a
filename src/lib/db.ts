@@ -536,6 +536,8 @@ export type TechnicianClient = {
   pool_photos: string[] | null;
   equipment_photos: string[] | null;
   equipment_notes: string | null;
+  notes: string | null;
+  filter_last_changed_at: string | null;
   has_spa: boolean;
   has_salt_system: boolean;
 };
@@ -616,6 +618,18 @@ export async function updateMyClientPoolPhotos(clientId: string, photos: string[
 
 export async function updateMyClientEquipment(clientId: string, photos: string[], notes: string) {
   const { error } = await supabase.rpc("update_my_client_equipment", { p_client_id: clientId, p_photos: photos, p_notes: notes });
+  if (error) throw error;
+}
+
+export async function updateMyClientNotes(clientId: string, notes: string) {
+  const { error } = await supabase.rpc("update_my_client_notes", { p_client_id: clientId, p_notes: notes });
+  if (error) throw error;
+}
+
+// Filter REPLACEMENT (media/cartridge change) — a once-a-year task, distinct
+// from the routine filter cleaning already logged per visit.
+export async function logMyClientFilterChange(clientId: string) {
+  const { error } = await supabase.rpc("log_my_client_filter_change", { p_client_id: clientId });
   if (error) throw error;
 }
 

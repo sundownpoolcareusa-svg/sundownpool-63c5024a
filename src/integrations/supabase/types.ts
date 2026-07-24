@@ -893,10 +893,12 @@ export type Database = {
           email: string
           equipment_notes: string
           equipment_photos: string[]
+          filter_last_changed_at: string
           has_salt_system: boolean
           has_spa: boolean
           monthly_value: number
           name: string
+          notes: string
           phone: string
           pool_photos: string[]
           service_days: string[]
@@ -948,6 +950,10 @@ export type Database = {
           stop_notes: string
         }[]
       }
+      log_my_client_filter_change: {
+        Args: { p_client_id: string }
+        Returns: undefined
+      }
       log_my_stop_filter_cleaning: {
         Args: { p_stop_id: string }
         Returns: {
@@ -976,6 +982,10 @@ export type Database = {
       }
       update_my_client_equipment: {
         Args: { p_client_id: string; p_notes: string; p_photos: string[] }
+        Returns: undefined
+      }
+      update_my_client_notes: {
+        Args: { p_client_id: string; p_notes: string }
         Returns: undefined
       }
       update_my_client_pool_photos: {

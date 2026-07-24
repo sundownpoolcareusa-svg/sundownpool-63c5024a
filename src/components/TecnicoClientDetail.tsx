@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
-  X, MapPin, Phone, Clock, FlaskConical, TestTube, FileText, Camera, Wrench, CheckCircle2, Filter, CalendarDays, CalendarPlus, Droplet, PlusCircle,
+  MapPin, Phone, Clock, FlaskConical, TestTube, FileText, Camera, Wrench, CheckCircle2, Filter, CalendarDays, CalendarPlus, Droplet, PlusCircle,
+  ChevronLeft, MoreHorizontal, AlertTriangle, Pencil, Home, Building2, StickyNote,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { PhotoUploader } from "@/components/PhotoUploader";
+import { supabase } from "@/integrations/supabase/client";
 import {
   getMyClientInvoices, getMyClientVisitHistory, getMyClientChemicalsHistory, updateMyClientPoolPhotos, updateMyClientEquipment,
+  updateMyClientNotes, logMyClientFilterChange,
   fmt, fmtDate, initials, CHEMICAL_READING_META,
   type TechnicianClient, type ClientVisitHistoryEntry, type ChemicalReadingKey,
 } from "@/lib/db";
@@ -29,6 +32,50 @@ function clientFullAddress(c: TechnicianClient) {
   return [c.address, c.city, c.state, c.zip].filter(Boolean).join(", ");
 }
 
+function isCommercial(clientType: string) {
+  return clientType.toLowerCase().startsWith("comm") || clientType.toLowerCase().startsWith("comer");
+}
+
+// Filter REPLACEMENT (media/cartridge change) is an annual task, distinct
+// from the routine filter cleaning tracked per visit. No alert until the
+// technician logs the first change — there's no real baseline before that.
+function filterChangeDueDate(client: TechnicianClient): Date | null {
+  if (!client.filter_last_changed_at) return null;
+  const last = new Date(`${client.filter_last_changed_at}T00:00:00`);
+  const due = new Date(last);
+  due.setFullYear(due.getFullYear() + 1);
+  return new Date() > due ? due : null;
+}
+
+// Circular photo showing the client's first pool photo (signed URL from the
+// private "client-photos" bucket), falling back to a property-type icon in
+// the same blue/purple scheme used on the "Meus Clientes" list.
+function ClientPhoto({ client }: { client: TechnicianClient }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const path = client.pool_photos?.[0];
+    if (!path) { setUrl(null); return; }
+    let alive = true;
+    supabase.storage.from("client-photos").createSignedUrl(path, 60 * 60).then(({ data }) => {
+      if (alive && data?.signedUrl) setUrl(data.signedUrl);
+    });
+    return () => { alive = false; };
+  }, [client.pool_photos]);
+
+  if (url) {
+    return <img src={url} alt="" className="h-[130px] w-[100px] shrink-0 rounded-2xl object-cover" />;
+  }
+  const commercial = isCommercial(client.client_type);
+  return (
+    <div
+      className="grid h-[130px] w-[100px] shrink-0 place-items-center rounded-2xl"
+      style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "#DBEAFE", color: "#2563EB" }}
+    >
+      {commercial ? <Building2 className="h-9 w-9" /> : <Home className="h-9 w-9" />}
+    </div>
+  );
+}
+
 type SubView = "history" | "chemicals" | "invoices" | "photos" | "equipment" | null;
 
 export function TecnicoClientDetail({
@@ -39,10 +86,46 @@ export function TecnicoClientDetail({
   todayStopId: string | null;
   onCompleteService: () => void;
 }) {
+  const qc = useQueryClient();
   const [subView, setSubView] = useState<SubView>(null);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [filterConfirmOpen, setFilterConfirmOpen] = useState(false);
+  const [notes, setNotes] = useState(client?.notes ?? "");
+  const [filterLastChangedAt, setFilterLastChangedAt] = useState(client?.filter_last_changed_at ?? null);
+
+  useEffect(() => {
+    setNotes(client?.notes ?? "");
+    setFilterLastChangedAt(client?.filter_last_changed_at ?? null);
+  }, [client?.client_id]);
+
+  const notesMut = useMutation({
+    mutationFn: (next: string) => updateMyClientNotes(client!.client_id, next),
+    onSuccess: (_data, next) => {
+      setNotes(next);
+      setNotesOpen(false);
+      toast.success("Observações atualizadas!");
+      qc.invalidateQueries({ queryKey: ["my-technician-clients"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const filterChangeMut = useMutation({
+    mutationFn: () => logMyClientFilterChange(client!.client_id),
+    onSuccess: () => {
+      setFilterLastChangedAt(new Date().toISOString().slice(0, 10));
+      setFilterConfirmOpen(false);
+      toast.success("Troca de filtro registrada!");
+      qc.invalidateQueries({ queryKey: ["my-technician-clients"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   if (!client) return null;
   const address = clientFullAddress(client);
+  const commercial = isCommercial(client.client_type);
+  const filterDue = filterChangeDueDate({ ...client, filter_last_changed_at: filterLastChangedAt });
+  const noteLines = notes.split("\n").map((l) => l.trim()).filter(Boolean);
 
   function needsTodayStop() {
     toast.info("Só disponível no dia da visita agendada");
@@ -57,100 +140,197 @@ export function TecnicoClientDetail({
     onClose();
   }
 
+  const quickActions: { key: string; label: string; icon: typeof Clock; bg: string; fg: string; onClick?: () => void; link?: string }[] = [
+    { key: "history", label: "Histórico", icon: Clock, bg: "#FEF3C7", fg: "#B45309", onClick: () => setSubView("history") },
+    { key: "chemicals", label: "Químicos", icon: FlaskConical, bg: "#EDE4FB", fg: "#7C3AED", onClick: () => setSubView("chemicals") },
+    { key: "products", label: "Produtos", icon: TestTube, bg: "#DCFCE7", fg: "#16A34A", onClick: todayStopId ? undefined : needsTodayStop, link: todayStopId ?? undefined },
+    { key: "invoices", label: "Faturas", icon: FileText, bg: "#EDE4FB", fg: "#7C3AED", onClick: () => setSubView("invoices") },
+    { key: "photos", label: "Fotos", icon: Camera, bg: "#FFEDD5", fg: "#C2410C", onClick: () => setSubView("photos") },
+    { key: "equipment", label: "Equipamento", icon: Wrench, bg: "#DBEAFE", fg: "#2563EB", onClick: () => setSubView("equipment") },
+    { key: "complete", label: "Concluir", icon: CheckCircle2, bg: "#FEE2E2", fg: "#DC2626", onClick: completeService },
+  ];
+
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
-      <div className="fixed inset-x-0 bottom-0 z-50 max-h-[92vh] overflow-y-auto rounded-t-3xl bg-white shadow-2xl">
-        <div className="relative pt-2.5">
-          <div className="mx-auto h-1.5 w-10 rounded-full bg-[var(--dash-border)]" />
-          <button onClick={onClose} className="absolute right-4 top-3 grid h-9 w-9 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-            <X className="h-4 w-4" />
+      <div className="dash fixed inset-0 z-50 overflow-y-auto bg-[var(--dash-bg)]">
+        <header className="relative flex items-center justify-center border-b border-[var(--dash-border)] bg-[var(--dash-surface)] px-4 py-4">
+          <button onClick={onClose} className="absolute left-4 text-[var(--dash-text-secondary)]">
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-lg font-extrabold text-[var(--dash-text)]">Cliente</h1>
+          <button onClick={() => toast.info("Em breve")} className="absolute right-4 text-[var(--dash-text-secondary)]">
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+        </header>
+
+        <main className="mx-auto max-w-md space-y-4 p-4 pb-10">
+          <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+            <div className="flex items-start gap-3">
+              <ClientPhoto client={client} />
+              <div className="flex min-w-0 flex-1 flex-col self-stretch">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <span
+                      className="grid h-6 w-6 shrink-0 place-items-center rounded-full"
+                      style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "#DBEAFE", color: "#2563EB" }}
+                    >
+                      {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
+                    </span>
+                    <span className="truncate text-lg font-extrabold text-[var(--dash-text)]">{client.name}</span>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="text-base font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(client.monthly_value || 0))}</div>
+                    <div className="text-[10.5px] text-[var(--dash-text-muted)]">Valor mensal</div>
+                  </div>
+                </div>
+
+                <span
+                  className="mt-1.5 inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold"
+                  style={client.status === "Ativo" ? { background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" } : { background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}
+                >
+                  {client.status === "Ativo" ? "Ativo" : "Inativo"}
+                  {client.status === "Ativo" && <span className="h-1.5 w-1.5 rounded-full bg-[var(--dash-green)]" />}
+                </span>
+
+                <div className="mt-2 space-y-1.5 text-[12.5px] text-[var(--dash-text-secondary)]">
+                  {client.phone && (
+                    <a href={`tel:${client.phone}`} className="flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> {formatPhone(client.phone)}
+                    </a>
+                  )}
+                  {address && (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-start gap-2"
+                    >
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> {address}
+                    </a>
+                  )}
+                </div>
+
+                <span
+                  className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold"
+                  style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "#DBEAFE", color: "#2563EB" }}
+                >
+                  {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
+                  {commercial ? "Comercial" : "Residencial"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+            <h2 className="mb-3 text-[15px] font-extrabold text-[var(--dash-text)]">Ações rápidas</h2>
+            <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ scrollSnapType: "x proximity" }}>
+              {quickActions.map((a) => {
+                const tile = (
+                  <div className="flex w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-[var(--dash-border)] bg-white p-3" style={{ scrollSnapAlign: "start" }}>
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full" style={{ background: a.bg, color: a.fg }}>
+                      <a.icon className="h-5 w-5" />
+                    </div>
+                    <span className="text-center text-[11px] font-bold leading-tight text-[var(--dash-text)]">{a.label}</span>
+                  </div>
+                );
+                return a.link ? (
+                  <Link key={a.key} to="/tecnico/chemicals/$stopId" params={{ stopId: a.link }} onClick={onClose}>
+                    {tile}
+                  </Link>
+                ) : (
+                  <button key={a.key} type="button" onClick={a.onClick}>
+                    {tile}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {filterDue && (
+            <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+              <h2 className="mb-3 text-[15px] font-extrabold text-[var(--dash-text)]">Alertas</h2>
+              <button
+                type="button"
+                onClick={() => setFilterConfirmOpen(true)}
+                className="flex w-full items-center gap-3 rounded-[14px] p-3 text-left"
+                style={{ background: "#FFF1E7" }}
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full" style={{ background: "#FDE0C4", color: "#C2410C" }}>
+                  <AlertTriangle className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <div className="text-[14px] font-bold text-[var(--dash-text)]">Trocar filtro</div>
+                  <div className="text-[12px] text-[var(--dash-text-muted)]">Vencido desde {fmtDate(filterDue.toISOString().slice(0, 10))}</div>
+                </span>
+                <span className="text-[var(--dash-text-muted)]">›</span>
+              </button>
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Observações</h2>
+              <button
+                type="button"
+                onClick={() => { setNotesDraft(notes); setNotesOpen(true); }}
+                className="grid h-8 w-8 place-items-center rounded-full text-[var(--dash-text-secondary)]"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            </div>
+            {noteLines.length === 0 ? (
+              <p className="text-[13px] text-[var(--dash-text-muted)]">Nenhuma observação ainda.</p>
+            ) : (
+              <div className="flex items-start gap-2.5">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-secondary)]">
+                  <StickyNote className="h-4 w-4" />
+                </span>
+                <ul className="list-disc space-y-1 pl-4 text-[13.5px] text-[var(--dash-text-secondary)]">
+                  {noteLines.map((line, i) => <li key={i}>{line}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      <Modal open={notesOpen} onClose={() => setNotesOpen(false)} title="Observações" maxWidth="max-w-md">
+        <div className="space-y-3">
+          <textarea
+            value={notesDraft}
+            onChange={(e) => setNotesDraft(e.target.value)}
+            rows={5}
+            placeholder="Uma observação por linha..."
+            className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+          />
+          <button
+            onClick={() => notesMut.mutate(notesDraft)}
+            disabled={notesMut.isPending}
+            className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-[var(--dash-navy)] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+          >
+            {notesMut.isPending ? "Salvando..." : "Salvar"}
           </button>
         </div>
+      </Modal>
 
-        <div className="px-5 pb-6 pt-3">
-          <div className="flex items-start gap-3">
-            <div className="relative shrink-0">
-              <div className={`grid h-16 w-16 place-items-center rounded-full text-xl font-bold ${avatarColors[nameHash(client.name) % avatarColors.length]}`}>
-                {initials(client.name)}
-              </div>
-              {client.status === "Ativo" && (
-                <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white bg-[var(--dash-green)]" />
-              )}
-            </div>
-            <div className="min-w-0 pt-1">
-              <div className="text-xl font-extrabold text-[var(--dash-text)]">{client.name}</div>
-              <div className="text-[13px] text-[var(--dash-text-muted)]">{client.client_type}</div>
-              {address && (
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2 flex items-start gap-1.5 text-[13px] text-[var(--dash-text-secondary)]"
-                >
-                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> {address}
-                </a>
-              )}
-              {client.phone && (
-                <a href={`tel:${client.phone}`} className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[var(--dash-text-secondary)]">
-                  <Phone className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> {formatPhone(client.phone)}
-                </a>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-2.5">
-            <DetailRow
-              icon={Clock} bg="#FEF3C7" fg="#B45309"
-              title="Visit History" subtitle="View past visits and service history"
-              onClick={() => setSubView("history")}
-            />
-
-            <DetailRow
-              icon={FlaskConical} bg="#EDE4FB" fg="#7C3AED"
-              title="Chemistry Readings" subtitle="View and add pool chemical readings"
-              onClick={() => setSubView("chemicals")}
-            />
-
-            {todayStopId ? (
-              <Link to="/tecnico/chemicals/$stopId" params={{ stopId: todayStopId }} onClick={onClose}>
-                <DetailRow
-                  icon={TestTube} bg="#DCFCE7" fg="#16A34A"
-                  title="Products Used" subtitle="Record chemicals and products used"
-                />
-              </Link>
-            ) : (
-              <DetailRow
-                icon={TestTube} bg="#DCFCE7" fg="#16A34A"
-                title="Products Used" subtitle="Record chemicals and products used"
-                onClick={needsTodayStop}
-              />
-            )}
-
-            <DetailRow
-              icon={FileText} bg="#EDE4FB" fg="#7C3AED"
-              title="Invoices" subtitle="View invoice history and status"
-              onClick={() => setSubView("invoices")}
-            />
-            <DetailRow
-              icon={Camera} bg="#FFEDD5" fg="#C2410C"
-              title="Photos" subtitle="Add before & after photos"
-              onClick={() => setSubView("photos")}
-            />
-            <DetailRow
-              icon={Wrench} bg="#DBEAFE" fg="#2563EB"
-              title="Equipment" subtitle="Inspect and update equipment status"
-              onClick={() => setSubView("equipment")}
-            />
-            <DetailRow
-              icon={CheckCircle2} bg="#FEE2E2" fg="#DC2626"
-              title="Complete Service" subtitle="Mark this visit as complete"
-              danger
-              onClick={completeService}
-            />
+      <Modal open={filterConfirmOpen} onClose={() => setFilterConfirmOpen(false)} title="Trocar filtro" maxWidth="max-w-sm">
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--dash-text-secondary)]">Marcar o filtro deste cliente como trocado hoje? O próximo alerta será daqui a 1 ano.</p>
+          <div className="flex gap-3">
+            <button onClick={() => setFilterConfirmOpen(false)} className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-2.5 text-sm font-bold text-[var(--dash-text-secondary)]">
+              Cancelar
+            </button>
+            <button
+              onClick={() => filterChangeMut.mutate()}
+              disabled={filterChangeMut.isPending}
+              className="flex-1 rounded-[12px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: "var(--dash-green)" }}
+            >
+              {filterChangeMut.isPending ? "Salvando..." : "Confirmar"}
+            </button>
           </div>
         </div>
-      </div>
+      </Modal>
 
       <Modal open={subView === "history"} onClose={() => setSubView(null)} title="Visit History">
         <ClientHistoryList client={client} />
@@ -168,27 +348,6 @@ export function TecnicoClientDetail({
         <ClientEquipmentEditor client={client} />
       </Modal>
     </>
-  );
-}
-
-function DetailRow({
-  icon: Icon, bg, fg, title, subtitle, danger, onClick,
-}: { icon: typeof Clock; bg: string; fg: string; title: string; subtitle: string; danger?: boolean; onClick?: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-[16px] border border-[var(--dash-border)] bg-white p-3.5 text-left"
-    >
-      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full" style={{ background: bg, color: fg }}>
-        <Icon className="h-5 w-5" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="text-[15px] font-bold" style={{ color: danger ? "var(--dash-red)" : "var(--dash-text)" }}>{title}</div>
-        <div className="truncate text-[12.5px] text-[var(--dash-text-muted)]">{subtitle}</div>
-      </div>
-      <span className="text-[var(--dash-text-muted)]">›</span>
-    </button>
   );
 }
 
