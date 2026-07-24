@@ -296,7 +296,11 @@ function PoolChemicalsPage() {
               return (
                 <div key={key} className="flex items-center gap-1 py-3">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full shadow-sm" style={{ background: gradient }}>
-                    <Icon className="h-3.5 w-3.5 text-white" strokeWidth={2.4} style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))" }} />
+                    {key === "salt" ? (
+                      <img src={iconSaltBag} alt="" className="h-6 w-6 object-contain" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.25))" }} />
+                    ) : (
+                      <Icon className="h-3.5 w-3.5 text-white" strokeWidth={2.4} style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))" }} />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-[12.6px] font-bold text-[var(--dash-text)]">
@@ -545,7 +549,11 @@ function PoolChemicalsPage() {
                                 <div key={key} className="flex items-center justify-between gap-2 py-1.5">
                                   <div className="flex min-w-0 items-center gap-2">
                                     <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full" style={{ background: bg, color: fg }}>
-                                      <Icon className="h-3.5 w-3.5" />
+                                      {key === "salt" ? (
+                                        <img src={iconSaltBag} alt="" className="h-5 w-5 object-contain" />
+                                      ) : (
+                                        <Icon className="h-3.5 w-3.5" />
+                                      )}
                                     </div>
                                     <span className="truncate text-[13px] text-[var(--dash-text-secondary)]">{meta.label}</span>
                                   </div>
