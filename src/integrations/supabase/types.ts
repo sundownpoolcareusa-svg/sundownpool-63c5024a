@@ -36,6 +36,7 @@ export type Database = {
           monthly_value: number
           name: string
           notes: string | null
+          notify_by_email: boolean
           phone: string | null
           pool_capacity_gallons: number | null
           pool_filter_type: string | null
@@ -71,6 +72,7 @@ export type Database = {
           monthly_value?: number
           name: string
           notes?: string | null
+          notify_by_email?: boolean
           phone?: string | null
           pool_capacity_gallons?: number | null
           pool_filter_type?: string | null
@@ -106,6 +108,7 @@ export type Database = {
           monthly_value?: number
           name?: string
           notes?: string | null
+          notify_by_email?: boolean
           phone?: string | null
           pool_capacity_gallons?: number | null
           pool_filter_type?: string | null
@@ -421,44 +424,53 @@ export type Database = {
         Row: {
           client_id: string
           completed_at: string | null
+          completion_email_sent_at: string | null
           created_at: string
           id: string
           manual: boolean
           notes: string | null
+          on_way_email_sent_at: string | null
           position: number
           route_id: string
           scheduled_time: string | null
           started_at: string | null
           status: string
           updated_at: string
+          visit_photos: string[]
         }
         Insert: {
           client_id: string
           completed_at?: string | null
+          completion_email_sent_at?: string | null
           created_at?: string
           id?: string
           manual?: boolean
           notes?: string | null
+          on_way_email_sent_at?: string | null
           position?: number
           route_id: string
           scheduled_time?: string | null
           started_at?: string | null
           status?: string
           updated_at?: string
+          visit_photos?: string[]
         }
         Update: {
           client_id?: string
           completed_at?: string | null
+          completion_email_sent_at?: string | null
           created_at?: string
           id?: string
           manual?: boolean
           notes?: string | null
+          on_way_email_sent_at?: string | null
           position?: number
           route_id?: string
           scheduled_time?: string | null
           started_at?: string | null
           status?: string
           updated_at?: string
+          visit_photos?: string[]
         }
         Relationships: [
           {
@@ -873,6 +885,7 @@ export type Database = {
           position: number
           status: string
           stop_id: string
+          visit_photos: string[]
         }[]
       }
       get_my_technician_alerts: {
@@ -978,6 +991,10 @@ export type Database = {
           p_stop_id: string
           p_total_alkalinity: number
         }
+        Returns: undefined
+      }
+      save_my_stop_visit_photos: {
+        Args: { p_photos: string[]; p_stop_id: string }
         Returns: undefined
       }
       update_my_client_equipment: {
