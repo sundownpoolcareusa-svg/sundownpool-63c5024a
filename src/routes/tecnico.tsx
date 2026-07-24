@@ -17,7 +17,7 @@ import {
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
   getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
-  getMyServiceJobs, createMyServiceJob, completeMyServiceJob,
+  getMyServiceJobs, createMyServiceJob, completeMyServiceJob, saveMyPushSubscription,
   initials, fmt, fmtDate, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
   type ServiceJob, type ServiceJobPriority,
 } from "@/lib/db";
@@ -73,6 +73,15 @@ function toDateStr(d: Date) {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+// Web Push wants the VAPID public key as a raw Uint8Array, but env vars can
+// only carry strings — decode the base64url form back into bytes.
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
 function stopAddress(stop: TechnicianStop) {
@@ -251,6 +260,10 @@ function TecnicoPage() {
   const [profileHomeAddress, setProfileHomeAddress] = useState("");
   const [profileHomeLat, setProfileHomeLat] = useState<number | null>(null);
   const [profileHomeLng, setProfileHomeLng] = useState<number | null>(null);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">(
+    typeof Notification === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window) ? "unsupported" : Notification.permission,
+  );
+  const [pushBusy, setPushBusy] = useState(false);
   const { isLoaded: mapsLoaded } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY, libraries: MAP_LIBRARIES });
 
   useEffect(() => {
@@ -408,6 +421,37 @@ function TecnicoPage() {
     setProfileHomeLat(technician?.home_lat ?? null);
     setProfileHomeLng(technician?.home_lng ?? null);
     setProfileOpen(true);
+  }
+
+  async function enablePushReminders() {
+    setPushBusy(true);
+    try {
+      const permission = await Notification.requestPermission();
+      setPushPermission(permission);
+      if (permission !== "granted") {
+        if (permission === "denied") toast.error("Notificações bloqueadas — ative nas configurações do navegador.");
+        return;
+      }
+      const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+      if (!publicKey) {
+        toast.error("Lembretes push ainda não configurados neste ambiente.");
+        return;
+      }
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+      const json = subscription.toJSON();
+      if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) throw new Error("Assinatura inválida");
+      await saveMyPushSubscription({ endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth });
+      toast.success("Lembretes ativados neste dispositivo!");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível ativar os lembretes");
+    } finally {
+      setPushBusy(false);
+    }
   }
 
   async function signOut() {
@@ -660,6 +704,32 @@ function TecnicoPage() {
                   <p className="mt-1.5 text-[11px] text-[var(--dash-text-muted)]">
                     Usado para otimizar a rota a partir de onde você sai e volta.
                   </p>
+                </div>
+
+                <div className="rounded-xl border border-[var(--dash-border)] p-3">
+                  <div className="flex items-center gap-2 text-[13px] font-bold text-[var(--dash-text)]">
+                    <Bell className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Lembretes push
+                  </div>
+                  {pushPermission === "unsupported" ? (
+                    <p className="mt-1.5 text-[11.5px] text-[var(--dash-text-muted)]">
+                      Este navegador não suporta lembretes. No iPhone, adicione o app à Tela de Início (compartilhar → Adicionar à Tela de Início) primeiro.
+                    </p>
+                  ) : pushPermission === "granted" ? (
+                    <p className="mt-1.5 text-[11.5px] font-semibold" style={{ color: "#16A34A" }}>Ativados neste dispositivo</p>
+                  ) : (
+                    <>
+                      <p className="mt-1.5 text-[11.5px] text-[var(--dash-text-muted)]">
+                        Receba um aviso no celular perto do horário de um serviço agendado.
+                      </p>
+                      <button
+                        onClick={enablePushReminders}
+                        disabled={pushBusy}
+                        className="mt-2 w-full rounded-[10px] border border-[var(--dash-border)] py-2 text-[12.5px] font-bold text-[var(--dash-text-secondary)] disabled:opacity-50"
+                      >
+                        {pushBusy ? "Ativando..." : "Ativar lembretes"}
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 <button
