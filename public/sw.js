@@ -16,6 +16,10 @@ self.addEventListener("push", (event) => {
     icon: "/sundown-logo-white.png",
     badge: "/sundown-logo-white.png",
     data: { url: data.url || "/tecnico" },
+    // Keeps the notification on screen until the user interacts with it —
+    // honored on desktop Chrome/Edge; iOS Safari ignores this flag and always
+    // uses its own banner-then-Notification-Center behavior regardless.
+    requireInteraction: true,
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
