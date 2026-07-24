@@ -686,7 +686,7 @@ export async function getMyServiceJobs(status?: ServiceJobStatus) {
   return (data ?? []) as ServiceJob[];
 }
 
-export async function createMyServiceJob(values: {
+export type ServiceJobInput = {
   clientId: string;
   title: string;
   notes: string | null;
@@ -697,7 +697,9 @@ export async function createMyServiceJob(values: {
   durationMinutes: number | null;
   reminderEnabled: boolean;
   reminderMinutesBefore: number | null;
-}) {
+};
+
+export async function createMyServiceJob(values: ServiceJobInput) {
   const { data, error } = await supabase.rpc("create_my_service_job", {
     p_client_id: values.clientId,
     p_title: values.title,
@@ -712,6 +714,23 @@ export async function createMyServiceJob(values: {
   });
   if (error) throw error;
   return data as string;
+}
+
+export async function updateMyServiceJob(jobId: string, values: ServiceJobInput) {
+  const { error } = await supabase.rpc("update_my_service_job", {
+    p_job_id: jobId,
+    p_client_id: values.clientId,
+    p_title: values.title,
+    p_notes: values.notes ?? undefined,
+    p_service_types: values.serviceTypes,
+    p_priority: values.priority ?? undefined,
+    p_scheduled_date: values.scheduledDate ?? undefined,
+    p_scheduled_time: values.scheduledTime ?? undefined,
+    p_duration_minutes: values.durationMinutes ?? undefined,
+    p_reminder_enabled: values.reminderEnabled,
+    p_reminder_minutes_before: values.reminderMinutesBefore ?? undefined,
+  });
+  if (error) throw error;
 }
 
 export async function completeMyServiceJob(jobId: string) {
