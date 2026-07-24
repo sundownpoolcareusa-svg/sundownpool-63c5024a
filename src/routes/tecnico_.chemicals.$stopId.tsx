@@ -9,9 +9,10 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Modal } from "@/components/Modal";
+import { PhotoUploader } from "@/components/PhotoUploader";
 import {
   getMyTechnician, getMyStopDetail, getMyStopChemicals, saveMyStopChemicals, updateMyStopStatus,
-  getMyStopChemicalsHistory, logMyStopFilterCleaning, fmtDate, formatProductQty, mergeSavedProducts,
+  getMyStopChemicalsHistory, logMyStopFilterCleaning, saveMyStopVisitPhotos, fmtDate, formatProductQty, mergeSavedProducts,
   CHEMICAL_READING_META, DEFAULT_READINGS, DEFAULT_PRODUCTS, isReadingInRange,
   type ChemicalReadingKey, type ChemicalReadings, type Product, type BodyType,
 } from "@/lib/db";
@@ -107,6 +108,22 @@ function TechnicianChemicalsPage() {
   const { data: stop } = useQuery({ queryKey: ["my-stop-detail", stopId], queryFn: () => getMyStopDetail(stopId), enabled: checkedSession });
   const [bodyType, setBodyType] = useState<BodyType>("pool");
   const hasSpaOnly = !!stop?.has_spa;
+
+  // A photo of this visit specifically (with its own date/time), separate
+  // from the client's general pool photo gallery — attached to the
+  // completion email for clients who opted into email notifications.
+  const [visitPhotos, setVisitPhotos] = useState<string[]>([]);
+  const [visitPhotosLoaded, setVisitPhotosLoaded] = useState(false);
+  useEffect(() => {
+    if (stop && !visitPhotosLoaded) {
+      setVisitPhotos(stop.visit_photos ?? []);
+      setVisitPhotosLoaded(true);
+    }
+  }, [stop, visitPhotosLoaded]);
+  const visitPhotosMut = useMutation({
+    mutationFn: (photos: string[]) => saveMyStopVisitPhotos(stopId, photos),
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data: existingPool, isLoading: poolLoading } = useQuery({
     queryKey: ["my-stop-chemicals", stopId, "pool"],
@@ -509,6 +526,15 @@ function TechnicianChemicalsPage() {
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Adicionar notas do serviço..."
             className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm"
+          />
+        </section>
+
+        <section className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+          <PhotoUploader
+            label="Foto da Visita"
+            value={visitPhotos}
+            onChange={(next) => { setVisitPhotos(next); visitPhotosMut.mutate(next); }}
+            folder={`stop-${stopId}/visit`}
           />
         </section>
       </main>

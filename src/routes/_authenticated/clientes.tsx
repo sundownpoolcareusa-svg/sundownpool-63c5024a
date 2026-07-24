@@ -884,6 +884,7 @@ function ClientFormModal({
     contacts: [] as ClientContact[],
     has_spa: false,
     has_salt_system: false,
+    notify_by_email: false,
     notes: "",
   };
   const [form, setForm] = useState(empty);
@@ -924,6 +925,7 @@ function ClientFormModal({
         contacts: editing.contacts || [],
         has_spa: editing.has_spa ?? false,
         has_salt_system: editing.has_salt_system ?? false,
+        notify_by_email: editing.notify_by_email ?? false,
         notes: editing.notes || "",
       });
     } else {
@@ -1093,6 +1095,15 @@ function ClientFormModal({
                 className="h-4 w-4"
               />
               This pool has a Salt chlorination system
+            </label>
+            <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+              <input
+                type="checkbox"
+                checked={form.notify_by_email}
+                onChange={(e) => setForm({ ...form, notify_by_email: e.target.checked })}
+                className="h-4 w-4"
+              />
+              Email this client when the technician is on the way and when the visit is complete
             </label>
             <PhotoUploader
               label="Pool photos"
