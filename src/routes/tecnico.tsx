@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GoogleMap, Marker, TrafficLayer, useJsApiLoader } from "@react-google-maps/api";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,6 +73,71 @@ function toDateStr(d: Date) {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+// Horizontally scrollable calendar strip (drag/swipe with a finger to move
+// between weeks) covering 30 days before/after today, so more than one day
+// is visible at a time instead of a single date label with prev/next arrows.
+function DateStrip({ selected, onSelect }: { selected: Date; onSelect: (d: Date) => void }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const days = useMemo(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    return Array.from({ length: 61 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d;
+    });
+  }, []);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    const el = container?.querySelector<HTMLElement>(`[data-date="${selected.toDateString()}"]`);
+    el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [selected]);
+
+  const todayStr = new Date().toDateString();
+
+  return (
+    <div
+      ref={scrollRef}
+      className="flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style={{ scrollSnapType: "x proximity" }}
+    >
+      {days.map((d) => {
+        const dStr = d.toDateString();
+        const isSelected = dStr === selected.toDateString();
+        const isToday = dStr === todayStr;
+        const weekday = d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+        return (
+          <button
+            key={dStr}
+            type="button"
+            data-date={dStr}
+            onClick={() => onSelect(d)}
+            className="flex w-11 shrink-0 flex-col items-center gap-0.5 rounded-[12px] py-2"
+            style={{
+              scrollSnapAlign: "center",
+              background: isSelected ? "var(--dash-navy)" : isToday ? "var(--dash-water-bg)" : "transparent",
+            }}
+          >
+            <span
+              className="text-[10px] font-semibold uppercase"
+              style={{ color: isSelected ? "rgba(255,255,255,0.75)" : "var(--dash-text-muted-2)" }}
+            >
+              {weekday}
+            </span>
+            <span
+              className="text-[15px] font-extrabold"
+              style={{ color: isSelected ? "#fff" : "var(--dash-text)" }}
+            >
+              {d.getDate()}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 // Web Push wants the VAPID public key as a raw Uint8Array, but env vars can
@@ -228,25 +293,6 @@ function TecnicoPage() {
   const [checkedSession, setCheckedSession] = useState(false);
   const [date, setDate] = useState(() => new Date());
   const dateStr = toDateStr(date);
-  const swipeStartX = useRef<number | null>(null);
-  const swipeStartY = useRef<number | null>(null);
-  const handleDateSwipeStart = (e: React.TouchEvent) => {
-    swipeStartX.current = e.touches[0].clientX;
-    swipeStartY.current = e.touches[0].clientY;
-  };
-  const handleDateSwipeEnd = (e: React.TouchEvent) => {
-    if (swipeStartX.current === null || swipeStartY.current === null) return;
-    const dx = e.changedTouches[0].clientX - swipeStartX.current;
-    const dy = e.changedTouches[0].clientY - swipeStartY.current;
-    swipeStartX.current = null;
-    swipeStartY.current = null;
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
-    if (dx < 0) {
-      setDate((d) => new Date(d.getTime() + 86400000));
-    } else {
-      setDate((d) => new Date(d.getTime() - 86400000));
-    }
-  };
   const [view, setView] = useState<"inicio" | "rota" | "clientes" | "servicos" | "acoes">(search.view ?? "inicio");
   const [newJobOpen, setNewJobOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<ServiceJob | null>(null);
@@ -554,23 +600,14 @@ function TecnicoPage() {
           <TecnicoActionsList alerts={alerts} jobs={serviceJobs} onSelectJob={setSelectedJob} onBack={() => setView("inicio")} />
         ) : (
           <>
-        <div
-          className="flex items-center justify-between rounded-[14px] border border-[var(--dash-border)] bg-white p-3"
-          onTouchStart={handleDateSwipeStart}
-          onTouchEnd={handleDateSwipeEnd}
-        >
-          <button onClick={() => setDate((d) => new Date(d.getTime() - 86400000))} className="grid h-8 w-8 place-items-center rounded-full text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <div className="text-center">
+        <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+          <DateStrip selected={date} onSelect={setDate} />
+          <div className="mt-2 text-center">
             <div className="flex items-center justify-center gap-1.5 text-[13px] font-bold capitalize text-[var(--dash-text)]">
               <CalendarDays className="h-3.5 w-3.5" style={{ color: "var(--dash-navy)" }} /> {dateLabel}
             </div>
             <div className="text-[11px] text-[var(--dash-text-muted)]">{completedCount} de {sorted.length} concluídas</div>
           </div>
-          <button onClick={() => setDate((d) => new Date(d.getTime() + 86400000))} className="grid h-8 w-8 place-items-center rounded-full text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
-            <ChevronRight className="h-4 w-4" />
-          </button>
         </div>
 
         <div className="grid grid-cols-4 gap-2">
