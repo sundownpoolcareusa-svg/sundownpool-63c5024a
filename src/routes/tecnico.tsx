@@ -12,12 +12,14 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Home, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
   AlertTriangle, DollarSign, Filter, FileText, X, RotateCcw,
-  Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal, Pencil,
+  Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal, Pencil, Camera,
 } from "lucide-react";
+import { PhotoUploader } from "@/components/PhotoUploader";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
   getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
   getMyServiceJobs, createMyServiceJob, updateMyServiceJob, completeMyServiceJob, saveMyPushSubscription,
+  saveMyStopVisitPhotos,
   initials, fmt, fmtDate, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
   type ServiceJob, type ServiceJobPriority,
 } from "@/lib/db";
@@ -296,6 +298,8 @@ function TecnicoPage() {
   const [showTraffic, setShowTraffic] = useState(false);
   const [selectedClient, setSelectedClient] = useState<TechnicianClient | null>(null);
   const [undoStop, setUndoStop] = useState<TechnicianStop | null>(null);
+  const [photoPromptStop, setPhotoPromptStop] = useState<TechnicianStop | null>(null);
+  const [photoPromptPhotos, setPhotoPromptPhotos] = useState<string[]>([]);
   const [profileOpen, setProfileOpen] = useState(false);
   const [myEmail, setMyEmail] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
@@ -395,6 +399,36 @@ function TecnicoPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-technician-stops", dateStr] }),
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // For clients who opted into the photo email, ask for a visit photo right
+  // when the stop is marked done — but it's optional, not a requirement, so
+  // the technician can just tap "Esqueci a foto" and move on to the next
+  // pool without getting stuck.
+  function requestCompleteStop(stop: TechnicianStop) {
+    if (stop.client_notify_photo && !stop.has_visit_photo) {
+      setPhotoPromptPhotos([]);
+      setPhotoPromptStop(stop);
+    } else {
+      statusMut.mutate({ stopId: stop.stop_id, status: "Concluído" });
+    }
+  }
+
+  function resolvePhotoPrompt(withPhoto: boolean) {
+    if (!photoPromptStop) return;
+    const stop = photoPromptStop;
+    const photos = photoPromptPhotos;
+    setPhotoPromptStop(null);
+    (async () => {
+      if (withPhoto && photos.length > 0) {
+        try {
+          await saveMyStopVisitPhotos(stop.stop_id, photos);
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Erro ao salvar foto");
+        }
+      }
+      statusMut.mutate({ stopId: stop.stop_id, status: "Concluído" });
+    })();
+  }
 
   // When the technician has a home address on file, anchor the whole day
   // there (origin = destination = home) so Directions' optimizer picks
@@ -883,7 +917,7 @@ function TecnicoPage() {
                       )}
                       {next && (
                         <button
-                          onClick={() => statusMut.mutate({ stopId: stop.stop_id, status: next })}
+                          onClick={() => next === "Concluído" ? requestCompleteStop(stop) : statusMut.mutate({ stopId: stop.stop_id, status: next })}
                           disabled={statusMut.isPending}
                           className="flex shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"
                           style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
@@ -968,7 +1002,7 @@ function TecnicoPage() {
           todayStopId={sorted.find((s) => s.client_id === selectedClient.client_id)?.stop_id ?? null}
           onCompleteService={() => {
             const stop = sorted.find((s) => s.client_id === selectedClient.client_id);
-            if (stop) statusMut.mutate({ stopId: stop.stop_id, status: "Concluído" });
+            if (stop) requestCompleteStop(stop);
           }}
         />
       )}
@@ -1000,6 +1034,43 @@ function TecnicoPage() {
               style={{ background: "var(--dash-navy)" }}
             >
               Confirmar
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {photoPromptStop && (
+        <Modal
+          open
+          onClose={() => setPhotoPromptStop(null)}
+          title="Foto da visita"
+          maxWidth="max-w-sm"
+        >
+          <p className="text-sm text-[var(--dash-text-secondary)]">
+            <span className="font-bold text-[var(--dash-text)]">{photoPromptStop.client_name}</span> quer receber uma foto da visita por e-mail. Quer tirar agora?
+          </p>
+          <div className="mt-3">
+            <PhotoUploader
+              label="Foto da visita"
+              value={photoPromptPhotos}
+              onChange={setPhotoPromptPhotos}
+              folder={`stop-${photoPromptStop.stop_id}/visit`}
+            />
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => resolvePhotoPrompt(false)}
+              className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-2.5 text-sm font-bold text-[var(--dash-text-secondary)]"
+            >
+              Esqueci a foto
+            </button>
+            <button
+              onClick={() => resolvePhotoPrompt(true)}
+              disabled={photoPromptPhotos.length === 0}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: "var(--dash-green)" }}
+            >
+              <Camera className="h-4 w-4" /> Enviar e concluir
             </button>
           </div>
         </Modal>
