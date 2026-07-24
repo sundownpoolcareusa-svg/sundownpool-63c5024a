@@ -25,6 +25,7 @@ export type Database = {
           equipment_notes: string | null
           equipment_photos: string[]
           filter_cleaning_count: number
+          filter_last_changed_at: string | null
           filter_last_cleaned_at: string | null
           gate_code: string | null
           has_salt_system: boolean
@@ -61,6 +62,7 @@ export type Database = {
           equipment_notes?: string | null
           equipment_photos?: string[]
           filter_cleaning_count?: number
+          filter_last_changed_at?: string | null
           filter_last_cleaned_at?: string | null
           gate_code?: string | null
           has_salt_system?: boolean
@@ -97,6 +99,7 @@ export type Database = {
           equipment_notes?: string | null
           equipment_photos?: string[]
           filter_cleaning_count?: number
+          filter_last_changed_at?: string | null
           filter_last_cleaned_at?: string | null
           gate_code?: string | null
           has_salt_system?: boolean
