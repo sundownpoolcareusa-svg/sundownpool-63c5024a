@@ -497,10 +497,10 @@ export async function updateMyTechnicianProfile(values: {
   home_lng: number | null;
 }) {
   const { error } = await supabase.rpc("update_my_technician_profile", {
-    p_phone: values.phone,
-    p_home_address: values.home_address,
-    p_home_lat: values.home_lat,
-    p_home_lng: values.home_lng,
+    p_phone: values.phone as string,
+    p_home_address: values.home_address as string,
+    p_home_lat: values.home_lat as number,
+    p_home_lng: values.home_lng as number,
   });
   if (error) throw error;
 }

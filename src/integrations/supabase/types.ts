@@ -733,10 +733,6 @@ export type Database = {
         Args: { p_job_id: string }
         Returns: undefined
       }
-      delete_my_push_subscription: {
-        Args: { p_endpoint: string }
-        Returns: undefined
-      }
       create_my_service_job: {
         Args: {
           p_client_id: string
@@ -751,6 +747,10 @@ export type Database = {
           p_title: string
         }
         Returns: string
+      }
+      delete_my_push_subscription: {
+        Args: { p_endpoint: string }
+        Returns: undefined
       }
       ensure_my_technician_stops: {
         Args: { p_date: string }
@@ -1004,10 +1004,10 @@ export type Database = {
       }
       update_my_technician_profile: {
         Args: {
-          p_home_address: string | null
-          p_home_lat: number | null
-          p_home_lng: number | null
-          p_phone: string | null
+          p_home_address: string
+          p_home_lat: number
+          p_home_lng: number
+          p_phone: string
         }
         Returns: undefined
       }
