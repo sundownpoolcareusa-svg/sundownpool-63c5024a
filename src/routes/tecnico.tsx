@@ -1857,7 +1857,7 @@ function TecnicoHomeDashboard({
     ? scheduledClients.reduce((sum, c) => sum + Number(c.monthly_value || 0) / (c.service_days?.length || 1), 0) / scheduledClients.length
     : 0;
   const totalWeeklyVisits = scheduledClients.reduce((sum, c) => sum + (c.service_days?.length || 0), 0);
-  const avgPerVisit = totalWeeklyVisits > 0 ? stats.estimated_route_revenue / (totalWeeklyVisits * 4) : 0;
+  const avgPerVisit = totalWeeklyVisits > 0 ? stats.estimated_route_revenue / totalWeeklyVisits : 0;
 
   return (
     <div className="space-y-4">
