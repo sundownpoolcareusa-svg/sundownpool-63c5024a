@@ -770,12 +770,28 @@ export async function deleteMyPushSubscription(endpoint: string) {
   if (error) throw error;
 }
 
+// Nudges the send-client-emails Edge Function to run right now instead of
+// waiting for its cron cycle, so "on the way" emails go out immediately
+// when a technician starts a stop. Fire-and-forget — on failure the next
+// scheduled cron run still catches anything pending within a few minutes.
+function triggerClientEmailSweep() {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) return;
+  fetch(`${url}/functions/v1/send-client-emails`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, apikey: key },
+  }).catch(() => {});
+}
+
 export async function updateMyStopStatus(stopId: string, status: StopStatus) {
   const { error } = await supabase.rpc("update_my_stop_status", {
     p_stop_id: stopId,
     p_status: status,
   });
   if (error) throw error;
+
+  if (status === "Em serviço") triggerClientEmailSweep();
 }
 
 export async function getMyStopDetail(stopId: string) {
