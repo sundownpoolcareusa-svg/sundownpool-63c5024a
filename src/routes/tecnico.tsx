@@ -12,13 +12,14 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Home, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
   AlertTriangle, DollarSign, Filter, FileText, X, RotateCcw,
+  Search, Waves, Brush, Leaf, Settings, Bell, Clock, ShieldCheck,
 } from "lucide-react";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
   getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
   getMyServiceJobs, createMyServiceJob, completeMyServiceJob,
   initials, fmt, fmtDate, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
-  type ServiceJob,
+  type ServiceJob, type ServiceJobPriority,
 } from "@/lib/db";
 import { formatPhone } from "@/lib/pdf";
 import { toast } from "sonner";
@@ -239,9 +240,6 @@ function TecnicoPage() {
   };
   const [view, setView] = useState<"inicio" | "rota" | "clientes" | "servicos" | "acoes">(search.view ?? "inicio");
   const [newJobOpen, setNewJobOpen] = useState(false);
-  const [newJobClientId, setNewJobClientId] = useState("");
-  const [newJobTitle, setNewJobTitle] = useState("");
-  const [newJobNotes, setNewJobNotes] = useState("");
   const [selectedJob, setSelectedJob] = useState<ServiceJob | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
@@ -308,13 +306,10 @@ function TecnicoPage() {
   });
 
   const createJobMut = useMutation({
-    mutationFn: () => createMyServiceJob(newJobClientId, newJobTitle.trim(), newJobNotes.trim() || null),
+    mutationFn: (values: Parameters<typeof createMyServiceJob>[0]) => createMyServiceJob(values),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-service-jobs"] });
       setNewJobOpen(false);
-      setNewJobClientId("");
-      setNewJobTitle("");
-      setNewJobNotes("");
       toast.success("Serviço criado");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -904,72 +899,12 @@ function TecnicoPage() {
       )}
 
       {newJobOpen && (
-        <Modal open onClose={() => setNewJobOpen(false)} title="Novo serviço" maxWidth="max-w-md">
-          <div className="space-y-4">
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Cliente</label>
-              <select
-                value={newJobClientId}
-                onChange={(e) => setNewJobClientId(e.target.value)}
-                className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2 text-sm"
-              >
-                <option value="">Selecione um cliente</option>
-                {myClients
-                  .slice()
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((c) => (
-                    <option key={c.client_id} value={c.client_id}>{c.name}</option>
-                  ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">O que precisa ser feito</label>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {SERVICE_JOB_SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setNewJobTitle(s)}
-                    className="rounded-full border px-2.5 py-1 text-[11.5px] font-semibold"
-                    style={
-                      newJobTitle === s
-                        ? { borderColor: "var(--dash-navy)", background: "var(--dash-navy)", color: "#fff" }
-                        : { borderColor: "var(--dash-border)", color: "var(--dash-text-secondary)" }
-                    }
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-              <input
-                value={newJobTitle}
-                onChange={(e) => setNewJobTitle(e.target.value)}
-                placeholder="Ex: Troca de filtro"
-                className="mt-2 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Notas (opcional)</label>
-              <textarea
-                value={newJobNotes}
-                onChange={(e) => setNewJobNotes(e.target.value)}
-                rows={3}
-                className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-              />
-            </div>
-
-            <button
-              onClick={() => createJobMut.mutate()}
-              disabled={!newJobClientId || !newJobTitle.trim() || createJobMut.isPending}
-              className="flex w-full items-center justify-center gap-2 rounded-[14px] py-3.5 text-[15px] font-bold text-white disabled:opacity-50"
-              style={{ background: "var(--dash-navy)" }}
-            >
-              {createJobMut.isPending ? "Criando..." : "Criar serviço"}
-            </button>
-          </div>
-        </Modal>
+        <NewServiceWizard
+          clients={myClients}
+          isSubmitting={createJobMut.isPending}
+          onClose={() => setNewJobOpen(false)}
+          onSubmit={(values) => createJobMut.mutate(values)}
+        />
       )}
 
       {selectedJob && (
@@ -1033,7 +968,497 @@ function TecnicoPage() {
   );
 }
 
-const SERVICE_JOB_SUGGESTIONS = ["Troca de filtro", "Tratamento de fosfato", "Reparo de equipamento", "Outro"];
+const OTHER_SERVICE = "Outro serviço";
+const SERVICE_TYPE_OPTIONS: { key: string; icon: typeof FlaskConical }[] = [
+  { key: "Balanceamento químico", icon: FlaskConical },
+  { key: "Aspiração", icon: Waves },
+  { key: "Escovação", icon: Brush },
+  { key: "Remoção de folhas", icon: Leaf },
+  { key: "Limpeza de filtro", icon: Filter },
+  { key: "Inspeção de equipamentos", icon: Settings },
+];
+const PRIORITY_OPTIONS: { key: ServiceJobPriority; bg: string; fg: string }[] = [
+  { key: "Baixa", bg: "#DCFCE7", fg: "#16A34A" },
+  { key: "Média", bg: "#FEF3C7", fg: "#B45309" },
+  { key: "Alta", bg: "#FEE2E2", fg: "#DC2626" },
+];
+const DURATION_OPTIONS = [
+  { value: "30", label: "30 minutos" },
+  { value: "60", label: "1 hora" },
+  { value: "90", label: "1h30" },
+  { value: "120", label: "2 horas" },
+  { value: "180", label: "3 horas" },
+];
+const REMINDER_OPTIONS = [
+  { value: "15", label: "15 minutos antes" },
+  { value: "30", label: "30 minutos antes" },
+  { value: "60", label: "1 hora antes" },
+  { value: "120", label: "2 horas antes" },
+];
+
+// Full-screen 4-step "Novo serviço" wizard (Cliente > Informações > Data e
+// hora > Revisão), matching the reference design the owner provided.
+function NewServiceWizard({
+  clients, isSubmitting, onClose, onSubmit,
+}: {
+  clients: TechnicianClient[];
+  isSubmitting: boolean;
+  onClose: () => void;
+  onSubmit: (values: Parameters<typeof createMyServiceJob>[0]) => void;
+}) {
+  const [step, setStep] = useState<"cliente" | "info" | "data" | "revisao">("cliente");
+  const [clientSearch, setClientSearch] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [serviceTypes, setServiceTypes] = useState<string[]>([]);
+  const [customDesc, setCustomDesc] = useState("");
+  const [priority, setPriority] = useState<ServiceJobPriority | null>(null);
+  const [schedDate, setSchedDate] = useState(() => toDateStr(new Date()));
+  const [schedTime, setSchedTime] = useState("09:00");
+  const [duration, setDuration] = useState("60");
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderMinutes, setReminderMinutes] = useState("30");
+
+  const client = clients.find((c) => c.client_id === clientId) ?? null;
+  const activeClients = clients.filter((c) => c.status === "Ativo");
+  const search = clientSearch.trim().toLowerCase();
+  const filteredClients = activeClients.filter(
+    (c) => !search || c.name.toLowerCase().includes(search) || (c.address ?? "").toLowerCase().includes(search),
+  );
+
+  function toggleServiceType(key: string) {
+    setServiceTypes((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  }
+
+  const hasOther = serviceTypes.includes(OTHER_SERVICE);
+  const canContinueInfo = serviceTypes.length > 0 && (!hasOther || customDesc.trim().length > 0);
+  const durationLabel = DURATION_OPTIONS.find((d) => d.value === duration)?.label ?? "";
+  const reminderLabel = REMINDER_OPTIONS.find((r) => r.value === reminderMinutes)?.label ?? "";
+
+  function buildTitle() {
+    const parts = serviceTypes.filter((s) => s !== OTHER_SERVICE);
+    if (hasOther && customDesc.trim()) parts.push(customDesc.trim());
+    return parts.join(", ");
+  }
+
+  function handleConfirm() {
+    if (!client) return;
+    onSubmit({
+      clientId: client.client_id,
+      title: buildTitle(),
+      notes: hasOther && customDesc.trim() ? customDesc.trim() : null,
+      serviceTypes,
+      priority,
+      scheduledDate: schedDate || null,
+      scheduledTime: schedTime || null,
+      durationMinutes: duration ? Number(duration) : null,
+      reminderEnabled,
+      reminderMinutesBefore: reminderEnabled ? Number(reminderMinutes) : null,
+    });
+  }
+
+  return (
+    <div className="dash fixed inset-0 z-50 overflow-y-auto bg-[var(--dash-bg)]">
+      <div className="mx-auto max-w-md p-4 pb-28">
+        <div className="flex items-start gap-2">
+          <button
+            onClick={() => {
+              if (step === "data") setStep("info");
+              else if (step === "revisao") setStep("data");
+              else onClose();
+            }}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-[var(--dash-text-secondary)]"
+          >
+            {step === "cliente" || step === "info" ? <X className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          </button>
+          <div className="flex-1 pr-9 text-center">
+            <h1 className="text-lg font-extrabold text-[var(--dash-text)]">{step === "cliente" ? "Adicionar Serviço" : "Novo serviço"}</h1>
+            <p className="mt-0.5 text-[12.5px] text-[var(--dash-text-muted)]">
+              {step === "cliente" && "Selecione o cliente para continuar"}
+              {(step === "info" || step === "data") && "Preencha os detalhes para criar o serviço"}
+              {step === "revisao" && "Revise os detalhes antes de finalizar"}
+            </p>
+          </div>
+        </div>
+
+        {step !== "cliente" && (
+          <div className="mt-4 flex items-center justify-center">
+            {(["info", "data", "revisao"] as const).map((s, i) => {
+              const idx = (["info", "data", "revisao"] as const).indexOf(step);
+              const active = s === step;
+              const done = i < idx;
+              return (
+                <div key={s} className="flex items-center">
+                  {i > 0 && <div className="h-[2px] w-8 sm:w-12" style={{ background: i <= idx ? "var(--dash-navy)" : "var(--dash-border)" }} />}
+                  <div className="flex flex-col items-center gap-1 px-1">
+                    <div
+                      className="grid h-7 w-7 place-items-center rounded-full text-[12px] font-bold"
+                      style={active || done ? { background: "var(--dash-navy)", color: "#fff" } : { background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}
+                    >
+                      {i + 1}
+                    </div>
+                    <div className="whitespace-nowrap text-[10px] font-semibold" style={{ color: active ? "var(--dash-navy)" : "var(--dash-text-muted-2)" }}>
+                      {s === "info" ? "Informações" : s === "data" ? "Data e hora" : "Revisão"}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-4 space-y-3">
+          {step === "cliente" && (
+            <>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+                <input
+                  value={clientSearch}
+                  onChange={(e) => setClientSearch(e.target.value)}
+                  placeholder="Buscar cliente..."
+                  className="w-full rounded-[12px] border border-[var(--dash-border-input)] bg-white py-2.5 pl-9 pr-3 text-sm"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-[14px] font-bold text-[var(--dash-text)]">Clientes ativos</h2>
+                <span className="rounded-full bg-[var(--dash-badge-paid-bg)] px-2 py-0.5 text-[11px] font-bold text-[var(--dash-badge-paid-text)]">
+                  {activeClients.length}
+                </span>
+              </div>
+              <p className="-mt-2 text-[11.5px] text-[var(--dash-text-muted)]">Somente clientes ativos aparecem na lista.</p>
+
+              <div className="space-y-2">
+                {filteredClients.map((c) => (
+                  <button
+                    key={c.client_id}
+                    onClick={() => { setClientId(c.client_id); setStep("info"); }}
+                    className="flex w-full items-center gap-3 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 text-left"
+                  >
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[13px] font-bold text-[var(--dash-water-icon)]">
+                      {initials(c.name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[14px] font-bold text-[var(--dash-text)]">{c.name}</div>
+                      <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{clientFullAddress(c) || "—"}</div>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-[var(--dash-badge-paid-bg)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--dash-badge-paid-text)]">Ativo</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
+                  </button>
+                ))}
+                {filteredClients.length === 0 && (
+                  <p className="py-8 text-center text-sm text-[var(--dash-text-muted)]">Nenhum cliente encontrado</p>
+                )}
+              </div>
+            </>
+          )}
+
+          {step === "info" && client && (
+            <>
+              <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+                <h2 className="mb-2 text-[13px] font-bold text-[var(--dash-text)]">Cliente</h2>
+                <button onClick={() => setStep("cliente")} className="flex w-full items-center gap-3 rounded-[12px] border border-[var(--dash-border)] p-2.5 text-left">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[12px] font-bold text-[var(--dash-water-icon)]">
+                    {initials(client.name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13.5px] font-bold text-[var(--dash-text)]">{client.name}</div>
+                    <div className="truncate text-[11.5px] text-[var(--dash-text-muted)]">{clientFullAddress(client) || "—"}</div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
+                </button>
+              </div>
+
+              <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+                <h2 className="mb-2 text-[13px] font-bold text-[var(--dash-text)]">Serviço a ser realizado</h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {SERVICE_TYPE_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    const checked = serviceTypes.includes(opt.key);
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => toggleServiceType(opt.key)}
+                        className="flex items-center gap-2 rounded-[12px] border p-2.5 text-left"
+                        style={checked ? { borderColor: "var(--dash-navy)", background: "var(--dash-water-bg)" } : { borderColor: "var(--dash-border)" }}
+                      >
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[var(--dash-water-icon)]">
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0 flex-1 text-[12.5px] font-bold leading-tight text-[var(--dash-text)]">{opt.key}</span>
+                        <span
+                          className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-[5px] border"
+                          style={checked ? { background: "var(--dash-navy)", borderColor: "var(--dash-navy)" } : { borderColor: "var(--dash-border)" }}
+                        >
+                          {checked && <Check className="h-3 w-3 text-white" />}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => toggleServiceType(OTHER_SERVICE)}
+                    className="col-span-2 flex items-center gap-2 rounded-[12px] border p-2.5 text-left"
+                    style={hasOther ? { borderColor: "var(--dash-navy)", background: "var(--dash-water-bg)" } : { borderColor: "var(--dash-border)" }}
+                  >
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[var(--dash-water-icon)]">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[12.5px] font-bold leading-tight text-[var(--dash-text)]">{OTHER_SERVICE}</span>
+                      <span className="block text-[11px] text-[var(--dash-text-muted)]">Descreva um serviço personalizado</span>
+                    </span>
+                    <span
+                      className="grid h-[18px] w-[18px] shrink-0 place-items-center rounded-[5px] border"
+                      style={hasOther ? { background: "var(--dash-navy)", borderColor: "var(--dash-navy)" } : { borderColor: "var(--dash-border)" }}
+                    >
+                      {hasOther && <Check className="h-3 w-3 text-white" />}
+                    </span>
+                  </button>
+                </div>
+
+                {hasOther && (
+                  <div className="mt-3">
+                    <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Descreva o serviço</label>
+                    <textarea
+                      value={customDesc}
+                      onChange={(e) => setCustomDesc(e.target.value.slice(0, 200))}
+                      rows={3}
+                      placeholder="Ex: Reparo de bomba da piscina"
+                      className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                    />
+                    <div className="mt-1 text-right text-[10.5px] text-[var(--dash-text-muted)]">{customDesc.length}/200</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+                <h2 className="mb-2 text-[13px] font-bold text-[var(--dash-text)]">Prioridade (opcional)</h2>
+                <div className="grid grid-cols-3 gap-2">
+                  {PRIORITY_OPTIONS.map((p) => (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => setPriority((cur) => (cur === p.key ? null : p.key))}
+                      className="rounded-full py-2 text-center text-[12.5px] font-bold"
+                      style={priority === p.key ? { background: p.fg, color: "#fff" } : { background: p.bg, color: p.fg }}
+                    >
+                      {p.key}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {step === "data" && (
+            <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-[var(--dash-water-bg)] text-[var(--dash-water-icon)]">
+                  <CalendarDays className="h-[18px] w-[18px]" />
+                </div>
+                <div>
+                  <div className="text-[14px] font-bold text-[var(--dash-text)]">Data e hora do serviço</div>
+                  <div className="text-[11.5px] text-[var(--dash-text-muted)]">Defina quando o serviço será realizado.</div>
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Data do serviço</label>
+                <input
+                  type="date"
+                  value={schedDate}
+                  onChange={(e) => setSchedDate(e.target.value)}
+                  className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="mt-3">
+                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Hora do serviço</label>
+                <input
+                  type="time"
+                  value={schedTime}
+                  onChange={(e) => setSchedTime(e.target.value)}
+                  className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="mt-3">
+                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Duração estimada (opcional)</label>
+                <select
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2 text-sm"
+                >
+                  {DURATION_OPTIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                </select>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <label className="text-[13px] font-bold text-[var(--dash-text)]">Lembrete para o técnico (opcional)</label>
+                <button
+                  onClick={() => setReminderEnabled((v) => !v)}
+                  className="relative h-6 w-11 shrink-0 rounded-full transition-colors"
+                  style={{ background: reminderEnabled ? "var(--dash-navy)" : "var(--dash-border)" }}
+                >
+                  <span
+                    className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
+                    style={{ transform: reminderEnabled ? "translateX(22px)" : "translateX(2px)" }}
+                  />
+                </button>
+              </div>
+
+              {reminderEnabled && (
+                <div className="mt-2 rounded-[12px] p-2.5" style={{ background: "var(--dash-water-bg)" }}>
+                  <div className="flex items-start gap-2 text-[12px] text-[var(--dash-water-icon)]">
+                    <Bell className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>Enviaremos um lembrete para o técnico antes do horário do serviço.</span>
+                  </div>
+                  <select
+                    value={reminderMinutes}
+                    onChange={(e) => setReminderMinutes(e.target.value)}
+                    className="mt-2 w-full rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2 text-sm"
+                  >
+                    {REMINDER_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                </div>
+              )}
+
+              <div className="mt-4 rounded-[12px] bg-[var(--dash-bg)] p-3">
+                <div className="mb-1.5 text-[12px] font-bold text-[var(--dash-navy)]">Resumo</div>
+                <div className="flex items-center justify-between text-[12.5px] text-[var(--dash-text-secondary)]">
+                  <span className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Data</span>
+                  <span className="font-semibold text-[var(--dash-text)]">{fmtDate(schedDate)}</span>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between text-[12.5px] text-[var(--dash-text-secondary)]">
+                  <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> Hora</span>
+                  <span className="font-semibold text-[var(--dash-text)]">{schedTime}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === "revisao" && client && (
+            <>
+              <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+                <div className="mb-2 flex items-center gap-2 text-[14px] font-bold text-[var(--dash-text)]">
+                  <FileText className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Resumo do serviço
+                </div>
+                <div className="divide-y divide-[var(--dash-border-table)]">
+                  <div className="flex items-center justify-between py-2.5">
+                    <div>
+                      <div className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--dash-text-muted-2)]">Cliente</div>
+                      <div className="mt-1 flex items-center gap-2">
+                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[11px] font-bold text-[var(--dash-water-icon)]">
+                          {initials(client.name)}
+                        </div>
+                        <div>
+                          <div className="text-[13px] font-bold text-[var(--dash-text)]">{client.name}</div>
+                          <div className="text-[11px] text-[var(--dash-text-muted)]">{clientFullAddress(client) || "—"}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <button onClick={() => setStep("cliente")}><ChevronRight className="h-4 w-4 text-[var(--dash-text-muted)]" /></button>
+                  </div>
+
+                  <div className="py-2.5">
+                    <div className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--dash-text-muted-2)]">Serviço a ser realizado</div>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {serviceTypes.filter((s) => s !== OTHER_SERVICE).map((s) => (
+                        <span key={s} className="rounded-full bg-[var(--dash-badge-paid-bg)] px-2.5 py-1 text-[11.5px] font-semibold text-[var(--dash-badge-paid-text)]">{s}</span>
+                      ))}
+                    </div>
+                    {hasOther && customDesc.trim() && (
+                      <p className="mt-1.5 text-[12.5px] text-[var(--dash-text-secondary)]">{customDesc.trim()}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between py-2.5">
+                    <span className="flex items-center gap-1.5 text-[12.5px] text-[var(--dash-text-secondary)]"><CalendarDays className="h-3.5 w-3.5" /> Data</span>
+                    <span className="text-[12.5px] font-semibold text-[var(--dash-text)]">{fmtDate(schedDate)}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2.5">
+                    <span className="flex items-center gap-1.5 text-[12.5px] text-[var(--dash-text-secondary)]"><Clock className="h-3.5 w-3.5" /> Hora</span>
+                    <span className="text-[12.5px] font-semibold text-[var(--dash-text)]">{schedTime}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2.5">
+                    <span className="flex items-center gap-1.5 text-[12.5px] text-[var(--dash-text-secondary)]"><Timer className="h-3.5 w-3.5" /> Duração estimada</span>
+                    <span className="text-[12.5px] font-semibold text-[var(--dash-text)]">{durationLabel}</span>
+                  </div>
+                  {priority && (
+                    <div className="flex items-center justify-between py-2.5">
+                      <span className="text-[12.5px] text-[var(--dash-text-secondary)]">Prioridade</span>
+                      <span className="text-[12.5px] font-semibold text-[var(--dash-text)]">{priority}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between py-2.5">
+                    <span className="flex items-center gap-1.5 text-[12.5px] text-[var(--dash-text-secondary)]"><Bell className="h-3.5 w-3.5" /> Lembrete</span>
+                    <span className="text-[12.5px] font-semibold text-[var(--dash-text)]">{reminderEnabled ? reminderLabel : "Desativado"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-[14px] p-3 text-[12px]" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>Ao confirmar, o serviço aparecerá na sua lista de Serviços em aberto.</span>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-[var(--dash-border)] bg-white p-3">
+        <div className="mx-auto flex max-w-md gap-2">
+          {step === "cliente" && (
+            <button onClick={onClose} className="flex-1 rounded-[14px] border border-[var(--dash-border)] py-3 text-[14px] font-bold text-[var(--dash-text-secondary)]">
+              Cancelar
+            </button>
+          )}
+          {step === "info" && (
+            <>
+              <button onClick={onClose} className="flex-1 rounded-[14px] border border-[var(--dash-border)] py-3 text-[14px] font-bold text-[var(--dash-text-secondary)]">
+                Cancelar
+              </button>
+              <button
+                onClick={() => setStep("data")}
+                disabled={!canContinueInfo}
+                className="flex-1 rounded-[14px] py-3 text-[14px] font-bold text-white disabled:opacity-50"
+                style={{ background: "var(--dash-navy)" }}
+              >
+                Continuar
+              </button>
+            </>
+          )}
+          {step === "data" && (
+            <>
+              <button onClick={() => setStep("info")} className="flex-1 rounded-[14px] border border-[var(--dash-border)] py-3 text-[14px] font-bold text-[var(--dash-text-secondary)]">
+                Voltar
+              </button>
+              <button onClick={() => setStep("revisao")} className="flex-1 rounded-[14px] py-3 text-[14px] font-bold text-white" style={{ background: "var(--dash-navy)" }}>
+                Continuar
+              </button>
+            </>
+          )}
+          {step === "revisao" && (
+            <>
+              <button onClick={() => setStep("data")} className="flex-1 rounded-[14px] border border-[var(--dash-border)] py-3 text-[14px] font-bold text-[var(--dash-text-secondary)]">
+                Voltar
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={isSubmitting}
+                className="flex-1 rounded-[14px] py-3 text-[14px] font-bold text-white disabled:opacity-50"
+                style={{ background: "var(--dash-navy)" }}
+              >
+                {isSubmitting ? "Criando..." : "Confirmar serviço"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const clientAvatarColors = [
   "bg-sky-200 text-sky-800", "bg-orange-200 text-orange-800", "bg-purple-200 text-purple-800",

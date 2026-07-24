@@ -509,8 +509,15 @@ export type Database = {
           client_id: string
           completed_at: string | null
           created_at: string
+          duration_minutes: number | null
           id: string
           notes: string | null
+          priority: string | null
+          reminder_enabled: boolean
+          reminder_minutes_before: number | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          service_types: string[]
           status: string
           technician_id: string
           title: string
@@ -521,8 +528,15 @@ export type Database = {
           client_id: string
           completed_at?: string | null
           created_at?: string
+          duration_minutes?: number | null
           id?: string
           notes?: string | null
+          priority?: string | null
+          reminder_enabled?: boolean
+          reminder_minutes_before?: number | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          service_types?: string[]
           status?: string
           technician_id: string
           title: string
@@ -533,8 +547,15 @@ export type Database = {
           client_id?: string
           completed_at?: string | null
           created_at?: string
+          duration_minutes?: number | null
           id?: string
           notes?: string | null
+          priority?: string | null
+          reminder_enabled?: boolean
+          reminder_minutes_before?: number | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          service_types?: string[]
           status?: string
           technician_id?: string
           title?: string
@@ -669,7 +690,18 @@ export type Database = {
         Returns: undefined
       }
       create_my_service_job: {
-        Args: { p_client_id: string; p_notes?: string; p_title: string }
+        Args: {
+          p_client_id: string
+          p_duration_minutes?: number
+          p_notes?: string
+          p_priority?: string
+          p_reminder_enabled?: boolean
+          p_reminder_minutes_before?: number
+          p_scheduled_date?: string
+          p_scheduled_time?: string
+          p_service_types?: string[]
+          p_title: string
+        }
         Returns: string
       }
       ensure_my_technician_stops: {
@@ -721,9 +753,16 @@ export type Database = {
           client_name: string
           completed_at: string
           created_at: string
+          duration_minutes: number
           job_id: string
           next_visit_date: string
           notes: string
+          priority: string
+          reminder_enabled: boolean
+          reminder_minutes_before: number
+          scheduled_date: string
+          scheduled_time: string
+          service_types: string[]
           status: string
           title: string
         }[]
