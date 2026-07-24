@@ -19,6 +19,36 @@ webpush.setVapidDetails("mailto:support@sundownpoolcare.com", VAPID_PUBLIC_KEY, 
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+// The business operates out of Sarasota, FL — technicians pick scheduled_date/
+// scheduled_time as their own local wall-clock, with no timezone attached (a
+// Postgres TIME column can't carry one). This edge function, though, always
+// runs in UTC. Naively doing `new Date(\`${date}T${time}\`)` would silently
+// treat that wall-clock string as UTC — off by 4-5 hours depending on
+// EDT/EST — which pushed every job's computed time outside the grace window
+// and meant reminders never fired. Convert explicitly via the IANA zone
+// instead, so the DST offset is resolved correctly for the given date.
+const BUSINESS_TIMEZONE = "America/New_York";
+
+function zonedWallClockToUtcMs(dateStr: string, timeStr: string, timeZone: string): number {
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const [h, mi, s] = timeStr.split(":").map(Number);
+  const guessUtcMs = Date.UTC(y, mo - 1, d, h, mi, s || 0);
+
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  });
+  const parts = Object.fromEntries(dtf.formatToParts(new Date(guessUtcMs)).map((p) => [p.type, p.value]));
+  const asIfUtcMs = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    Number(parts.hour), Number(parts.minute), Number(parts.second),
+  );
+  const offsetMs = asIfUtcMs - guessUtcMs;
+  return guessUtcMs - offsetMs;
+}
+
 // How long past the scheduled time a reminder is still worth sending —
 // guards against a burst of stale reminders if the cron job was paused.
 const GRACE_MS = 2 * 60 * 60 * 1000;
@@ -39,7 +69,7 @@ Deno.serve(async () => {
 
   const now = Date.now();
   const due = (jobs ?? []).filter((job) => {
-    const scheduledAt = new Date(`${job.scheduled_date}T${job.scheduled_time}`).getTime();
+    const scheduledAt = zonedWallClockToUtcMs(job.scheduled_date, job.scheduled_time, BUSINESS_TIMEZONE);
     const fireAt = scheduledAt - (job.reminder_minutes_before ?? 0) * 60000;
     return now >= fireAt && now - scheduledAt < GRACE_MS;
   });
