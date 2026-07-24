@@ -1626,11 +1626,10 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
           <p className="mt-3 text-sm font-semibold text-[var(--dash-text-secondary)]">Nenhum cliente atribuído</p>
         </div>
       ) : (
-        clients.map((c, idx) => {
+        clients.map((c) => {
           const address = clientFullAddress(c);
           const isOnRoute = (c.service_days ?? []).length > 0;
           const commercial = isCommercial(c.client_type);
-          const avatarColor = clientAvatarColors[idx % clientAvatarColors.length];
           return (
             <div
               key={c.client_id}
@@ -1642,31 +1641,34 @@ function TecnicoClientsList({ clients, isLoading, onSelectClient }: { clients: T
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${avatarColor}`}>
-                    {commercial ? <Building2 className="h-4 w-4" /> : <Home className="h-4 w-4" />}
+                  <div
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full"
+                    style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "#DBEAFE", color: "#2563EB" }}
+                  >
+                    {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
                   </div>
                   <span className="truncate text-[15px] font-bold text-[var(--dash-text)]">{c.name}</span>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1.5">
                   {c.status !== "Ativo" ? (
-                    <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
+                    <span className="rounded-full px-2 py-[2px] text-[9.5px] font-semibold" style={{ background: "var(--dash-border-table)", color: "var(--dash-text-muted-2)" }}>
                       Inativo
                     </span>
                   ) : isOnRoute ? (
                     (c.service_days ?? []).map((day) => {
                       const badge = WEEKDAY_BADGE[day] ?? { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" };
                       return (
-                        <span key={day} className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: badge.bg, color: badge.text }}>
+                        <span key={day} className="rounded-full px-2 py-[2px] text-[9.5px] font-semibold" style={{ background: badge.bg, color: badge.text }}>
                           {day}
                         </span>
                       );
                     })
                   ) : (
-                    <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
+                    <span className="rounded-full px-2 py-[2px] text-[9.5px] font-semibold" style={{ background: "var(--dash-badge-paid-bg)", color: "var(--dash-badge-paid-text)" }}>
                       Cliente
                     </span>
                   )}
-                  <span className="text-[15px] font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(c.monthly_value || 0))}</span>
+                  <span className="text-[13.5px] font-extrabold tabular-nums text-[var(--dash-text)]">{fmt(Number(c.monthly_value || 0))}</span>
                   <ChevronRight className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
                 </div>
               </div>
