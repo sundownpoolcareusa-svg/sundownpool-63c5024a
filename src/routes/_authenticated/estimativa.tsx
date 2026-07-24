@@ -345,7 +345,9 @@ function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; on
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(estimate.subtotal)}</span></div>
-            <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums" style={{ color: "var(--dash-green)" }}>-{fmt(estimate.discount)}</span></div>
+            {Number(estimate.discount) > 0 && (
+              <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums" style={{ color: "var(--dash-green)" }}>-{fmt(estimate.discount)}</span></div>
+            )}
             <div className="mt-2 flex items-center justify-between border-t border-[var(--dash-border)] pt-2">
               <span className="text-base font-bold text-[var(--dash-text)]">{estimate.billing_type === "monthly" ? "Monthly Payment" : "Total"}</span>
               <span className="text-2xl font-extrabold tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(estimate.total)}{estimate.billing_type === "monthly" && "/mo"}</span>
