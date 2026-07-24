@@ -730,29 +730,24 @@ export type Database = {
         Args: { p_job_id: string }
         Returns: undefined
       }
-      create_my_service_job:
-        | {
-            Args: { p_client_id: string; p_notes?: string; p_title: string }
-            Returns: string
-          }
-        | {
-            Args: {
-              p_client_id: string
-              p_duration_minutes?: number
-              p_notes?: string
-              p_priority?: string
-              p_reminder_enabled?: boolean
-              p_reminder_minutes_before?: number
-              p_scheduled_date?: string
-              p_scheduled_time?: string
-              p_service_types?: string[]
-              p_title: string
-            }
-            Returns: string
-          }
       delete_my_push_subscription: {
         Args: { p_endpoint: string }
         Returns: undefined
+      }
+      create_my_service_job: {
+        Args: {
+          p_client_id: string
+          p_duration_minutes?: number
+          p_notes?: string
+          p_priority?: string
+          p_reminder_enabled?: boolean
+          p_reminder_minutes_before?: number
+          p_scheduled_date?: string
+          p_scheduled_time?: string
+          p_service_types?: string[]
+          p_title: string
+        }
+        Returns: string
       }
       ensure_my_technician_stops: {
         Args: { p_date: string }
@@ -959,49 +954,21 @@ export type Database = {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string }
         Returns: undefined
       }
-      save_my_stop_chemicals:
-        | {
-            Args: {
-              p_calcium_hardness: number
-              p_free_chlorine: number
-              p_notes: string
-              p_ph: number
-              p_products: Json
-              p_stabilizer: number
-              p_stop_id: string
-              p_total_alkalinity: number
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_body_type?: string
-              p_calcium_hardness: number
-              p_free_chlorine: number
-              p_notes: string
-              p_ph: number
-              p_products: Json
-              p_stabilizer: number
-              p_stop_id: string
-              p_total_alkalinity: number
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_body_type?: string
-              p_calcium_hardness: number
-              p_free_chlorine: number
-              p_notes: string
-              p_ph: number
-              p_products: Json
-              p_salt?: number
-              p_stabilizer: number
-              p_stop_id: string
-              p_total_alkalinity: number
-            }
-            Returns: undefined
-          }
+      save_my_stop_chemicals: {
+        Args: {
+          p_body_type?: string
+          p_calcium_hardness: number
+          p_free_chlorine: number
+          p_notes: string
+          p_ph: number
+          p_products: Json
+          p_salt?: number
+          p_stabilizer: number
+          p_stop_id: string
+          p_total_alkalinity: number
+        }
+        Returns: undefined
+      }
       update_my_client_equipment: {
         Args: { p_client_id: string; p_notes: string; p_photos: string[] }
         Returns: undefined
@@ -1016,10 +983,10 @@ export type Database = {
       }
       update_my_technician_profile: {
         Args: {
-          p_home_address: string
-          p_home_lat: number
-          p_home_lng: number
-          p_phone: string
+          p_home_address: string | null
+          p_home_lat: number | null
+          p_home_lng: number | null
+          p_phone: string | null
         }
         Returns: undefined
       }

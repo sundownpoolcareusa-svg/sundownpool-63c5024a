@@ -1198,15 +1198,13 @@ function NewServiceWizard({
               <p className="-mt-2 text-[11.5px] text-[var(--dash-text-muted)]">Somente clientes ativos aparecem na lista.</p>
 
               <div className="space-y-2">
-                {filteredClients.map((c) => (
+                {filteredClients.map((c, idx) => (
                   <button
                     key={c.client_id}
                     onClick={() => { setClientId(c.client_id); setStep("info"); }}
                     className="flex w-full items-center gap-3 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 text-left"
                   >
-                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[13px] font-bold text-[var(--dash-water-icon)]">
-                      {initials(c.name)}
-                    </div>
+                    <ClientAvatarPhoto client={c} idx={idx} sizeClass="h-11 w-11" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[14px] font-bold text-[var(--dash-text)]">{c.name}</div>
                       <div className="truncate text-[12px] text-[var(--dash-text-muted)]">{clientFullAddress(c) || "—"}</div>
@@ -1227,9 +1225,7 @@ function NewServiceWizard({
               <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
                 <h2 className="mb-2 text-[13px] font-bold text-[var(--dash-text)]">Cliente</h2>
                 <button onClick={() => setStep("cliente")} className="flex w-full items-center gap-3 rounded-[12px] border border-[var(--dash-border)] p-2.5 text-left">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[12px] font-bold text-[var(--dash-water-icon)]">
-                    {initials(client.name)}
-                  </div>
+                  <ClientAvatarPhoto client={client} idx={0} sizeClass="h-10 w-10" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13.5px] font-bold text-[var(--dash-text)]">{client.name}</div>
                     <div className="truncate text-[11.5px] text-[var(--dash-text-muted)]">{clientFullAddress(client) || "—"}</div>
@@ -1419,9 +1415,7 @@ function NewServiceWizard({
                     <div>
                       <div className="text-[11px] font-bold uppercase tracking-[.05em] text-[var(--dash-text-muted-2)]">Cliente</div>
                       <div className="mt-1 flex items-center gap-2">
-                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--dash-water-bg)] text-[11px] font-bold text-[var(--dash-water-icon)]">
-                          {initials(client.name)}
-                        </div>
+                        <ClientAvatarPhoto client={client} idx={0} sizeClass="h-8 w-8" />
                         <div>
                           <div className="text-[13px] font-bold text-[var(--dash-text)]">{client.name}</div>
                           <div className="text-[11px] text-[var(--dash-text-muted)]">{clientFullAddress(client) || "—"}</div>
@@ -1547,6 +1541,31 @@ const WEEKDAY_BADGE: Record<string, { bg: string; text: string }> = {
 
 function clientFullAddress(c: TechnicianClient) {
   return [c.address, c.city, c.state, c.zip].filter(Boolean).join(", ");
+}
+
+// Circular avatar showing the client's first pool photo (signed URL, same
+// private "client-photos" bucket the owner side uses) when one exists,
+// falling back to the initials circle used everywhere else in this app.
+function ClientAvatarPhoto({ client, idx, sizeClass }: { client: TechnicianClient; idx: number; sizeClass: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    const path = client.pool_photos?.[0];
+    if (!path) { setUrl(null); return; }
+    let alive = true;
+    supabase.storage.from("client-photos").createSignedUrl(path, 60 * 60).then(({ data }) => {
+      if (alive && data?.signedUrl) setUrl(data.signedUrl);
+    });
+    return () => { alive = false; };
+  }, [client.pool_photos]);
+
+  if (url) {
+    return <img src={url} alt="" className={`${sizeClass} shrink-0 rounded-full object-cover`} />;
+  }
+  return (
+    <div className={`grid ${sizeClass} shrink-0 place-items-center rounded-full text-[12px] font-bold ${clientAvatarColors[idx % clientAvatarColors.length]}`}>
+      {initials(client.name)}
+    </div>
+  );
 }
 
 // Read-only client list for the technician's own assigned clients — no

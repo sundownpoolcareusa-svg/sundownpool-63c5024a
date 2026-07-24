@@ -9,53 +9,29 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as MaintenancePlansRouteImport } from './routes/maintenance-plans'
-import { Route as ServiceAreasRouteImport } from './routes/service-areas'
-import { Route as ServicesRouteImport } from './routes/services'
 import { Route as TecnicoRouteImport } from './routes/tecnico'
-import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authenticated/estimativa'
-import { Route as AuthenticatedInvoiceRouteImport } from './routes/_authenticated/invoice'
-import { Route as AuthenticatedQuimicosRouteImport } from './routes/_authenticated/quimicos'
-import { Route as AuthenticatedRotasRouteImport } from './routes/_authenticated/rotas'
-import { Route as AuthenticatedTecnicosRouteImport } from './routes/_authenticated/tecnicos'
-import { Route as ETokenRouteImport } from './routes/e.$token'
+import { Route as ServicesRouteImport } from './routes/services'
+import { Route as ServiceAreasRouteImport } from './routes/service-areas'
+import { Route as MaintenancePlansRouteImport } from './routes/maintenance-plans'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as ITokenRouteImport } from './routes/i.$token'
-import { Route as AuthenticatedChemicalsStopIdRouteImport } from './routes/_authenticated/chemicals.$stopId'
+import { Route as ETokenRouteImport } from './routes/e.$token'
+import { Route as AuthenticatedTecnicosRouteImport } from './routes/_authenticated/tecnicos'
+import { Route as AuthenticatedRotasRouteImport } from './routes/_authenticated/rotas'
+import { Route as AuthenticatedQuimicosRouteImport } from './routes/_authenticated/quimicos'
+import { Route as AuthenticatedInvoiceRouteImport } from './routes/_authenticated/invoice'
+import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authenticated/estimativa'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as TecnicoChemicalsStopIdRouteImport } from './routes/tecnico_.chemicals.$stopId'
+import { Route as AuthenticatedChemicalsStopIdRouteImport } from './routes/_authenticated/chemicals.$stopId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MaintenancePlansRoute = MaintenancePlansRouteImport.update({
-  id: '/maintenance-plans',
-  path: '/maintenance-plans',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ServiceAreasRoute = ServiceAreasRouteImport.update({
-  id: '/service-areas',
-  path: '/service-areas',
+const TecnicoRoute = TecnicoRouteImport.update({
+  id: '/tecnico',
+  path: '/tecnico',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesRoute = ServicesRouteImport.update({
@@ -63,34 +39,48 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TecnicoRoute = TecnicoRouteImport.update({
-  id: '/tecnico',
-  path: '/tecnico',
+const ServiceAreasRoute = ServiceAreasRouteImport.update({
+  id: '/service-areas',
+  path: '/service-areas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
-  id: '/clientes',
-  path: '/clientes',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const MaintenancePlansRoute = MaintenancePlansRouteImport.update({
+  id: '/maintenance-plans',
+  path: '/maintenance-plans',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedEstimativaRoute = AuthenticatedEstimativaRouteImport.update({
-  id: '/estimativa',
-  path: '/estimativa',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedInvoiceRoute = AuthenticatedInvoiceRouteImport.update({
-  id: '/invoice',
-  path: '/invoice',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedQuimicosRoute = AuthenticatedQuimicosRouteImport.update({
-  id: '/quimicos',
-  path: '/quimicos',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ITokenRoute = ITokenRouteImport.update({
+  id: '/i/$token',
+  path: '/i/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ETokenRoute = ETokenRouteImport.update({
+  id: '/e/$token',
+  path: '/e/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTecnicosRoute = AuthenticatedTecnicosRouteImport.update({
+  id: '/tecnicos',
+  path: '/tecnicos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRotasRoute = AuthenticatedRotasRouteImport.update({
@@ -98,19 +88,34 @@ const AuthenticatedRotasRoute = AuthenticatedRotasRouteImport.update({
   path: '/rotas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTecnicosRoute = AuthenticatedTecnicosRouteImport.update({
-  id: '/tecnicos',
-  path: '/tecnicos',
+const AuthenticatedQuimicosRoute = AuthenticatedQuimicosRouteImport.update({
+  id: '/quimicos',
+  path: '/quimicos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ETokenRoute = ETokenRouteImport.update({
-  id: '/e/$token',
-  path: '/e/$token',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedInvoiceRoute = AuthenticatedInvoiceRouteImport.update({
+  id: '/invoice',
+  path: '/invoice',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ITokenRoute = ITokenRouteImport.update({
-  id: '/i/$token',
-  path: '/i/$token',
+const AuthenticatedEstimativaRoute = AuthenticatedEstimativaRouteImport.update({
+  id: '/estimativa',
+  path: '/estimativa',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const TecnicoChemicalsStopIdRoute = TecnicoChemicalsStopIdRouteImport.update({
+  id: '/tecnico_/chemicals/$stopId',
+  path: '/tecnico/chemicals/$stopId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedChemicalsStopIdRoute =
@@ -119,11 +124,6 @@ const AuthenticatedChemicalsStopIdRoute =
     path: '/chemicals/$stopId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const TecnicoChemicalsStopIdRoute = TecnicoChemicalsStopIdRouteImport.update({
-  id: '/tecnico_/chemicals/$stopId',
-  path: '/tecnico/chemicals/$stopId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -267,46 +267,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/maintenance-plans': {
-      id: '/maintenance-plans'
-      path: '/maintenance-plans'
-      fullPath: '/maintenance-plans'
-      preLoaderRoute: typeof MaintenancePlansRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/service-areas': {
-      id: '/service-areas'
-      path: '/service-areas'
-      fullPath: '/service-areas'
-      preLoaderRoute: typeof ServiceAreasRouteImport
+    '/tecnico': {
+      id: '/tecnico'
+      path: '/tecnico'
+      fullPath: '/tecnico'
+      preLoaderRoute: typeof TecnicoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services': {
@@ -316,67 +281,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tecnico': {
-      id: '/tecnico'
-      path: '/tecnico'
-      fullPath: '/tecnico'
-      preLoaderRoute: typeof TecnicoRouteImport
+    '/service-areas': {
+      id: '/service-areas'
+      path: '/service-areas'
+      fullPath: '/service-areas'
+      preLoaderRoute: typeof ServiceAreasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/clientes': {
-      id: '/_authenticated/clientes'
-      path: '/clientes'
-      fullPath: '/clientes'
-      preLoaderRoute: typeof AuthenticatedClientesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/maintenance-plans': {
+      id: '/maintenance-plans'
+      path: '/maintenance-plans'
+      fullPath: '/maintenance-plans'
+      preLoaderRoute: typeof MaintenancePlansRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/estimativa': {
-      id: '/_authenticated/estimativa'
-      path: '/estimativa'
-      fullPath: '/estimativa'
-      preLoaderRoute: typeof AuthenticatedEstimativaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/invoice': {
-      id: '/_authenticated/invoice'
-      path: '/invoice'
-      fullPath: '/invoice'
-      preLoaderRoute: typeof AuthenticatedInvoiceRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/quimicos': {
-      id: '/_authenticated/quimicos'
-      path: '/quimicos'
-      fullPath: '/quimicos'
-      preLoaderRoute: typeof AuthenticatedQuimicosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/rotas': {
-      id: '/_authenticated/rotas'
-      path: '/rotas'
-      fullPath: '/rotas'
-      preLoaderRoute: typeof AuthenticatedRotasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/tecnicos': {
-      id: '/_authenticated/tecnicos'
-      path: '/tecnicos'
-      fullPath: '/tecnicos'
-      preLoaderRoute: typeof AuthenticatedTecnicosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/e/$token': {
-      id: '/e/$token'
-      path: '/e/$token'
-      fullPath: '/e/$token'
-      preLoaderRoute: typeof ETokenRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/i/$token': {
@@ -386,11 +330,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ITokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/chemicals/$stopId': {
-      id: '/_authenticated/chemicals/$stopId'
-      path: '/chemicals/$stopId'
-      fullPath: '/chemicals/$stopId'
-      preLoaderRoute: typeof AuthenticatedChemicalsStopIdRouteImport
+    '/e/$token': {
+      id: '/e/$token'
+      path: '/e/$token'
+      fullPath: '/e/$token'
+      preLoaderRoute: typeof ETokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/tecnicos': {
+      id: '/_authenticated/tecnicos'
+      path: '/tecnicos'
+      fullPath: '/tecnicos'
+      preLoaderRoute: typeof AuthenticatedTecnicosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rotas': {
+      id: '/_authenticated/rotas'
+      path: '/rotas'
+      fullPath: '/rotas'
+      preLoaderRoute: typeof AuthenticatedRotasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/quimicos': {
+      id: '/_authenticated/quimicos'
+      path: '/quimicos'
+      fullPath: '/quimicos'
+      preLoaderRoute: typeof AuthenticatedQuimicosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/invoice': {
+      id: '/_authenticated/invoice'
+      path: '/invoice'
+      fullPath: '/invoice'
+      preLoaderRoute: typeof AuthenticatedInvoiceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/estimativa': {
+      id: '/_authenticated/estimativa'
+      path: '/estimativa'
+      fullPath: '/estimativa'
+      preLoaderRoute: typeof AuthenticatedEstimativaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/clientes': {
+      id: '/_authenticated/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/tecnico_/chemicals/$stopId': {
@@ -399,6 +392,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tecnico/chemicals/$stopId'
       preLoaderRoute: typeof TecnicoChemicalsStopIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/chemicals/$stopId': {
+      id: '/_authenticated/chemicals/$stopId'
+      path: '/chemicals/$stopId'
+      fullPath: '/chemicals/$stopId'
+      preLoaderRoute: typeof AuthenticatedChemicalsStopIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
