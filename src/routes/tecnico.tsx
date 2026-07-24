@@ -216,6 +216,25 @@ function TecnicoPage() {
   const [checkedSession, setCheckedSession] = useState(false);
   const [date, setDate] = useState(() => new Date());
   const dateStr = toDateStr(date);
+  const swipeStartX = useRef<number | null>(null);
+  const swipeStartY = useRef<number | null>(null);
+  const handleDateSwipeStart = (e: React.TouchEvent) => {
+    swipeStartX.current = e.touches[0].clientX;
+    swipeStartY.current = e.touches[0].clientY;
+  };
+  const handleDateSwipeEnd = (e: React.TouchEvent) => {
+    if (swipeStartX.current === null || swipeStartY.current === null) return;
+    const dx = e.changedTouches[0].clientX - swipeStartX.current;
+    const dy = e.changedTouches[0].clientY - swipeStartY.current;
+    swipeStartX.current = null;
+    swipeStartY.current = null;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < 0) {
+      setDate((d) => new Date(d.getTime() + 86400000));
+    } else {
+      setDate((d) => new Date(d.getTime() - 86400000));
+    }
+  };
   const [view, setView] = useState<"inicio" | "rota" | "clientes">(search.view ?? "inicio");
   const [mapOpen, setMapOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
@@ -436,7 +455,11 @@ function TecnicoPage() {
           <TecnicoClientsList clients={myClients} isLoading={isLoadingClients} onSelectClient={setSelectedClient} />
         ) : (
           <>
-        <div className="flex items-center justify-between rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+        <div
+          className="flex items-center justify-between rounded-[14px] border border-[var(--dash-border)] bg-white p-3"
+          onTouchStart={handleDateSwipeStart}
+          onTouchEnd={handleDateSwipeEnd}
+        >
           <button onClick={() => setDate((d) => new Date(d.getTime() - 86400000))} className="grid h-8 w-8 place-items-center rounded-full text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]">
             <ChevronLeft className="h-4 w-4" />
           </button>
