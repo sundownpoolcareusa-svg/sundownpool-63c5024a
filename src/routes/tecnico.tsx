@@ -25,8 +25,8 @@ import { toast } from "sonner";
 import tecnicoIcon from "@/assets/tecnico-apple-touch-icon.png";
 
 export const Route = createFileRoute("/tecnico")({
-  validateSearch: (search: Record<string, unknown>): { view?: "inicio" | "rota" | "clientes" | "servicos" } => ({
-    view: search.view === "rota" || search.view === "clientes" || search.view === "servicos" ? search.view : undefined,
+  validateSearch: (search: Record<string, unknown>): { view?: "inicio" | "rota" | "clientes" | "servicos" | "acoes" } => ({
+    view: search.view === "rota" || search.view === "clientes" || search.view === "servicos" || search.view === "acoes" ? search.view : undefined,
   }),
   head: () => ({
     meta: [
@@ -237,7 +237,7 @@ function TecnicoPage() {
       setDate((d) => new Date(d.getTime() - 86400000));
     }
   };
-  const [view, setView] = useState<"inicio" | "rota" | "clientes" | "servicos">(search.view ?? "inicio");
+  const [view, setView] = useState<"inicio" | "rota" | "clientes" | "servicos" | "acoes">(search.view ?? "inicio");
   const [newJobOpen, setNewJobOpen] = useState(false);
   const [newJobClientId, setNewJobClientId] = useState("");
   const [newJobTitle, setNewJobTitle] = useState("");
@@ -483,9 +483,12 @@ function TecnicoPage() {
             date={date}
             stats={dashboard ?? null}
             alerts={alerts}
+            serviceJobs={serviceJobs}
             isLoading={isLoadingDashboard || isLoadingAlerts}
             error={dashboardError ?? alertsError ?? null}
             onJumpToday={() => setDate(new Date())}
+            onSelectJob={setSelectedJob}
+            onOpenActions={() => setView("acoes")}
           />
         ) : view === "clientes" ? (
           <TecnicoClientsList clients={myClients} isLoading={isLoadingClients} onSelectClient={setSelectedClient} />
@@ -496,6 +499,8 @@ function TecnicoPage() {
             onSelectJob={setSelectedJob}
             onNewJob={() => setNewJobOpen(true)}
           />
+        ) : view === "acoes" ? (
+          <TecnicoActionsList alerts={alerts} jobs={serviceJobs} onSelectJob={setSelectedJob} onBack={() => setView("inicio")} />
         ) : (
           <>
         <div
@@ -1264,8 +1269,11 @@ const ALERT_META: Record<TechnicianAlert["alert_type"], { label: string; icon: t
 // All numbers come from SECURITY DEFINER RPCs since the technician has no
 // direct read access to clients' financial fields, chemicals, or invoices.
 function TecnicoHomeDashboard({
-  date, stats, alerts, isLoading, error, onJumpToday,
-}: { date: Date; stats: TechnicianDashboardStats | null; alerts: TechnicianAlert[]; isLoading: boolean; error: Error | null; onJumpToday: () => void }) {
+  date, stats, alerts, serviceJobs, isLoading, error, onJumpToday, onSelectJob, onOpenActions,
+}: {
+  date: Date; stats: TechnicianDashboardStats | null; alerts: TechnicianAlert[]; serviceJobs: ServiceJob[];
+  isLoading: boolean; error: Error | null; onJumpToday: () => void; onSelectJob: (j: ServiceJob) => void; onOpenActions: () => void;
+}) {
   if (error) {
     return (
       <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-4 text-center">
@@ -1287,12 +1295,13 @@ function TecnicoHomeDashboard({
     { label: "Quinta", value: stats.qui_routes },
     { label: "Sexta", value: stats.sex_routes },
   ];
-  const statCards = [
+  const statCards: { icon: typeof CalendarDays; tint: string; value: string | number; label: string; onClick?: () => void }[] = [
     { icon: CalendarDays, tint: "#2563EB", value: stats.clients_today, label: "Clientes hoje" },
     { icon: CheckCircle2, tint: "#16A34A", value: stats.completed_today, label: "Concluídos" },
-    { icon: AlertTriangle, tint: "#DC2626", value: totalAlerts, label: "Alertas" },
+    { icon: AlertTriangle, tint: "#DC2626", value: totalAlerts, label: "Alertas", onClick: onOpenActions },
     { icon: DollarSign, tint: "#0891B2", value: fmt(stats.avg_cost_per_visit), label: "Custo médio/visita" },
   ];
+  const openJobs = serviceJobs.filter((j) => j.status !== "Concluído");
 
   return (
     <div className="space-y-4">
@@ -1309,14 +1318,15 @@ function TecnicoHomeDashboard({
       <div className="grid grid-cols-4 gap-2">
         {statCards.map((c) => {
           const Icon = c.icon;
+          const Tag = c.onClick ? "button" : "div";
           return (
-            <div key={c.label} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+            <Tag key={c.label} onClick={c.onClick} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
               <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: `${c.tint}1A`, color: c.tint }}>
                 <Icon className="h-4 w-4" />
               </div>
               <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{c.value}</div>
               <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">{c.label}</div>
-            </div>
+            </Tag>
           );
         })}
       </div>
@@ -1353,19 +1363,19 @@ function TecnicoHomeDashboard({
       <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-[15px] font-bold text-[var(--dash-text)]">Ação necessária</h2>
-          <button onClick={() => toast.info("Ver todas — em breve")} className="text-[12px] font-semibold" style={{ color: "var(--dash-link)" }}>
+          <button onClick={onOpenActions} className="text-[12px] font-semibold" style={{ color: "var(--dash-link)" }}>
             Ver todas
           </button>
         </div>
-        {alerts.length === 0 ? (
+        {alerts.length === 0 && openJobs.length === 0 ? (
           <p className="py-4 text-center text-[13px] text-[var(--dash-text-muted)]">Nenhuma ação pendente</p>
         ) : (
           <div className="divide-y divide-[var(--dash-border-table)]">
-            {alerts.slice(0, 3).map((a, i) => {
+            {alerts.slice(0, 5).map((a, i) => {
               const meta = ALERT_META[a.alert_type];
               const Icon = meta.icon;
               return (
-                <div key={i} className="flex items-center gap-2.5 py-2.5">
+                <div key={`alert-${i}`} className="flex items-center gap-2.5 py-2.5">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: meta.bg, color: meta.text }}>
                     <Icon className="h-4 w-4" />
                   </div>
@@ -1379,6 +1389,24 @@ function TecnicoHomeDashboard({
                 </div>
               );
             })}
+            {openJobs.slice(0, 5).map((j) => (
+              <button
+                key={j.job_id}
+                onClick={() => onSelectJob(j)}
+                className="flex w-full items-center gap-2.5 py-2.5 text-left"
+              >
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: "#DBEAFE", color: "#2563EB" }}>
+                  <Wrench className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-bold text-[var(--dash-text)]">{j.title}</div>
+                  <div className="truncate text-[11px] text-[var(--dash-text-muted)]">{j.client_name}</div>
+                </div>
+                <div className="shrink-0 text-[12px] font-bold" style={{ color: "#2563EB" }}>
+                  {serviceJobAge(j.created_at)}
+                </div>
+              </button>
+            ))}
           </div>
         )}
       </div>
@@ -1395,7 +1423,7 @@ function TecnicoHomeDashboard({
               <div className="text-[16px] font-extrabold text-[var(--dash-text)]">{stats.filters_overdue}</div>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+          <button onClick={onOpenActions} className="flex items-center gap-2.5 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 text-left">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: "#FEE2E2", color: "#DC2626" }}>
               <AlertTriangle className="h-4 w-4" />
             </div>
@@ -1403,9 +1431,74 @@ function TecnicoHomeDashboard({
               <div className="text-[11px] text-[var(--dash-text-muted)]">Piscinas com alerta</div>
               <div className="text-[16px] font-extrabold text-[var(--dash-text)]">{stats.pools_with_alert}</div>
             </div>
-          </div>
+          </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Full "Ação necessária" list, reached via "Ver todas" or by tapping the
+// Alertas/Piscinas com alerta stat cards — same row design as the home
+// card's preview, but unsliced (all alerts + all open service jobs).
+function TecnicoActionsList({
+  alerts, jobs, onSelectJob, onBack,
+}: { alerts: TechnicianAlert[]; jobs: ServiceJob[]; onSelectJob: (j: ServiceJob) => void; onBack: () => void }) {
+  const openJobs = jobs.filter((j) => j.status !== "Concluído");
+  return (
+    <div className="space-y-3">
+      <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--dash-text-secondary)]">
+        <ChevronLeft className="h-4 w-4" /> Voltar
+      </button>
+      <h1 className="text-lg font-extrabold text-[var(--dash-text)]">Ação necessária</h1>
+
+      {alerts.length === 0 && openJobs.length === 0 ? (
+        <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white py-14 text-center">
+          <CheckCircle2 className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
+          <p className="mt-3 text-sm font-semibold text-[var(--dash-text-secondary)]">Nenhuma ação pendente</p>
+        </div>
+      ) : (
+        <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3">
+          <div className="divide-y divide-[var(--dash-border-table)]">
+            {alerts.map((a, i) => {
+              const meta = ALERT_META[a.alert_type];
+              const Icon = meta.icon;
+              return (
+                <div key={`alert-${i}`} className="flex items-center gap-2.5 py-2.5">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: meta.bg, color: meta.text }}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13px] font-bold text-[var(--dash-text)]">{meta.label}</div>
+                    <div className="truncate text-[11px] text-[var(--dash-text-muted)]">{a.client_name}</div>
+                  </div>
+                  <div className="shrink-0 text-[12px] font-bold" style={{ color: a.days <= 0 ? "#B45309" : "#DC2626" }}>
+                    {a.days <= 0 ? "Hoje" : `${a.days} dias`}
+                  </div>
+                </div>
+              );
+            })}
+            {openJobs.map((j) => (
+              <button
+                key={j.job_id}
+                onClick={() => onSelectJob(j)}
+                className="flex w-full items-center gap-2.5 py-2.5 text-left"
+              >
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: "#DBEAFE", color: "#2563EB" }}>
+                  <Wrench className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-bold text-[var(--dash-text)]">{j.title}</div>
+                  <div className="truncate text-[11px] text-[var(--dash-text-muted)]">{j.client_name}</div>
+                </div>
+                <div className="shrink-0 text-[12px] font-bold" style={{ color: "#2563EB" }}>
+                  {serviceJobAge(j.created_at)}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
