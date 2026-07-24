@@ -4,13 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
+import { TechAvatar } from "@/components/TechAvatar";
+import { PhotoUploader } from "@/components/PhotoUploader";
 import { Plus, Pencil, UserX, HardHat } from "lucide-react";
 import {
   listTechnicians,
   createTechnician,
   updateTechnician,
   deactivateTechnician,
-  initials,
   type Technician,
 } from "@/lib/db";
 import { toast } from "sonner";
@@ -109,12 +110,7 @@ function TecnicosPage() {
                     <tr key={t.id} className="border-b border-[var(--dash-border-table)]">
                       <td className="py-4">
                         <div className="flex items-center gap-3">
-                          <div
-                            className="grid h-10 w-10 place-items-center rounded-full text-xs font-bold text-white"
-                            style={{ background: t.color }}
-                          >
-                            {initials(t.name)}
-                          </div>
+                          <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-10 w-10" textClassName="text-xs" />
                           <div className="font-bold text-[var(--dash-text)]">{t.name}</div>
                         </div>
                       </td>
@@ -216,14 +212,16 @@ function TechnicianFormModal({
   onSaved: () => void;
   editing?: Technician | null;
 }) {
-  const empty = { name: "", phone: "", color: COLORS[0] };
+  const empty = { name: "", phone: "", color: COLORS[0], photo_path: null as string | null };
   const [form, setForm] = useState(empty);
 
   const editingId = editing?.id ?? null;
   const [loadedId, setLoadedId] = useState<string | null>(null);
   if (open && editingId !== loadedId) {
     setForm(
-      editing ? { name: editing.name, phone: editing.phone || "", color: editing.color } : empty,
+      editing
+        ? { name: editing.name, phone: editing.phone || "", color: editing.color, photo_path: editing.photo_path ?? null }
+        : empty,
     );
     setLoadedId(editingId);
   }
@@ -302,6 +300,15 @@ function TechnicianFormModal({
             ))}
           </div>
         </div>
+        {editing && (
+          <PhotoUploader
+            label="Photo"
+            value={form.photo_path ? [form.photo_path] : []}
+            onChange={(v) => setForm({ ...form, photo_path: v[0] ?? null })}
+            folder={`technicians/${editing.id}`}
+            max={1}
+          />
+        )}
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"

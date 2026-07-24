@@ -15,6 +15,7 @@ import {
   Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal, Pencil, Camera,
 } from "lucide-react";
 import { PhotoUploader } from "@/components/PhotoUploader";
+import { TechAvatar } from "@/components/TechAvatar";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
   getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
@@ -586,12 +587,13 @@ function TecnicoPage() {
               <div className="text-[11px] text-[var(--dash-text-muted)]">Pool Technician</div>
             </div>
             <div className="relative">
-              <div
-                className="grid h-10 w-10 place-items-center rounded-full text-[13px] font-bold text-white"
-                style={{ background: technician?.color || "var(--dash-navy)" }}
-              >
-                {technician ? initials(technician.name) : ""}
-              </div>
+              <TechAvatar
+                name={technician?.name ?? ""}
+                color={technician?.color || "var(--dash-navy)"}
+                photoPath={technician?.photo_path}
+                className="h-10 w-10"
+                textClassName="text-[13px]"
+              />
               <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-[var(--dash-green)]" />
             </div>
           </button>
@@ -734,12 +736,13 @@ function TecnicoPage() {
               </div>
               <div className="space-y-4 px-5 pb-6 pt-3">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-[15px] font-bold text-white"
-                    style={{ background: technician?.color || "var(--dash-navy)" }}
-                  >
-                    {technician ? initials(technician.name) : ""}
-                  </div>
+                  <TechAvatar
+                    name={technician?.name ?? ""}
+                    color={technician?.color || "var(--dash-navy)"}
+                    photoPath={technician?.photo_path}
+                    className="h-12 w-12"
+                    textClassName="text-[15px]"
+                  />
                   <div>
                     <div className="text-xl font-extrabold text-[var(--dash-text)]">{technician?.name}</div>
                     <p className="text-[13px] text-[var(--dash-text-muted)]">Meu perfil</p>

@@ -209,6 +209,7 @@ export type Technician = {
   home_address?: string | null;
   home_lat?: number | null;
   home_lng?: number | null;
+  photo_path?: string | null;
   created_at: string;
 };
 
@@ -268,7 +269,7 @@ export async function setClientTechnician(clientId: string, technicianId: string
   if (error) throw error;
 }
 
-export async function createTechnician(values: { name: string; phone?: string; color?: string }) {
+export async function createTechnician(values: { name: string; phone?: string; color?: string; photo_path?: string | null }) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Not authenticated");
   const { data, error } = await supabase
@@ -282,7 +283,7 @@ export async function createTechnician(values: { name: string; phone?: string; c
 
 export async function updateTechnician(
   id: string,
-  values: { name: string; phone?: string | null; color?: string },
+  values: { name: string; phone?: string | null; color?: string; photo_path?: string | null },
 ) {
   const { error } = await supabase.from("technicians").update(values).eq("id", id);
   if (error) throw error;
