@@ -27,6 +27,7 @@ export type Database = {
           filter_cleaning_count: number
           filter_last_cleaned_at: string | null
           gate_code: string | null
+          has_salt_system: boolean
           has_spa: boolean
           id: string
           last_service_date: string | null
@@ -61,6 +62,7 @@ export type Database = {
           filter_cleaning_count?: number
           filter_last_cleaned_at?: string | null
           gate_code?: string | null
+          has_salt_system?: boolean
           has_spa?: boolean
           id?: string
           last_service_date?: string | null
@@ -95,6 +97,7 @@ export type Database = {
           filter_cleaning_count?: number
           filter_last_cleaned_at?: string | null
           gate_code?: string | null
+          has_salt_system?: boolean
           has_spa?: boolean
           id?: string
           last_service_date?: string | null
@@ -865,6 +868,7 @@ export type Database = {
           client_zip: string
           filter_cleaning_count: number
           filter_last_cleaned_at: string
+          has_salt_system: boolean
           has_spa: boolean
           position: number
           status: string
@@ -889,6 +893,7 @@ export type Database = {
           email: string
           equipment_notes: string
           equipment_photos: string[]
+          has_salt_system: boolean
           has_spa: boolean
           monthly_value: number
           name: string
