@@ -89,7 +89,7 @@ Deno.serve(async () => {
   // cron run picks it up once saved.
   const { data: completedStops, error: completedErr } = await supabase
     .from("route_stops")
-    .select("id, completed_at, visit_photos, client:clients!inner(id, name, email, notify_by_email)")
+    .select("id, completed_at, visit_photos, client:clients!inner(id, name, email, notify_by_email, has_salt_system)")
     .eq("status", "Concluído")
     .is("completion_email_sent_at", null)
     .eq("clients.notify_by_email", true);
@@ -97,7 +97,8 @@ Deno.serve(async () => {
   if (completedErr) return new Response(JSON.stringify({ error: completedErr.message }), { status: 500 });
 
   for (const stop of (completedStops ?? []) as {
-    id: string; completed_at: string | null; visit_photos: string[] | null; client: ClientRow | ClientRow[];
+    id: string; completed_at: string | null; visit_photos: string[] | null;
+    client: (ClientRow & { has_salt_system: boolean }) | (ClientRow & { has_salt_system: boolean })[];
   }[]) {
     const client = Array.isArray(stop.client) ? stop.client[0] : stop.client;
     if (!client?.email) continue;
@@ -122,7 +123,11 @@ Deno.serve(async () => {
       }
     }
 
+    // Salt is only ever shown to the technician for pools flagged as having
+    // a salt system — the reading still gets saved regardless (defaults to
+    // a placeholder value), so it must be excluded here the same way.
     const readingsRows = Object.entries(CHEMICAL_LABELS)
+      .filter(([key]) => key !== "salt" || client.has_salt_system)
       .map(([key, label]) => {
         const value = (chem as Record<string, number | null>)[key];
         if (value === null || value === undefined) return "";
