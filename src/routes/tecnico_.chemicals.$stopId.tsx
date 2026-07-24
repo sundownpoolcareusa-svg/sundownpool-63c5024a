@@ -172,6 +172,20 @@ function TechnicianChemicalsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // For clients with both Pool and Spa, saving must not immediately complete
+  // the stop — switching tabs discards the other body's unsaved edits, so a
+  // single "save & complete" button only ever persisted whichever tab was
+  // active, silently dropping the other one. This saves just the active tab
+  // and stays on the page so both can be recorded before finishing the visit.
+  const saveOnlyMut = useMutation({
+    mutationFn: () => saveMyStopChemicals(stopId, { readings, products, notes }, bodyType),
+    onSuccess: () => {
+      toast.success(`Químicos da ${bodyType === "pool" ? "piscina" : "spa"} salvos!`);
+      qc.invalidateQueries({ queryKey: ["my-stop-chemicals", stopId, bodyType] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const filterCleanMut = useMutation({
     mutationFn: () => logMyStopFilterCleaning(stopId),
     onSuccess: () => {
@@ -447,21 +461,52 @@ function TechnicianChemicalsPage() {
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--dash-border)] bg-[var(--dash-surface)] p-3">
-        <div className="mx-auto flex max-w-3xl gap-3">
-          <button
-            onClick={() => navigate({ to: "/tecnico", search: { view: "rota" } })}
-            className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-3 text-sm font-bold text-[var(--dash-text-secondary)]"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={() => saveMut.mutate()}
-            disabled={saveMut.isPending}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white disabled:opacity-50"
-            style={{ background: "var(--dash-green)" }}
-          >
-            <Check className="h-4 w-4" /> {saveMut.isPending ? "Salvando..." : "Salvar e Concluir"}
-          </button>
+        <div className="mx-auto max-w-3xl space-y-2">
+          {stop?.has_spa ? (
+            <>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => navigate({ to: "/tecnico", search: { view: "rota" } })}
+                  className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-3 text-sm font-bold text-[var(--dash-text-secondary)]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => saveOnlyMut.mutate()}
+                  disabled={saveOnlyMut.isPending}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-[12px] border-2 py-3 text-sm font-bold disabled:opacity-50"
+                  style={{ borderColor: "var(--dash-navy)", color: "var(--dash-navy)" }}
+                >
+                  <Check className="h-4 w-4" /> {saveOnlyMut.isPending ? "Salvando..." : `Salvar ${bodyType === "pool" ? "Piscina" : "Spa"}`}
+                </button>
+              </div>
+              <button
+                onClick={() => saveMut.mutate()}
+                disabled={saveMut.isPending}
+                className="flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white disabled:opacity-50"
+                style={{ background: "var(--dash-green)" }}
+              >
+                <Check className="h-4 w-4" /> {saveMut.isPending ? "Concluindo..." : "Concluir Visita"}
+              </button>
+            </>
+          ) : (
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate({ to: "/tecnico", search: { view: "rota" } })}
+                className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-3 text-sm font-bold text-[var(--dash-text-secondary)]"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => saveMut.mutate()}
+                disabled={saveMut.isPending}
+                className="flex flex-1 items-center justify-center gap-2 rounded-[12px] py-3 text-sm font-bold text-white disabled:opacity-50"
+                style={{ background: "var(--dash-green)" }}
+              >
+                <Check className="h-4 w-4" /> {saveMut.isPending ? "Salvando..." : "Salvar e Concluir"}
+              </button>
+            </div>
+          )}
         </div>
       </footer>
 
@@ -529,6 +574,7 @@ function TechnicianChemicalsPage() {
                         <>
                           <div className="mt-2 divide-y divide-[var(--dash-border-table)]">
                             {READING_ORDER.map((key) => {
+                              if (key === "salt" && !stop?.has_salt_system) return null;
                               const meta = CHEMICAL_READING_META[key];
                               const value = entry.chemicals[key];
                               if (value === null) return null;
