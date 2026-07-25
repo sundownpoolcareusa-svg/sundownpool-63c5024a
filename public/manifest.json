@@ -1,0 +1,12 @@
+{
+  "name": "Sundown Pool Care",
+  "short_name": "Sundown",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0C2A4D",
+  "theme_color": "#0C2A4D",
+  "icons": [
+    { "src": "/app-icon.png", "sizes": "709x709", "type": "image/png" }
+  ]
+}
