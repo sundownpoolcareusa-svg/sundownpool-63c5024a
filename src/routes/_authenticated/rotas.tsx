@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker, TrafficLayer, useJsApiLoader } from "@react-google-maps/api";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
@@ -10,10 +10,12 @@ import { TechAvatar } from "@/components/TechAvatar";
 import {
   Plus, Phone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Play, Trash2, MapPin, CalendarDays,
   CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X,
+  Timer, Route as RouteIcon, Car, Building2, Home as HomeIcon, RotateCcw, FileText,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
   addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, clientFullAddress, setClientTechnician,
+  formatPhone,
   type RouteStop, type StopStatus, type Technician, type Client, type RouteRow,
 } from "@/lib/db";
 import { geocodeAndSaveClient } from "@/lib/geocode";
@@ -91,6 +93,15 @@ function statusMarkerColor(status: StopStatus) {
   return "#94A3B8";
 }
 
+// Same label the technician sees on their own /tecnico stop cards.
+function stopStatusLabel(status: StopStatus) {
+  return status === "Em serviço" ? "Em andamento" : status === "Concluído" ? "Concluído" : "Pendente";
+}
+
+function isCommercial(clientType: string) {
+  return clientType.toLowerCase().startsWith("comm") || clientType.toLowerCase().startsWith("comer");
+}
+
 const GOOGLE_MAPS_KEY = (import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined) ?? "";
 const SARASOTA_CENTER = { lat: 27.3364, lng: -82.5307 };
 const mapContainerStyle = { width: "100%", height: "100%" };
@@ -138,8 +149,8 @@ function haversineMiles(a: LatLng, b: LatLng) {
 }
 
 function RouteMap({
-  stops, coords, isLoaded, loadError,
-}: { stops: RouteStop[]; coords: Record<string, LatLng>; isLoaded: boolean; loadError?: Error }) {
+  stops, coords, isLoaded, loadError, showTraffic,
+}: { stops: RouteStop[]; coords: Record<string, LatLng>; isLoaded: boolean; loadError?: Error; showTraffic?: boolean }) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const points = stops.map((s) => ({ s, pos: coords[s.id] })).filter((p): p is { s: RouteStop; pos: LatLng } => !!p.pos);
@@ -210,6 +221,7 @@ function RouteMap({
         onLoad={(m) => { mapRef.current = m; setMap(m); }}
         options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false }}
       >
+        {showTraffic && <TrafficLayer />}
         {points.map((p, i) => (
           <Marker
             key={p.s.id}
@@ -349,6 +361,8 @@ function RotasPage() {
   const [addTechOpen, setAddTechOpen] = useState(false);
   const [detailStopId, setDetailStopId] = useState<string | null>(null);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+  const [mapSheetOpen, setMapSheetOpen] = useState(false);
+  const [showTraffic, setShowTraffic] = useState(false);
 
   const dateStr = toDateStr(selectedDate);
   const days = weekDays(selectedDate);
@@ -451,6 +465,57 @@ function RotasPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Same anchor-on-home-address optimization the technician's own /tecnico
+  // "Otimizar" button runs — mirrored here so the owner can trigger it too.
+  const optimizeMut = useMutation({
+    mutationFn: async () => {
+      if (!mapIsLoaded) throw new Error("Mapa ainda carregando, tente novamente em instantes");
+      const orderedStops = stops.slice().sort((a, b) => a.position - b.position);
+      const withCoords = orderedStops.filter((s) => coords[s.id]);
+      const withoutCoords = orderedStops.filter((s) => !coords[s.id]);
+      if (withCoords.length < 3) throw new Error("Precisa de pelo menos 3 paradas com endereço para otimizar");
+
+      const directionsService = new google.maps.DirectionsService();
+      const home = activeRoute?.technician?.home_lat != null && activeRoute?.technician?.home_lng != null
+        ? { lat: activeRoute.technician.home_lat, lng: activeRoute.technician.home_lng }
+        : null;
+
+      if (home) {
+        const result = await directionsService.route({
+          origin: home,
+          destination: home,
+          waypoints: withCoords.map((s) => ({ location: coords[s.id] })),
+          optimizeWaypoints: true,
+          travelMode: google.maps.TravelMode.DRIVING,
+        });
+        const order = result.routes[0]?.waypoint_order ?? withCoords.map((_, i) => i);
+        const newOrder = [...order.map((i) => withCoords[i]), ...withoutCoords];
+        await reorderStops(newOrder.map((s) => s.id));
+        return;
+      }
+
+      const first = withCoords[0];
+      const last = withCoords[withCoords.length - 1];
+      const middle = withCoords.slice(1, -1);
+      const result = await directionsService.route({
+        origin: coords[first.id],
+        destination: coords[last.id],
+        waypoints: middle.map((s) => ({ location: coords[s.id] })),
+        optimizeWaypoints: true,
+        travelMode: google.maps.TravelMode.DRIVING,
+      });
+      const order = result.routes[0]?.waypoint_order ?? middle.map((_, i) => i);
+      const optimizedMiddle = order.map((i) => middle[i]);
+      const newOrder = [first, ...optimizedMiddle, last, ...withoutCoords];
+      await reorderStops(newOrder.map((s) => s.id));
+    },
+    onSuccess: () => {
+      toast.success("Rota otimizada!");
+      qc.invalidateQueries({ queryKey: ["route-stops", activeRoute?.id] });
+    },
+    onError: (e: Error) => toast.error(e.message || "Não foi possível otimizar a rota"),
+  });
+
   function move(index: number, dir: -1 | 1) {
     const next = [...stops];
     const target = index + dir;
@@ -503,9 +568,9 @@ function RotasPage() {
 
         <MobileDaySelector selected={selectedDate} onSelect={setSelectedDate} />
 
-        <StatRow items={mobileCards} />
-
         {technicianId === "all" ? (
+          <>
+          <StatRow items={mobileCards} />
           <div className="space-y-2">
             {technicians.length === 0 ? (
               <p className="text-sm text-[var(--dash-text-muted)]">No technicians yet.</p>
@@ -543,6 +608,7 @@ function RotasPage() {
               })
             )}
           </div>
+          </>
         ) : (
           <>
             <button
@@ -553,15 +619,22 @@ function RotasPage() {
               <ChevronLeft className="h-4 w-4" /> Todos os técnicos
             </button>
             {activeRoute ? (
-              <StopsList
+              <TechDayRoute
                 route={activeRoute}
                 stops={stops}
-                onMove={move}
+                summary={summary}
+                coords={coords}
+                mapIsLoaded={mapIsLoaded}
+                mapLoadError={mapLoadError}
                 onStatus={handleStatusChange}
-                onRemove={(id) => removeMut.mutate(id)}
-                onAddStop={() => setAddOpen(true)}
-                pending={statusMut.isPending}
-                showDelete={false}
+                statusPending={statusMut.isPending}
+                onOptimize={() => optimizeMut.mutate()}
+                optimizePending={optimizeMut.isPending}
+                mapSheetOpen={mapSheetOpen}
+                onOpenMap={() => setMapSheetOpen(true)}
+                onCloseMap={() => setMapSheetOpen(false)}
+                showTraffic={showTraffic}
+                onToggleTraffic={() => setShowTraffic((v) => !v)}
               />
             ) : (
               <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
@@ -833,6 +906,235 @@ function MobileDaySelector({ selected, onSelect }: { selected: Date; onSelect: (
           </button>
         );
       })}
+    </div>
+  );
+}
+
+// Mirrors the technician's own /tecnico "Rota" view exactly (same stat
+// cards, Ver mapa/Otimizar/Tráfego row, numbered stop cards) so when the
+// owner drills into a technician from Rotas, it's the same screen that
+// technician sees on their own phone.
+function TechDayRoute({
+  route, stops, summary, coords, mapIsLoaded, mapLoadError,
+  onStatus, statusPending, onOptimize, optimizePending,
+  mapSheetOpen, onOpenMap, onCloseMap, showTraffic, onToggleTraffic,
+}: {
+  route: RouteRow;
+  stops: RouteStop[];
+  summary: { total: number; completed: number; remaining: number; etaLabel: string };
+  coords: Record<string, LatLng>;
+  mapIsLoaded: boolean;
+  mapLoadError?: Error;
+  onStatus: (stop: RouteStop, status: StopStatus) => void;
+  statusPending: boolean;
+  onOptimize: () => void;
+  optimizePending: boolean;
+  mapSheetOpen: boolean;
+  onOpenMap: () => void;
+  onCloseMap: () => void;
+  showTraffic: boolean;
+  onToggleTraffic: () => void;
+}) {
+  const statCards = [
+    { icon: CheckCircle2, tint: "#16A34A", value: summary.completed, label: "Concluídas" },
+    { icon: Timer, tint: "#E8813A", value: summary.remaining, label: "Pendentes" },
+    { icon: RouteIcon, tint: "#2563EB", value: summary.total, label: "Total do dia" },
+    { icon: Timer, tint: "#7C3AED", value: summary.etaLabel, label: "Tempo estimado" },
+  ];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <TechAvatar
+          name={route.technician?.name || "?"}
+          color={route.technician?.color || "var(--dash-navy)"}
+          photoPath={route.technician?.photo_path}
+          className="h-11 w-11"
+          textClassName="text-sm"
+        />
+        <div>
+          <h2 className="text-lg font-extrabold text-[var(--dash-text)]">{route.technician?.name}</h2>
+          <div className="text-xs text-[var(--dash-text-muted)]">
+            {stops.length} paradas • <span style={{ color: "var(--dash-green)" }}>{summary.completed} concluídas</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {statCards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.label} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+              <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: `${c.tint}1A`, color: c.tint }}>
+                <Icon className="h-4 w-4" />
+              </div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{c.value}</div>
+              <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">{c.label}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-3 gap-1.5">
+        <button
+          onClick={onOpenMap}
+          className="flex items-center justify-center gap-1 rounded-full border border-[var(--dash-border)] bg-white px-1.5 py-2 text-[11px] font-bold text-[var(--dash-text-secondary)]"
+        >
+          <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">Ver mapa</span>
+        </button>
+        <button
+          onClick={onOptimize}
+          disabled={optimizePending}
+          className="flex items-center justify-center gap-1 rounded-full border border-[var(--dash-border)] bg-white px-1.5 py-2 text-[11px] font-bold text-[var(--dash-text-secondary)] disabled:opacity-50"
+        >
+          <RouteIcon className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">{optimizePending ? "Otimizando..." : "Otimizar"}</span>
+        </button>
+        <button
+          onClick={() => { onToggleTraffic(); onOpenMap(); }}
+          className="flex items-center justify-center gap-1 rounded-full border border-[var(--dash-border)] bg-white px-1.5 py-2 text-[11px] font-bold text-[var(--dash-text-secondary)]"
+        >
+          <Car className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-navy)" }} /> <span className="truncate">Tráfego</span>
+        </button>
+      </div>
+
+      {mapSheetOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40" onClick={onCloseMap} />
+          <div className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white shadow-2xl">
+            <div className="relative pt-2.5">
+              <div className="mx-auto h-1.5 w-10 rounded-full bg-[var(--dash-border)]" />
+              <button onClick={onCloseMap} className="absolute right-4 top-3 grid h-9 w-9 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3 px-4 pb-6 pt-2">
+              <div>
+                <div className="text-lg font-extrabold text-[var(--dash-text)]">Mapa da rota</div>
+                <p className="text-[13px] text-[var(--dash-text-muted)]">{route.technician?.name}</p>
+              </div>
+              <MapErrorBoundary key={route.id}>
+                <RouteMap stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} showTraffic={showTraffic} />
+              </MapErrorBoundary>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="space-y-0">
+        {stops.length === 0 ? (
+          <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white py-14 text-center">
+            <MapPin className="mx-auto h-8 w-8 text-[var(--dash-text-muted)]" />
+            <p className="mt-3 text-sm font-semibold text-[var(--dash-text-secondary)]">Nenhuma parada neste dia</p>
+          </div>
+        ) : (
+          stops.map((stop, i) => {
+            const badgeStyle = STATUS_STYLES[stop.status] ?? STATUS_STYLES["Pendente"];
+            const next = nextStatus(stop.status);
+            const address = stop.client ? clientFullAddress(stop.client) : "";
+            const commercial = isCommercial(stop.client?.client_type ?? "");
+            return (
+              <div key={stop.id} className="relative mb-3">
+                <div
+                  className="absolute -left-2 -top-2 z-10 grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold text-white ring-2 ring-white"
+                  style={{ background: statusMarkerColor(stop.status) }}
+                >
+                  {i + 1}
+                </div>
+                <div className="flex-1 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 pl-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="truncate text-[14px] font-bold text-[var(--dash-text)]">{stop.client?.name}</div>
+                      {address ? (
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="truncate text-[12px] text-[var(--dash-text-muted-2)] underline decoration-dotted underline-offset-2"
+                        >
+                          {address}
+                        </a>
+                      ) : (
+                        <span className="text-[12px] text-[var(--dash-text-muted-2)]">—</span>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <span className="whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badgeStyle.bg, color: badgeStyle.text }}>
+                          {stopStatusLabel(stop.status)}
+                        </span>
+                        {stop.status === "Concluído" && (
+                          <button
+                            onClick={() => { if (confirm(`Voltar a parada de ${stop.client?.name ?? "cliente"} para Pendente?`)) onStatus(stop, "Pendente"); }}
+                            title="Desfazer conclusão"
+                            className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[var(--dash-text-muted-2)]"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="mt-1 text-[11px] font-semibold text-[var(--dash-text-muted-2)]">{stop.scheduled_time ? stop.scheduled_time.slice(0, 5) : "—"}</div>
+                    </div>
+                  </div>
+
+                  {stop.notes && (
+                    <div className="mt-2 flex items-start gap-1.5 rounded-[10px] bg-[#FEF3C7] px-2.5 py-1.5 text-[12px] text-[#92400E]">
+                      <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      {stop.notes}
+                    </div>
+                  )}
+
+                  <div className="mt-2 flex flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <span
+                      title={commercial ? "Comercial" : "Residencial"}
+                      className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
+                      style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
+                    >
+                      {commercial ? <Building2 className="h-3.5 w-3.5" /> : <HomeIcon className="h-3.5 w-3.5" />}
+                    </span>
+                    <Link
+                      to="/chemicals/$stopId"
+                      params={{ stopId: stop.id }}
+                      title="Chemical"
+                      className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-1 text-[11px] font-bold text-white"
+                      style={{ background: "var(--dash-green)" }}
+                    >
+                      <FlaskConical className="h-3 w-3" />
+                      Chemical
+                    </Link>
+                    {stop.client?.phone && (
+                      <a href={`tel:${stop.client.phone}`} title={formatPhone(stop.client.phone)} className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                        <Phone className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                    {address && (
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Navigate"
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
+                      >
+                        <Navigation className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                    {next && (
+                      <button
+                        onClick={() => onStatus(stop, next)}
+                        disabled={statusPending}
+                        className="flex shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"
+                        style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
+                      >
+                        {next === "Concluído" ? <Check className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                        {next === "Concluído" ? "Concluir" : "Iniciar"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
