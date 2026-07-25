@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import { TechAvatar } from "@/components/TechAvatar";
 import { PhotoUploader } from "@/components/PhotoUploader";
-import { Plus, Pencil, UserX, HardHat } from "lucide-react";
+import { Plus, Pencil, UserX, HardHat, Crown } from "lucide-react";
 import {
   listTechnicians,
   createTechnician,
@@ -43,6 +43,8 @@ function TecnicosPage() {
     queryKey: ["technicians"],
     queryFn: listTechnicians,
   });
+  const master = technicians.filter((t) => t.is_owner);
+  const staff = technicians.filter((t) => !t.is_owner);
 
   const deactivateMut = useMutation({
     mutationFn: (id: string) => deactivateTechnician(id),
@@ -65,13 +67,13 @@ function TecnicosPage() {
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h1 className="text-xl font-extrabold text-[var(--dash-text)] sm:text-2xl">
-              Technicians
+              Users
             </h1>
             <button
               onClick={() => setOpen(true)}
               className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
             >
-              <Plus className="h-4 w-4" /> New Technician
+              <Plus className="h-4 w-4" /> New User
             </button>
           </div>
 
@@ -81,13 +83,13 @@ function TecnicosPage() {
             <div className="mt-8 rounded-[18px] border-2 border-dashed border-[var(--dash-border)] py-16 text-center">
               <HardHat className="mx-auto h-10 w-10 text-[var(--dash-text-muted)]" />
               <p className="mt-3 font-semibold text-[var(--dash-text-secondary)]">
-                No technicians registered
+                No users registered
               </p>
               <button
                 onClick={() => setOpen(true)}
                 className="mt-4 inline-flex items-center gap-2 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white"
               >
-                <Plus className="h-4 w-4" /> Add first technician
+                <Plus className="h-4 w-4" /> Add first user
               </button>
             </div>
           ) : (
@@ -96,7 +98,7 @@ function TecnicosPage() {
                 <thead>
                   <tr className="border-b border-[var(--dash-border-table)] text-left text-[var(--dash-text-muted)]">
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">
-                      Technician
+                      User
                     </th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Phone</th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Color</th>
@@ -105,47 +107,26 @@ function TecnicosPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {technicians.map((t) => (
-                    <tr key={t.id} className="border-b border-[var(--dash-border-table)]">
-                      <td className="py-4">
-                        <div className="flex items-center gap-3">
-                          <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-10 w-10" textClassName="text-xs" />
-                          <div className="font-bold text-[var(--dash-text)]">{t.name}</div>
-                        </div>
-                      </td>
-                      <td className="py-4 text-[var(--dash-text)]">
-                        {t.phone ? formatPhone(t.phone) : "—"}
-                      </td>
-                      <td className="py-4">
-                        <span
-                          className="inline-block h-4 w-4 rounded-full"
-                          style={{ background: t.color }}
-                        />
-                      </td>
-                      <td className="py-4">
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setEditing(t)}
-                            title="Edit"
-                            className="hover:opacity-70"
-                            style={{ color: "var(--dash-navy)" }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeactivating(t)}
-                            title="Remove"
-                            className="hover:opacity-70"
-                            style={{ color: "var(--dash-red)" }}
-                          >
-                            <UserX className="h-4 w-4" />
-                          </button>
-                        </div>
+                {master.length > 0 && (
+                  <tbody>
+                    <tr>
+                      <td colSpan={4} className="pb-1 pt-4 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted-2)]">
+                        Master
                       </td>
                     </tr>
+                    {master.map((t) => (
+                      <UserRow key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
+                    ))}
+                  </tbody>
+                )}
+                <tbody>
+                  <tr>
+                    <td colSpan={4} className="pb-1 pt-4 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted-2)]">
+                      Users
+                    </td>
+                  </tr>
+                  {staff.map((t) => (
+                    <UserRow key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
                   ))}
                 </tbody>
               </table>
@@ -169,7 +150,7 @@ function TecnicosPage() {
       <Modal
         open={!!deactivating}
         onClose={() => setDeactivating(null)}
-        title="Remove technician"
+        title="Remove user"
         maxWidth="max-w-md"
       >
         {deactivating && (
@@ -201,6 +182,53 @@ function TecnicosPage() {
   );
 }
 
+function UserRow({ t, onEdit, onRemove }: { t: Technician; onEdit: () => void; onRemove: () => void }) {
+  return (
+    <tr className="border-b border-[var(--dash-border-table)]">
+      <td className="py-4">
+        <div className="flex items-center gap-3">
+          <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-10 w-10" textClassName="text-xs" />
+          <div className="flex items-center gap-1.5">
+            <div className="font-bold text-[var(--dash-text)]">{t.name}</div>
+            {t.is_owner && <Crown className="h-3.5 w-3.5" style={{ color: "var(--dash-orange)" }} />}
+          </div>
+        </div>
+      </td>
+      <td className="py-4 text-[var(--dash-text)]">
+        {t.phone ? formatPhone(t.phone) : "—"}
+      </td>
+      <td className="py-4">
+        <span
+          className="inline-block h-4 w-4 rounded-full"
+          style={{ background: t.color }}
+        />
+      </td>
+      <td className="py-4">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onEdit}
+            title="Edit"
+            className="hover:opacity-70"
+            style={{ color: "var(--dash-navy)" }}
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onRemove}
+            title="Remove"
+            className="hover:opacity-70"
+            style={{ color: "var(--dash-red)" }}
+          >
+            <UserX className="h-4 w-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function TechnicianFormModal({
   open,
   onClose,
@@ -212,7 +240,7 @@ function TechnicianFormModal({
   onSaved: () => void;
   editing?: Technician | null;
 }) {
-  const empty = { name: "", phone: "", color: COLORS[0], photo_path: null as string | null };
+  const empty = { name: "", phone: "", color: COLORS[0], photo_path: null as string | null, is_owner: false };
   const [form, setForm] = useState(empty);
 
   const editingId = editing?.id ?? null;
@@ -220,7 +248,7 @@ function TechnicianFormModal({
   if (open && editingId !== loadedId) {
     setForm(
       editing
-        ? { name: editing.name, phone: editing.phone || "", color: editing.color, photo_path: editing.photo_path ?? null }
+        ? { name: editing.name, phone: editing.phone || "", color: editing.color, photo_path: editing.photo_path ?? null, is_owner: editing.is_owner ?? false }
         : empty,
     );
     setLoadedId(editingId);
@@ -238,7 +266,7 @@ function TechnicianFormModal({
       }
     },
     onSuccess: () => {
-      toast.success(editing ? "Technician updated!" : "Technician added!");
+      toast.success(editing ? "User updated!" : "User added!");
       setForm(empty);
       onSaved();
       onClose();
@@ -250,7 +278,7 @@ function TechnicianFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={editing ? "Edit Technician" : "New Technician"}
+      title={editing ? "Edit User" : "New User"}
       maxWidth="max-w-md"
     >
       <form
@@ -309,6 +337,15 @@ function TechnicianFormModal({
             max={1}
           />
         )}
+        <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+          <input
+            type="checkbox"
+            checked={form.is_owner}
+            onChange={(e) => setForm({ ...form, is_owner: e.target.checked })}
+            className="h-4 w-4"
+          />
+          This is the Master (company owner)
+        </label>
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
@@ -321,7 +358,7 @@ function TechnicianFormModal({
             disabled={mut.isPending}
             className="rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {mut.isPending ? "Saving..." : editing ? "Update Technician" : "Save Technician"}
+            {mut.isPending ? "Saving..." : editing ? "Update User" : "Save User"}
           </button>
         </div>
       </form>
