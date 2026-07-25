@@ -440,7 +440,6 @@ export type Database = {
           notes: string | null
           on_way_email_sent_at: string | null
           photo_email_sent_at: string | null
-          photo_taken_at: string | null
           position: number
           route_id: string
           scheduled_time: string | null
@@ -459,7 +458,6 @@ export type Database = {
           notes?: string | null
           on_way_email_sent_at?: string | null
           photo_email_sent_at?: string | null
-          photo_taken_at?: string | null
           position?: number
           route_id: string
           scheduled_time?: string | null
@@ -478,7 +476,6 @@ export type Database = {
           notes?: string | null
           on_way_email_sent_at?: string | null
           photo_email_sent_at?: string | null
-          photo_taken_at?: string | null
           position?: number
           route_id?: string
           scheduled_time?: string | null
@@ -710,6 +707,8 @@ export type Database = {
         Row: {
           active: boolean
           auth_user_id: string | null
+          can_manage_clients: boolean
+          can_view_earnings: boolean
           color: string
           created_at: string
           home_address: string | null
@@ -728,6 +727,8 @@ export type Database = {
         Insert: {
           active?: boolean
           auth_user_id?: string | null
+          can_manage_clients?: boolean
+          can_view_earnings?: boolean
           color?: string
           created_at?: string
           home_address?: string | null
@@ -746,6 +747,8 @@ export type Database = {
         Update: {
           active?: boolean
           auth_user_id?: string | null
+          can_manage_clients?: boolean
+          can_view_earnings?: boolean
           color?: string
           created_at?: string
           home_address?: string | null
@@ -975,12 +978,14 @@ export type Database = {
           client_lat: number
           client_lng: number
           client_name: string
+          client_notify_photo: boolean
           client_phone: string
           client_state: string
           client_type: string
           client_zip: string
           completed_at: string
           has_chemicals: boolean
+          has_visit_photo: boolean
           position: number
           route_id: string
           scheduled_time: string
@@ -991,23 +996,23 @@ export type Database = {
         }[]
       }
       get_my_technicians_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          id: string
-          name: string
-          phone: string | null
-          color: string
           active: boolean
-          auth_user_id: string | null
-          auth_email: string | null
-          home_address: string | null
-          home_lat: number | null
-          home_lng: number | null
-          photo_path: string | null
-          is_owner: boolean
-          can_view_earnings: boolean
+          auth_email: string
+          auth_user_id: string
           can_manage_clients: boolean
+          can_view_earnings: boolean
+          color: string
           created_at: string
+          home_address: string
+          home_lat: number
+          home_lng: number
+          id: string
+          is_owner: boolean
+          name: string
+          phone: string
+          photo_path: string
         }[]
       }
       log_my_client_filter_change: {
