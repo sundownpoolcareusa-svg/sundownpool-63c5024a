@@ -6,13 +6,15 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import { TechAvatar } from "@/components/TechAvatar";
 import { PhotoUploader } from "@/components/PhotoUploader";
-import { Plus, Pencil, UserX, HardHat, Crown } from "lucide-react";
+import { Plus, Pencil, UserX, HardHat, Crown, KeyRound } from "lucide-react";
 import {
-  listTechnicians,
+  listTechniciansAdmin,
   createTechnician,
   updateTechnician,
   deactivateTechnician,
-  type Technician,
+  createTechnicianLogin,
+  resetTechnicianPassword,
+  type TechnicianAdmin,
 } from "@/lib/db";
 import { toast } from "sonner";
 
@@ -37,11 +39,11 @@ const COLORS = ["#16A34A", "#2563EB", "#DC2626", "#D97706", "#7C3AED", "#0891B2"
 function TecnicosPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Technician | null>(null);
-  const [deactivating, setDeactivating] = useState<Technician | null>(null);
+  const [editing, setEditing] = useState<TechnicianAdmin | null>(null);
+  const [deactivating, setDeactivating] = useState<TechnicianAdmin | null>(null);
   const { data: technicians = [], isLoading } = useQuery({
-    queryKey: ["technicians"],
-    queryFn: listTechnicians,
+    queryKey: ["technicians-admin"],
+    queryFn: listTechniciansAdmin,
   });
   const master = technicians.filter((t) => t.is_owner);
   const staff = technicians.filter((t) => !t.is_owner);
@@ -49,8 +51,8 @@ function TecnicosPage() {
   const deactivateMut = useMutation({
     mutationFn: (id: string) => deactivateTechnician(id),
     onSuccess: () => {
-      toast.success("Technician removed");
-      qc.invalidateQueries({ queryKey: ["technicians"] });
+      toast.success("User removed");
+      qc.invalidateQueries({ queryKey: ["technicians-admin"] });
       setDeactivating(null);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -100,6 +102,7 @@ function TecnicosPage() {
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">
                       User
                     </th>
+                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Email</th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Phone</th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Color</th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">
@@ -110,7 +113,7 @@ function TecnicosPage() {
                 {master.length > 0 && (
                   <tbody>
                     <tr>
-                      <td colSpan={4} className="pb-1 pt-4 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted-2)]">
+                      <td colSpan={5} className="pb-1 pt-4 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted-2)]">
                         Master
                       </td>
                     </tr>
@@ -121,7 +124,7 @@ function TecnicosPage() {
                 )}
                 <tbody>
                   <tr>
-                    <td colSpan={4} className="pb-1 pt-4 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted-2)]">
+                    <td colSpan={5} className="pb-1 pt-4 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted-2)]">
                       Users
                     </td>
                   </tr>
@@ -138,13 +141,13 @@ function TecnicosPage() {
       <TechnicianFormModal
         open={open}
         onClose={() => setOpen(false)}
-        onSaved={() => qc.invalidateQueries({ queryKey: ["technicians"] })}
+        onSaved={() => { qc.invalidateQueries({ queryKey: ["technicians-admin"] }); qc.invalidateQueries({ queryKey: ["technicians"] }); }}
       />
       <TechnicianFormModal
         open={!!editing}
         onClose={() => setEditing(null)}
         editing={editing}
-        onSaved={() => qc.invalidateQueries({ queryKey: ["technicians"] })}
+        onSaved={() => { qc.invalidateQueries({ queryKey: ["technicians-admin"] }); qc.invalidateQueries({ queryKey: ["technicians"] }); }}
       />
 
       <Modal
@@ -182,7 +185,7 @@ function TecnicosPage() {
   );
 }
 
-function UserRow({ t, onEdit, onRemove }: { t: Technician; onEdit: () => void; onRemove: () => void }) {
+function UserRow({ t, onEdit, onRemove }: { t: TechnicianAdmin; onEdit: () => void; onRemove: () => void }) {
   return (
     <tr className="border-b border-[var(--dash-border-table)]">
       <td className="py-4">
@@ -193,6 +196,9 @@ function UserRow({ t, onEdit, onRemove }: { t: Technician; onEdit: () => void; o
             {t.is_owner && <Crown className="h-3.5 w-3.5" style={{ color: "var(--dash-orange)" }} />}
           </div>
         </div>
+      </td>
+      <td className="py-4 text-[var(--dash-text-secondary)]">
+        {t.auth_email ?? <span className="text-[var(--dash-text-muted)]">No login yet</span>}
       </td>
       <td className="py-4 text-[var(--dash-text)]">
         {t.phone ? formatPhone(t.phone) : "—"}
@@ -238,9 +244,12 @@ function TechnicianFormModal({
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  editing?: Technician | null;
+  editing?: TechnicianAdmin | null;
 }) {
-  const empty = { name: "", phone: "", color: COLORS[0], photo_path: null as string | null, is_owner: false };
+  const empty = {
+    name: "", phone: "", color: COLORS[0], photo_path: null as string | null, is_owner: false,
+    can_view_earnings: true, can_manage_clients: false,
+  };
   const [form, setForm] = useState(empty);
 
   const editingId = editing?.id ?? null;
@@ -248,7 +257,10 @@ function TechnicianFormModal({
   if (open && editingId !== loadedId) {
     setForm(
       editing
-        ? { name: editing.name, phone: editing.phone || "", color: editing.color, photo_path: editing.photo_path ?? null, is_owner: editing.is_owner ?? false }
+        ? {
+          name: editing.name, phone: editing.phone || "", color: editing.color, photo_path: editing.photo_path ?? null, is_owner: editing.is_owner ?? false,
+          can_view_earnings: editing.can_view_earnings ?? true, can_manage_clients: editing.can_manage_clients ?? false,
+        }
         : empty,
     );
     setLoadedId(editingId);
@@ -346,6 +358,37 @@ function TechnicianFormModal({
           />
           This is the Master (company owner)
         </label>
+
+        {!form.is_owner && (
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">
+              Permissions
+            </label>
+            <div className="mt-1 space-y-2">
+              <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+                <input
+                  type="checkbox"
+                  checked={form.can_view_earnings}
+                  onChange={(e) => setForm({ ...form, can_view_earnings: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                Can see $ values (route totals, averages) on their own dashboard
+              </label>
+              <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+                <input
+                  type="checkbox"
+                  checked={form.can_manage_clients}
+                  onChange={(e) => setForm({ ...form, can_manage_clients: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                Can add/edit clients (reserved — not available in the technician app yet)
+              </label>
+            </div>
+          </div>
+        )}
+
+        {editing && <LoginSection technician={editing} />}
+
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"
@@ -363,5 +406,89 @@ function TechnicianFormModal({
         </div>
       </form>
     </Modal>
+  );
+}
+
+// Creating/resetting a login happens immediately (its own button, its own
+// request) rather than being bundled into the main form's Save — it goes
+// through a separate Edge Function call, not the plain table update the
+// rest of the form uses, and success/failure for it is independent of
+// whether the name/phone/permissions changes above get saved.
+function LoginSection({ technician }: { technician: TechnicianAdmin }) {
+  const qc = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const createMut = useMutation({
+    mutationFn: () => createTechnicianLogin(technician.id, email, password),
+    onSuccess: () => {
+      toast.success("Login created!");
+      setEmail("");
+      setPassword("");
+      qc.invalidateQueries({ queryKey: ["technicians-admin"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const resetMut = useMutation({
+    mutationFn: () => resetTechnicianPassword(technician.id, password),
+    onSuccess: () => {
+      toast.success("Password updated!");
+      setPassword("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="rounded-[10px] border border-[var(--dash-border-input)] p-3">
+      <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">
+        <KeyRound className="h-3.5 w-3.5" /> Login
+      </div>
+      {technician.auth_user_id ? (
+        <div className="mt-2 space-y-2">
+          <p className="text-sm text-[var(--dash-text-secondary)]">{technician.auth_email}</p>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="New password"
+            className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+          />
+          <button
+            type="button"
+            disabled={!password || resetMut.isPending}
+            onClick={() => resetMut.mutate()}
+            className="rounded-[10px] border border-[var(--dash-border)] px-3 py-2 text-sm font-semibold text-[var(--dash-text-secondary)] disabled:opacity-50"
+          >
+            {resetMut.isPending ? "Saving..." : "Reset Password"}
+          </button>
+        </div>
+      ) : (
+        <div className="mt-2 space-y-2">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+          />
+          <button
+            type="button"
+            disabled={!email || !password || createMut.isPending}
+            onClick={() => createMut.mutate()}
+            className="rounded-[10px] bg-[var(--dash-navy)] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {createMut.isPending ? "Creating..." : "Create Login"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

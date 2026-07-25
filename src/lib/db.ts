@@ -211,8 +211,15 @@ export type Technician = {
   home_lng?: number | null;
   photo_path?: string | null;
   is_owner?: boolean;
+  can_view_earnings?: boolean;
+  can_manage_clients?: boolean;
   created_at: string;
 };
+
+// Same as Technician, plus the email linked to their /tecnico login (if
+// any) — only available via the admin-only get_my_technicians_admin RPC,
+// since auth.users isn't reachable through the normal client API.
+export type TechnicianAdmin = Technician & { auth_email: string | null };
 
 export type StopStatus = "Pendente" | "Em serviço" | "Concluído";
 
@@ -270,7 +277,7 @@ export async function setClientTechnician(clientId: string, technicianId: string
   if (error) throw error;
 }
 
-export async function createTechnician(values: { name: string; phone?: string; color?: string; photo_path?: string | null; is_owner?: boolean }) {
+export async function createTechnician(values: { name: string; phone?: string; color?: string; photo_path?: string | null; is_owner?: boolean; can_view_earnings?: boolean; can_manage_clients?: boolean }) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Not authenticated");
   const { data, error } = await supabase
@@ -284,7 +291,7 @@ export async function createTechnician(values: { name: string; phone?: string; c
 
 export async function updateTechnician(
   id: string,
-  values: { name: string; phone?: string | null; color?: string; photo_path?: string | null; is_owner?: boolean },
+  values: { name: string; phone?: string | null; color?: string; photo_path?: string | null; is_owner?: boolean; can_view_earnings?: boolean; can_manage_clients?: boolean },
 ) {
   const { error } = await supabase.from("technicians").update(values).eq("id", id);
   if (error) throw error;
@@ -295,6 +302,37 @@ export async function updateTechnician(
 export async function deactivateTechnician(id: string) {
   const { error } = await supabase.from("technicians").update({ active: false }).eq("id", id);
   if (error) throw error;
+}
+
+// Same as listTechnicians, plus each one's login email (if they have a
+// /tecnico login) — used by the owner's Users admin page only.
+export async function listTechniciansAdmin() {
+  const { data, error } = await supabase.rpc("get_my_technicians_admin");
+  if (error) throw error;
+  return (data ?? []) as TechnicianAdmin[];
+}
+
+// Creates a brand-new /tecnico login for a technician who doesn't have one
+// yet, and links it to their technician record. Goes through an Edge
+// Function since creating auth users requires the service role key, which
+// can never be used from the browser.
+export async function createTechnicianLogin(technicianId: string, email: string, password: string) {
+  const { data, error } = await supabase.functions.invoke("manage-technician-login", {
+    body: { action: "create", technician_id: technicianId, email, password },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error ?? "Failed to create login");
+}
+
+// Sets a new password on a technician's existing /tecnico login. Same
+// Edge Function as createTechnicianLogin — resetting another user's
+// password also requires the service role key.
+export async function resetTechnicianPassword(technicianId: string, password: string) {
+  const { data, error } = await supabase.functions.invoke("manage-technician-login", {
+    body: { action: "reset_password", technician_id: technicianId, password },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error ?? "Failed to reset password");
 }
 
 export async function listRoutesForDate(date: string) {
