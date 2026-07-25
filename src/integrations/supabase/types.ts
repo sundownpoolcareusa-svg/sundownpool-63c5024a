@@ -716,8 +716,6 @@ export type Database = {
           home_lng: number | null
           id: string
           is_owner: boolean
-          can_view_earnings: boolean
-          can_manage_clients: boolean
           name: string
           phone: string | null
           photo_path: string | null
@@ -736,8 +734,6 @@ export type Database = {
           home_lng?: number | null
           id?: string
           is_owner?: boolean
-          can_view_earnings?: boolean
-          can_manage_clients?: boolean
           name: string
           phone?: string | null
           photo_path?: string | null
@@ -756,8 +752,6 @@ export type Database = {
           home_lng?: number | null
           id?: string
           is_owner?: boolean
-          can_view_earnings?: boolean
-          can_manage_clients?: boolean
           name?: string
           phone?: string | null
           photo_path?: string | null
