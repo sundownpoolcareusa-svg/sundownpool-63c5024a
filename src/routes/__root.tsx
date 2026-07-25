@@ -96,8 +96,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "Sundown Pool Care" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
+      { name: "theme-color", content: "#0C2A4D" },
     ],
     links: [
+      // A real Web App Manifest (scope: "/") is what actually keeps a Home
+      // Screen icon in standalone mode while navigating between different
+      // routes (e.g. /dashboard -> /rotas) — the apple-mobile-web-app-*
+      // meta tags alone only reliably cover the single page that was
+      // added, which is why every page but the entry one was dropping back
+      // into Safari's browser chrome the moment you tapped to a new route.
+      { rel: "manifest", href: "/manifest.json" },
       {
         rel: "stylesheet",
         href: appCss,
