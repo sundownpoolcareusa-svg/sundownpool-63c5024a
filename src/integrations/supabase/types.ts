@@ -717,6 +717,8 @@ export type Database = {
           home_lng: number | null
           id: string
           is_owner: boolean
+          can_view_earnings: boolean
+          can_manage_clients: boolean
           name: string
           phone: string | null
           photo_path: string | null
@@ -733,6 +735,8 @@ export type Database = {
           home_lng?: number | null
           id?: string
           is_owner?: boolean
+          can_view_earnings?: boolean
+          can_manage_clients?: boolean
           name: string
           phone?: string | null
           photo_path?: string | null
@@ -749,6 +753,8 @@ export type Database = {
           home_lng?: number | null
           id?: string
           is_owner?: boolean
+          can_view_earnings?: boolean
+          can_manage_clients?: boolean
           name?: string
           phone?: string | null
           photo_path?: string | null
@@ -982,6 +988,26 @@ export type Database = {
           status: string
           stop_id: string
           stop_notes: string
+        }[]
+      }
+      get_my_technicians_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          phone: string | null
+          color: string
+          active: boolean
+          auth_user_id: string | null
+          auth_email: string | null
+          home_address: string | null
+          home_lat: number | null
+          home_lng: number | null
+          photo_path: string | null
+          is_owner: boolean
+          can_view_earnings: boolean
+          can_manage_clients: boolean
+          created_at: string
         }[]
       }
       log_my_client_filter_change: {

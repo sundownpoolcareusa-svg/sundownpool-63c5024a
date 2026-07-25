@@ -612,6 +612,7 @@ function TecnicoPage() {
             serviceJobs={serviceJobs}
             isLoading={isLoadingDashboard || isLoadingAlerts}
             error={dashboardError ?? alertsError ?? null}
+            canViewEarnings={technician?.can_view_earnings ?? true}
             onJumpToday={() => setDate(new Date())}
             onSelectJob={setSelectedJob}
             onOpenActions={() => setView("acoes")}
@@ -1912,10 +1913,10 @@ const ALERT_META: Record<TechnicianAlert["alert_type"], { label: string; icon: t
 // All numbers come from SECURITY DEFINER RPCs since the technician has no
 // direct read access to clients' financial fields, chemicals, or invoices.
 function TecnicoHomeDashboard({
-  date, stats, clients, alerts, serviceJobs, isLoading, error, onJumpToday, onSelectJob, onOpenActions,
+  date, stats, clients, alerts, serviceJobs, isLoading, error, canViewEarnings, onJumpToday, onSelectJob, onOpenActions,
 }: {
   date: Date; stats: TechnicianDashboardStats | null; clients: TechnicianClient[]; alerts: TechnicianAlert[]; serviceJobs: ServiceJob[];
-  isLoading: boolean; error: Error | null; onJumpToday: () => void; onSelectJob: (j: ServiceJob) => void; onOpenActions: () => void;
+  isLoading: boolean; error: Error | null; canViewEarnings: boolean; onJumpToday: () => void; onSelectJob: (j: ServiceJob) => void; onOpenActions: () => void;
 }) {
   if (error) {
     return (
@@ -1942,7 +1943,7 @@ function TecnicoHomeDashboard({
     { icon: CalendarDays, tint: "#2563EB", value: stats.clients_today, label: "Clientes hoje" },
     { icon: CheckCircle2, tint: "#16A34A", value: stats.completed_today, label: "Concluídos" },
     { icon: AlertTriangle, tint: "#DC2626", value: totalAlerts, label: "Alertas", onClick: onOpenActions },
-    { icon: DollarSign, tint: "#0891B2", value: fmt(stats.avg_cost_per_visit), label: "Custo médio/visita" },
+    { icon: DollarSign, tint: "#0891B2", value: canViewEarnings ? fmt(stats.avg_cost_per_visit) : "—", label: "Custo médio/visita" },
   ];
   const openJobs = serviceJobs.filter((j) => j.status !== "Concluído");
 
@@ -1979,32 +1980,36 @@ function TecnicoHomeDashboard({
         })}
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
-          <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#DBEAFE", color: "#2563EB" }}>
-            <DollarSign className="h-4 w-4" />
+      {canViewEarnings && (
+        <>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+              <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#DBEAFE", color: "#2563EB" }}>
+                <DollarSign className="h-4 w-4" />
+              </div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(stats.estimated_route_revenue)}</div>
+              <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Total mensal</div>
+            </div>
+            <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+              <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#CCFBF1", color: "#0D9488" }}>
+                <DollarSign className="h-4 w-4" />
+              </div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerPool)}</div>
+              <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por piscina</div>
+            </div>
+            <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+              <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#EDE4FB", color: "#7C3AED" }}>
+                <DollarSign className="h-4 w-4" />
+              </div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerVisit)}</div>
+              <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por visita</div>
+            </div>
           </div>
-          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(stats.estimated_route_revenue)}</div>
-          <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Total mensal</div>
-        </div>
-        <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
-          <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#CCFBF1", color: "#0D9488" }}>
-            <DollarSign className="h-4 w-4" />
-          </div>
-          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerPool)}</div>
-          <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por piscina</div>
-        </div>
-        <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
-          <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#EDE4FB", color: "#7C3AED" }}>
-            <DollarSign className="h-4 w-4" />
-          </div>
-          <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerVisit)}</div>
-          <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por visita</div>
-        </div>
-      </div>
-      <p className="-mt-2 text-center text-[11px] text-[var(--dash-text-muted)]">
-        {totalWeeklyVisits} visitas/semana · {scheduledClients.length} piscinas com rota
-      </p>
+          <p className="-mt-2 text-center text-[11px] text-[var(--dash-text-muted)]">
+            {totalWeeklyVisits} visitas/semana · {scheduledClients.length} piscinas com rota
+          </p>
+        </>
+      )}
 
       <div>
         <h2 className="mb-2 text-[15px] font-bold text-[var(--dash-text)]">Rota da semana</h2>
