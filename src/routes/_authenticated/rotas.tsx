@@ -31,6 +31,20 @@ const STATUS_STYLES: Record<StopStatus, { bg: string; text: string }> = {
   "Concluído": { bg: "var(--dash-badge-paid-bg)", text: "var(--dash-badge-paid-text)" },
 };
 
+// Same visual language as STATUS_STYLES, but for a technician's whole day
+// (aggregated across their stops) rather than a single stop.
+type RouteStatusLabel = "Pendente" | "Em Rota" | "Concluído";
+const ROUTE_STATUS_STYLES: Record<RouteStatusLabel, { bg: string; text: string }> = {
+  "Pendente": STATUS_STYLES["Pendente"],
+  "Em Rota": STATUS_STYLES["Em serviço"],
+  "Concluído": STATUS_STYLES["Concluído"],
+};
+function routeStatusLabel(total: number, completed: number, inProgress: boolean): RouteStatusLabel {
+  if (total > 0 && completed === total) return "Concluído";
+  if (completed > 0 || inProgress) return "Em Rota";
+  return "Pendente";
+}
+
 function StatusBadge({ status }: { status: StopStatus }) {
   const s = STATUS_STYLES[status] ?? STATUS_STYLES["Pendente"];
   return (
@@ -353,10 +367,14 @@ function RotasPage() {
   });
 
   const techStats = useMemo(() => {
-    const map = new Map<string, { total: number; completed: number }>();
+    const map = new Map<string, { total: number; completed: number; inProgress: boolean }>();
     for (const r of routes) {
       const list = r.route_stops ?? [];
-      map.set(r.technician_id, { total: list.length, completed: list.filter((s) => s.status === "Concluído").length });
+      map.set(r.technician_id, {
+        total: list.length,
+        completed: list.filter((s) => s.status === "Concluído").length,
+        inProgress: list.some((s) => s.status === "Em serviço"),
+      });
     }
     return map;
   }, [routes]);
@@ -493,7 +511,10 @@ function RotasPage() {
               <p className="text-sm text-[var(--dash-text-muted)]">No technicians yet.</p>
             ) : (
               technicians.map((t) => {
-                const tStats = techStats.get(t.id) ?? { total: 0, completed: 0 };
+                const tStats = techStats.get(t.id) ?? { total: 0, completed: 0, inProgress: false };
+                const pct = tStats.total > 0 ? Math.round((tStats.completed / tStats.total) * 100) : 0;
+                const label = routeStatusLabel(tStats.total, tStats.completed, tStats.inProgress);
+                const badge = ROUTE_STATUS_STYLES[label];
                 return (
                   <button
                     key={t.id}
@@ -502,8 +523,19 @@ function RotasPage() {
                   >
                     <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-10 w-10" textClassName="text-[13px]" />
                     <div className="min-w-0 flex-1">
-                      <div className="text-[14px] font-bold text-[var(--dash-text)]">{t.name}</div>
-                      <div className="text-[12px] text-[var(--dash-text-muted-2)]">{tStats.total} paradas · {tStats.completed} concluídas</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[14px] font-bold text-[var(--dash-text)]">{t.name}</span>
+                        <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badge.bg, color: badge.text }}>
+                          {label}
+                        </span>
+                      </div>
+                      <div className="mt-0.5 text-[12px] text-[var(--dash-text-muted-2)]">{tStats.total} paradas · {tStats.completed} concluídas</div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--dash-bg)]">
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
+                        </div>
+                        <span className="shrink-0 text-[11px] font-semibold text-[var(--dash-text-muted-2)]">{pct}%</span>
+                      </div>
                     </div>
                     <ChevronRight className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
                   </button>
