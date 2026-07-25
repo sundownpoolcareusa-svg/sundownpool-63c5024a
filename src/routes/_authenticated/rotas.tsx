@@ -9,7 +9,7 @@ import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 import { TechAvatar } from "@/components/TechAvatar";
 import {
   Plus, Phone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Play, Trash2, MapPin, CalendarDays,
-  CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X, Home, Route as RouteIcon,
+  CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
@@ -70,13 +70,6 @@ function weekDays(center: Date) {
 const WEEKDAY_LONG = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const;
 // Weekday abbreviations matching the clients form's "Recurring Service Days" values
 const WEEKDAY_ABBR = WEEKDAY_LONG;
-
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Bom dia";
-  if (h < 18) return "Boa tarde";
-  return "Boa noite";
-}
 
 function statusMarkerColor(status: StopStatus) {
   if (status === "Concluído") return "#16A34A";
@@ -340,10 +333,8 @@ function RotasPage() {
   const [newRouteOpen, setNewRouteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [addTechOpen, setAddTechOpen] = useState(false);
-  const [showAllStops, setShowAllStops] = useState(false);
   const [detailStopId, setDetailStopId] = useState<string | null>(null);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
-  const [mobileView, setMobileView] = useState<"inicio" | "rota">("inicio");
 
   const dateStr = toDateStr(selectedDate);
   const days = weekDays(selectedDate);
@@ -377,7 +368,6 @@ function RotasPage() {
   const summary = routeStats(stops, coords);
 
   const currentStop = stops.find((s) => s.status === "Em serviço") ?? stops.find((s) => s.status === "Pendente") ?? null;
-  const nextStop = stops.find((s) => s.status === "Pendente" && s.id !== currentStop?.id) ?? null;
   const detailStop = stops.find((s) => s.id === detailStopId) ?? currentStop ?? stops[0] ?? null;
 
   // Clients with an assigned technician are auto-scheduled every matching
@@ -470,16 +460,16 @@ function RotasPage() {
   ];
 
   return (
-    <div className="dash min-h-screen bg-[var(--dash-bg)] lg:pl-60">
+    <div className="dash min-h-screen bg-[var(--dash-bg)] pb-20 lg:pb-0 lg:pl-60">
       <AppSidebar />
       <AppHeader />
 
       {/* MOBILE */}
-      <div className="space-y-4 p-3 pb-24 lg:hidden">
+      <div className="space-y-4 p-3 lg:hidden">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-extrabold text-[var(--dash-text)]">
-              {mobileView === "inicio" ? <>{greeting()}, {(activeRoute?.technician?.name ?? "there").split(" ")[0]} 👋</> : "Rota"}
+              {technicianId === "all" ? "Rotas" : (activeRoute?.technician?.name ?? "Rotas")}
             </h1>
             <p className="text-[13px] text-[var(--dash-text-muted-2)]">
               {selectedDate.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
@@ -495,103 +485,42 @@ function RotasPage() {
 
         <MobileDaySelector selected={selectedDate} onSelect={setSelectedDate} />
 
-        {mobileView === "inicio" && (
-          <>
-            <StatRow items={mobileCards} />
+        <StatRow items={mobileCards} />
 
-            <TechnicianProgressCard
-              technician={activeRoute?.technician ?? technicians[0]}
-              stats={activeRoute ? techStats.get(activeRoute.technician_id) : undefined}
-              onClick={() => {
-                const tech = activeRoute?.technician ?? technicians[0];
-                if (tech) selectTechnician(tech.id);
-                setMobileView("rota");
-              }}
-            />
-
-            {activeRoute ? (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-[13px] font-bold text-[var(--dash-text)]">Próxima parada</h2>
-                    <button onClick={() => setShowAllStops((v) => !v)} className="text-[12px] font-semibold text-[var(--dash-link)]">
-                      {showAllStops ? "Ocultar" : "Ver todas"}
-                    </button>
-                  </div>
-                  {currentStop && (
-                    <NextStopRow stop={currentStop} highlighted onStatus={handleStatusChange} pending={statusMut.isPending} />
-                  )}
-                  {nextStop && (
-                    <NextStopRow stop={nextStop} onStatus={handleStatusChange} pending={statusMut.isPending} />
-                  )}
-                  {!currentStop && !nextStop && (
-                    <p className="text-sm text-[var(--dash-text-muted)]">All stops completed for this route.</p>
-                  )}
-                </div>
-
-                {showAllStops && (
-                  <StopsList
-                    route={activeRoute}
-                    stops={stops}
-                    onMove={move}
-                    onStatus={handleStatusChange}
-                    onRemove={(id) => removeMut.mutate(id)}
-                    onAddStop={() => setAddOpen(true)}
-                    pending={statusMut.isPending}
-                    showDelete={false}
-                  />
-                )}
-              </>
+        {technicianId === "all" ? (
+          <div className="space-y-2">
+            {technicians.length === 0 ? (
+              <p className="text-sm text-[var(--dash-text-muted)]">No technicians yet.</p>
             ) : (
-              <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
+              technicians.map((t) => {
+                const tStats = techStats.get(t.id) ?? { total: 0, completed: 0 };
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => selectTechnician(t.id)}
+                    className="flex w-full items-center gap-3 rounded-2xl border border-[var(--dash-border)] bg-white p-4 text-left"
+                  >
+                    <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-10 w-10" textClassName="text-[13px]" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[14px] font-bold text-[var(--dash-text)]">{t.name}</div>
+                      <div className="text-[12px] text-[var(--dash-text-muted-2)]">{tStats.total} paradas · {tStats.completed} concluídas</div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
+                  </button>
+                );
+              })
             )}
-
-            {recurringClients.length > 0 && (
-              <RecurringSuggestions
-                clients={recurringClients}
-                technicianId={technicianId}
-                technicians={technicians}
-                date={dateStr}
-                onAdded={(routeId) => { setSelectedRouteId(routeId); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); qc.invalidateQueries({ queryKey: ["clients"] }); }}
-              />
-            )}
-
-            <TechniciansCard technicians={technicians} open={addTechOpen} onOpenChange={setAddTechOpen} />
-          </>
-        )}
-
-        {mobileView === "rota" && (
+          </div>
+        ) : (
           <>
-            <TechnicianChips
-              technicians={technicians}
-              techStats={techStats}
-              selectedId={technicianId}
-              focusedId={activeRoute?.technician_id}
-              onSelect={selectTechnician}
-              onAddClick={() => setAddTechOpen(true)}
-            />
-
-            {technicianId === "all" ? (
-              filteredRoutes.length === 0 ? (
-                <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
-              ) : (
-                filteredRoutes.map((r) => (
-                  <StopsList
-                    key={r.id}
-                    route={r}
-                    stops={r.route_stops ?? []}
-                    onMove={() => {}}
-                    onStatus={handleStatusChange}
-                    onRemove={() => {}}
-                    onAddStop={() => {}}
-                    pending={statusMut.isPending}
-                    hideAddCta
-                    showDelete={false}
-                    compact
-                  />
-                ))
-              )
-            ) : activeRoute ? (
+            <button
+              onClick={() => selectTechnician("all")}
+              className="flex items-center gap-1 text-sm font-semibold"
+              style={{ color: "var(--dash-link)" }}
+            >
+              <ChevronLeft className="h-4 w-4" /> Todos os técnicos
+            </button>
+            {activeRoute ? (
               <StopsList
                 route={activeRoute}
                 stops={stops}
@@ -605,34 +534,9 @@ function RotasPage() {
             ) : (
               <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
             )}
-
-            <TechniciansCard technicians={technicians} open={addTechOpen} onOpenChange={setAddTechOpen} />
           </>
         )}
       </div>
-
-      {/* MOBILE bottom nav */}
-      <nav
-        className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-[var(--dash-border)] bg-white px-2 py-2 lg:hidden"
-        style={{ willChange: "transform" }}
-      >
-        <button
-          onClick={() => setMobileView("inicio")}
-          className="flex flex-col items-center gap-0.5 px-6 py-1 text-[11px] font-bold"
-          style={{ color: mobileView === "inicio" ? "var(--dash-navy)" : "var(--dash-text-muted-2)" }}
-        >
-          <Home className="h-5 w-5" />
-          Início
-        </button>
-        <button
-          onClick={() => { selectTechnician("all"); setMobileView("rota"); }}
-          className="flex flex-col items-center gap-0.5 px-6 py-1 text-[11px] font-bold"
-          style={{ color: mobileView === "rota" ? "var(--dash-navy)" : "var(--dash-text-muted-2)" }}
-        >
-          <RouteIcon className="h-5 w-5" />
-          Rota
-        </button>
-      </nav>
 
       {/* DESKTOP */}
       <div className="hidden space-y-5 p-5 lg:block">
@@ -897,122 +801,6 @@ function MobileDaySelector({ selected, onSelect }: { selected: Date; onSelect: (
           </button>
         );
       })}
-    </div>
-  );
-}
-
-function TechnicianProgressCard({
-  technician, stats, onClick,
-}: { technician?: Technician; stats?: { total: number; completed: number }; onClick: () => void }) {
-  if (!technician) {
-    return (
-      <button onClick={onClick} className="w-full rounded-2xl border border-dashed border-[var(--dash-border)] bg-white p-4 text-center text-sm text-[var(--dash-text-muted)]">
-        No technicians yet — tap to add one
-      </button>
-    );
-  }
-  const total = stats?.total ?? 0;
-  const completed = stats?.completed ?? 0;
-  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-  return (
-    <button onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl border border-[var(--dash-border)] bg-white p-4 text-left">
-      <TechAvatar name={technician.name} color={technician.color} photoPath={technician.photo_path} className="h-9 w-9" textClassName="text-[12px]" />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-[var(--dash-text)]">{technician.name}</span>
-          <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
-            Em Rota
-          </span>
-        </div>
-        <div className="mt-0.5 text-[12px] text-[var(--dash-text-muted-2)]">{total} paradas · {completed} concluídas</div>
-        <div className="mt-2 flex items-center gap-2">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--dash-bg)]">
-            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--dash-green)" }} />
-          </div>
-          <span className="shrink-0 text-[11px] font-semibold text-[var(--dash-text-muted-2)]">{pct}%</span>
-        </div>
-      </div>
-      <ChevronDown className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
-    </button>
-  );
-}
-
-function stopStatusLabel(status: StopStatus) {
-  return status === "Em serviço" ? "Em andamento" : status === "Concluído" ? "Concluído" : "Próxima";
-}
-
-function NextStopRow({
-  stop, highlighted, onStatus, pending,
-}: { stop: RouteStop; highlighted?: boolean; onStatus: (stop: RouteStop, status: StopStatus) => void; pending: boolean }) {
-  const badgeStyle = STATUS_STYLES[stop.status] ?? STATUS_STYLES["Pendente"];
-  const next = nextStatus(stop.status);
-  return (
-    <div
-      className="flex items-center gap-3 rounded-xl border p-3"
-      style={{
-        borderColor: highlighted ? "var(--dash-navy-2)" : "var(--dash-border)",
-        background: highlighted ? "var(--dash-water-bg)" : "#fff",
-      }}
-    >
-      <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white" style={{ background: statusMarkerColor(stop.status) }}>
-        {stop.position + 1}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-[12px] font-bold text-[var(--dash-text)]">{stop.scheduled_time ? stop.scheduled_time.slice(0, 5) : "—"}</span>
-          <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badgeStyle.bg, color: badgeStyle.text }}>
-            {stopStatusLabel(stop.status)}
-          </span>
-        </div>
-        <div className="truncate text-[13px] font-bold text-[var(--dash-text)]">{stop.client?.name}</div>
-        <div className="flex items-center gap-1.5">
-          <Link to="/chemicals/$stopId" params={{ stopId: stop.id }} className="shrink-0" title="Pool Chemicals">
-            <FlaskConical className="h-3.5 w-3.5" style={{ color: "var(--dash-green)" }} />
-          </Link>
-          {stop.client?.address ? (
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(clientFullAddress(stop.client))}`}
-              target="_blank"
-              rel="noreferrer"
-              className="truncate text-[12px] text-[var(--dash-text-muted-2)] underline decoration-dotted underline-offset-2"
-              title="Open in Google Maps"
-            >
-              {stop.client.address}
-            </a>
-          ) : (
-            <span className="truncate text-[12px] text-[var(--dash-text-muted-2)]">—</span>
-          )}
-        </div>
-      </div>
-      <div className="flex shrink-0 gap-1.5">
-        {stop.client?.phone && (
-          <a href={`tel:${stop.client.phone}`} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-            <Phone className="h-4 w-4" />
-          </a>
-        )}
-        {next && (
-          <button
-            onClick={() => onStatus(stop, next)}
-            disabled={pending}
-            title={next === "Concluído" ? "Complete" : "Start"}
-            className="grid h-9 w-9 place-items-center rounded-full text-white disabled:opacity-50"
-            style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
-          >
-            {next === "Concluído" ? <Check className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </button>
-        )}
-        {stop.client?.address && (
-          <a
-            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(clientFullAddress(stop.client))}`}
-            target="_blank"
-            rel="noreferrer"
-            title="Navigate"
-            className="grid h-9 w-9 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
-          >
-            <Navigation className="h-4 w-4" />
-          </a>
-        )}
-      </div>
     </div>
   );
 }

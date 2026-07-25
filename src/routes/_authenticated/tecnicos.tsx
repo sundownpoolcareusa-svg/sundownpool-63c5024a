@@ -55,7 +55,7 @@ function TecnicosPage() {
   });
 
   return (
-    <div className="dash min-h-screen bg-[var(--dash-bg)] lg:pl-60">
+    <div className="dash min-h-screen bg-[var(--dash-bg)] pb-20 lg:pb-0 lg:pl-60">
       <AppSidebar />
       <AppHeader />
       <main className="p-3 sm:p-5">

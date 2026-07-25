@@ -88,7 +88,7 @@ function EstimativaPage() {
   });
 
   return (
-    <div className="dash min-h-screen bg-[var(--dash-bg)] lg:pl-60">
+    <div className="dash min-h-screen bg-[var(--dash-bg)] pb-20 lg:pb-0 lg:pl-60">
       <AppSidebar />
       <AppHeader />
       <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12">

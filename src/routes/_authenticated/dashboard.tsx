@@ -892,7 +892,7 @@ function DashboardPage() {
   const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
 
   return (
-    <div className="dash min-h-screen bg-[var(--dash-bg)] lg:pl-60">
+    <div className="dash min-h-screen bg-[var(--dash-bg)] pb-20 lg:pb-0 lg:pl-60">
       <AppSidebar />
       <AppHeader />
       <main className="space-y-3 p-3 sm:p-4">
