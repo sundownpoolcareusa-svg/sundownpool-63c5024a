@@ -160,7 +160,7 @@ Deno.serve(async () => {
   // without a photo (picked up on a later run once one is added).
   const { data: photoStops, error: photoErr } = await supabase
     .from("route_stops")
-    .select("id, completed_at, visit_photos, client:clients!inner(id, name, email, notify_photo)")
+    .select("id, completed_at, photo_taken_at, visit_photos, client:clients!inner(id, name, email, notify_photo)")
     .eq("status", "Concluído")
     .is("photo_email_sent_at", null)
     .eq("clients.notify_photo", true);
@@ -168,7 +168,7 @@ Deno.serve(async () => {
   if (photoErr) return new Response(JSON.stringify({ error: photoErr.message }), { status: 500 });
 
   for (const stop of (photoStops ?? []) as {
-    id: string; completed_at: string | null; visit_photos: string[] | null;
+    id: string; completed_at: string | null; photo_taken_at: string | null; visit_photos: string[] | null;
     client: (ClientRow & { notify_photo: boolean }) | (ClientRow & { notify_photo: boolean })[];
   }[]) {
     const client = firstOf(stop.client);
@@ -185,7 +185,11 @@ Deno.serve(async () => {
       continue;
     }
 
-    const visitDate = stop.completed_at ? new Date(stop.completed_at) : new Date();
+    // photo_taken_at (set the moment the photo is saved) reflects when the
+    // photo was actually taken — completed_at only reflects when the stop
+    // last flipped to Concluído, which can be long before a photo gets
+    // added or replaced from the Chemicals screen afterward.
+    const visitDate = stop.photo_taken_at ? new Date(stop.photo_taken_at) : stop.completed_at ? new Date(stop.completed_at) : new Date();
     const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
     const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
