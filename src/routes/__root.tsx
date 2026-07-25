@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import defaultAppleTouchIcon from "../assets/owner-apple-touch-icon.png";
 
 function NotFoundComponent() {
   return (
@@ -87,6 +88,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Sundown Pool Care" },
       { name: "twitter:description", content: "Professional pool care in Southwest Florida. Family owned, 5-star rated." },
+      // Declared globally (not just on the dashboard/technician routes) so a
+      // fresh "Add to Home Screen" icon stays in standalone (no browser
+      // chrome) even when its first launch has to pass through /auth to log
+      // in — a page that would otherwise have no app-capable tag of its own
+      // and would silently drop the icon back into regular Safari chrome.
+      { name: "apple-mobile-web-app-title", content: "Sundown Pool Care" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
     ],
     links: [
       {
@@ -99,6 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
       },
+      { rel: "apple-touch-icon", href: defaultAppleTouchIcon },
     ],
   }),
   shellComponent: RootShell,
