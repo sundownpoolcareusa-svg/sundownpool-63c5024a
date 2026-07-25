@@ -9,7 +9,7 @@ import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 import { TechAvatar } from "@/components/TechAvatar";
 import {
   Plus, Phone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Play, Trash2, MapPin, CalendarDays,
-  CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X,
+  CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X, Home, Route as RouteIcon,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
@@ -340,10 +340,10 @@ function RotasPage() {
   const [newRouteOpen, setNewRouteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [addTechOpen, setAddTechOpen] = useState(false);
-  const [switcherOpen, setSwitcherOpen] = useState(false);
   const [showAllStops, setShowAllStops] = useState(false);
   const [detailStopId, setDetailStopId] = useState<string | null>(null);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
+  const [mobileView, setMobileView] = useState<"inicio" | "rota">("inicio");
 
   const dateStr = toDateStr(selectedDate);
   const days = weekDays(selectedDate);
@@ -475,11 +475,11 @@ function RotasPage() {
       <AppHeader />
 
       {/* MOBILE */}
-      <div className="space-y-4 p-3 lg:hidden">
+      <div className="space-y-4 p-3 pb-24 lg:hidden">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-extrabold text-[var(--dash-text)]">
-              {greeting()}, {(activeRoute?.technician?.name ?? "there").split(" ")[0]} 👋
+              {mobileView === "inicio" ? <>{greeting()}, {(activeRoute?.technician?.name ?? "there").split(" ")[0]} 👋</> : "Rota"}
             </h1>
             <p className="text-[13px] text-[var(--dash-text-muted-2)]">
               {selectedDate.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
@@ -495,68 +495,103 @@ function RotasPage() {
 
         <MobileDaySelector selected={selectedDate} onSelect={setSelectedDate} />
 
-        <StatRow items={mobileCards} />
-
-        <div className="relative">
-          <TechnicianProgressCard
-            technician={activeRoute?.technician ?? technicians[0]}
-            stats={activeRoute ? techStats.get(activeRoute.technician_id) : undefined}
-            onClick={() => setSwitcherOpen((v) => !v)}
-          />
-          {switcherOpen && (
-            <div className="absolute left-0 right-0 top-full z-20 mt-1.5 rounded-2xl border border-[var(--dash-border)] bg-white p-2 shadow-lg">
-              <button
-                onClick={() => { selectTechnician("all"); setSwitcherOpen(false); }}
-                className="block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
-              >
-                All technicians
-              </button>
-              {technicians.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => { selectTechnician(t.id); setSwitcherOpen(false); }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-[var(--dash-bg)]"
-                >
-                  <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-7 w-7" textClassName="text-[11px]" />
-                  <span className="text-sm font-semibold text-[var(--dash-text)]">{t.name}</span>
-                </button>
-              ))}
-              <button
-                onClick={() => { setSwitcherOpen(false); setNewRouteOpen(true); }}
-                className="mt-1 flex w-full items-center gap-2 rounded-xl border-t border-[var(--dash-border)] px-3 pt-2.5 pb-1 text-left text-sm font-semibold"
-                style={{ color: "var(--dash-link)" }}
-              >
-                <Plus className="h-4 w-4" /> New Route
-              </button>
-            </div>
-          )}
-        </div>
-
-        {activeRoute ? (
+        {mobileView === "inicio" && (
           <>
-            <MapErrorBoundary key={`${activeRoute.id}:${dateStr}`}>
-              <RouteMap key={`${activeRoute.id}:${dateStr}`} stops={stops} coords={coords} isLoaded={mapIsLoaded} loadError={mapLoadError} />
-            </MapErrorBoundary>
+            <StatRow items={mobileCards} />
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[13px] font-bold text-[var(--dash-text)]">Próxima parada</h2>
-                <button onClick={() => setShowAllStops((v) => !v)} className="text-[12px] font-semibold text-[var(--dash-link)]">
-                  {showAllStops ? "Ocultar" : "Ver todas"}
-                </button>
-              </div>
-              {currentStop && (
-                <NextStopRow stop={currentStop} highlighted onStatus={handleStatusChange} pending={statusMut.isPending} />
-              )}
-              {nextStop && (
-                <NextStopRow stop={nextStop} onStatus={handleStatusChange} pending={statusMut.isPending} />
-              )}
-              {!currentStop && !nextStop && (
-                <p className="text-sm text-[var(--dash-text-muted)]">All stops completed for this route.</p>
-              )}
-            </div>
+            <TechnicianProgressCard
+              technician={activeRoute?.technician ?? technicians[0]}
+              stats={activeRoute ? techStats.get(activeRoute.technician_id) : undefined}
+              onClick={() => {
+                const tech = activeRoute?.technician ?? technicians[0];
+                if (tech) selectTechnician(tech.id);
+                setMobileView("rota");
+              }}
+            />
 
-            {showAllStops && (
+            {activeRoute ? (
+              <>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[13px] font-bold text-[var(--dash-text)]">Próxima parada</h2>
+                    <button onClick={() => setShowAllStops((v) => !v)} className="text-[12px] font-semibold text-[var(--dash-link)]">
+                      {showAllStops ? "Ocultar" : "Ver todas"}
+                    </button>
+                  </div>
+                  {currentStop && (
+                    <NextStopRow stop={currentStop} highlighted onStatus={handleStatusChange} pending={statusMut.isPending} />
+                  )}
+                  {nextStop && (
+                    <NextStopRow stop={nextStop} onStatus={handleStatusChange} pending={statusMut.isPending} />
+                  )}
+                  {!currentStop && !nextStop && (
+                    <p className="text-sm text-[var(--dash-text-muted)]">All stops completed for this route.</p>
+                  )}
+                </div>
+
+                {showAllStops && (
+                  <StopsList
+                    route={activeRoute}
+                    stops={stops}
+                    onMove={move}
+                    onStatus={handleStatusChange}
+                    onRemove={(id) => removeMut.mutate(id)}
+                    onAddStop={() => setAddOpen(true)}
+                    pending={statusMut.isPending}
+                    showDelete={false}
+                  />
+                )}
+              </>
+            ) : (
+              <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
+            )}
+
+            {recurringClients.length > 0 && (
+              <RecurringSuggestions
+                clients={recurringClients}
+                technicianId={technicianId}
+                technicians={technicians}
+                date={dateStr}
+                onAdded={(routeId) => { setSelectedRouteId(routeId); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); qc.invalidateQueries({ queryKey: ["clients"] }); }}
+              />
+            )}
+
+            <TechniciansCard technicians={technicians} open={addTechOpen} onOpenChange={setAddTechOpen} />
+          </>
+        )}
+
+        {mobileView === "rota" && (
+          <>
+            <TechnicianChips
+              technicians={technicians}
+              techStats={techStats}
+              selectedId={technicianId}
+              focusedId={activeRoute?.technician_id}
+              onSelect={selectTechnician}
+              onAddClick={() => setAddTechOpen(true)}
+            />
+
+            {technicianId === "all" ? (
+              filteredRoutes.length === 0 ? (
+                <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
+              ) : (
+                filteredRoutes.map((r) => (
+                  <StopsList
+                    key={r.id}
+                    route={r}
+                    stops={r.route_stops ?? []}
+                    onMove={() => {}}
+                    onStatus={handleStatusChange}
+                    onRemove={() => {}}
+                    onAddStop={() => {}}
+                    pending={statusMut.isPending}
+                    hideAddCta
+                    showDelete={false}
+                    compact
+                  />
+                ))
+              )
+            ) : activeRoute ? (
               <StopsList
                 route={activeRoute}
                 stops={stops}
@@ -567,24 +602,37 @@ function RotasPage() {
                 pending={statusMut.isPending}
                 showDelete={false}
               />
+            ) : (
+              <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
             )}
+
+            <TechniciansCard technicians={technicians} open={addTechOpen} onOpenChange={setAddTechOpen} />
           </>
-        ) : (
-          <EmptyState onNewRoute={() => setNewRouteOpen(true)} />
         )}
-
-        {recurringClients.length > 0 && (
-          <RecurringSuggestions
-            clients={recurringClients}
-            technicianId={technicianId}
-            technicians={technicians}
-            date={dateStr}
-            onAdded={(routeId) => { setSelectedRouteId(routeId); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); qc.invalidateQueries({ queryKey: ["clients"] }); }}
-          />
-        )}
-
-        <TechniciansCard technicians={technicians} open={addTechOpen} onOpenChange={setAddTechOpen} />
       </div>
+
+      {/* MOBILE bottom nav */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-[var(--dash-border)] bg-white px-2 py-2 lg:hidden"
+        style={{ willChange: "transform" }}
+      >
+        <button
+          onClick={() => setMobileView("inicio")}
+          className="flex flex-col items-center gap-0.5 px-6 py-1 text-[11px] font-bold"
+          style={{ color: mobileView === "inicio" ? "var(--dash-navy)" : "var(--dash-text-muted-2)" }}
+        >
+          <Home className="h-5 w-5" />
+          Início
+        </button>
+        <button
+          onClick={() => { selectTechnician("all"); setMobileView("rota"); }}
+          className="flex flex-col items-center gap-0.5 px-6 py-1 text-[11px] font-bold"
+          style={{ color: mobileView === "rota" ? "var(--dash-navy)" : "var(--dash-text-muted-2)" }}
+        >
+          <RouteIcon className="h-5 w-5" />
+          Rota
+        </button>
+      </nav>
 
       {/* DESKTOP */}
       <div className="hidden space-y-5 p-5 lg:block">
