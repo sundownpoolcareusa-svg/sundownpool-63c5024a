@@ -8,7 +8,7 @@ const tabs = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/clientes", label: "Clients", icon: Users },
   { to: "/rotas", label: "Routes", icon: Map },
-  { to: "/tecnicos", label: "Technicians", icon: HardHat },
+  { to: "/tecnicos", label: "Users", icon: HardHat },
   { to: "/quimicos", label: "Chemicals", icon: FlaskConical },
   { to: "/estimativa", label: "Estimates", icon: ClipboardList },
   { to: "/invoice", label: "Invoices", icon: FileText },

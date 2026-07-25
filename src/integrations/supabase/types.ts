@@ -716,6 +716,7 @@ export type Database = {
           home_lat: number | null
           home_lng: number | null
           id: string
+          is_owner: boolean
           name: string
           phone: string | null
           photo_path: string | null
@@ -731,6 +732,7 @@ export type Database = {
           home_lat?: number | null
           home_lng?: number | null
           id?: string
+          is_owner?: boolean
           name: string
           phone?: string | null
           photo_path?: string | null
@@ -746,6 +748,7 @@ export type Database = {
           home_lat?: number | null
           home_lng?: number | null
           id?: string
+          is_owner?: boolean
           name?: string
           phone?: string | null
           photo_path?: string | null
