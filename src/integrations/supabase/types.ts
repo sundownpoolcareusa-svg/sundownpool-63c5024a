@@ -440,6 +440,7 @@ export type Database = {
           notes: string | null
           on_way_email_sent_at: string | null
           photo_email_sent_at: string | null
+          photo_taken_at: string | null
           position: number
           route_id: string
           scheduled_time: string | null
@@ -458,6 +459,7 @@ export type Database = {
           notes?: string | null
           on_way_email_sent_at?: string | null
           photo_email_sent_at?: string | null
+          photo_taken_at?: string | null
           position?: number
           route_id: string
           scheduled_time?: string | null
@@ -476,6 +478,7 @@ export type Database = {
           notes?: string | null
           on_way_email_sent_at?: string | null
           photo_email_sent_at?: string | null
+          photo_taken_at?: string | null
           position?: number
           route_id?: string
           scheduled_time?: string | null

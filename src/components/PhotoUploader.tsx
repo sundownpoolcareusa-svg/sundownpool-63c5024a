@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { stampPhotoWithTimestamp } from "@/lib/photoStamp";
 
 export function PhotoUploader({
   label,
@@ -10,6 +11,7 @@ export function PhotoUploader({
   bucket = "client-photos",
   folder,
   max,
+  stamp,
 }: {
   label: string;
   value: string[];
@@ -17,6 +19,7 @@ export function PhotoUploader({
   bucket?: string;
   folder: string; // e.g. `${userId}/pool`
   max?: number;
+  stamp?: boolean; // burns the current date/time into the photo before upload
 }) {
   const [uploading, setUploading] = useState(false);
 
@@ -26,7 +29,8 @@ export function PhotoUploader({
     try {
       const uploaded: string[] = [];
       const room = max !== undefined ? Math.max(0, max - value.length) : files.length;
-      for (const file of Array.from(files).slice(0, room)) {
+      for (const rawFile of Array.from(files).slice(0, room)) {
+        const file = stamp ? await stampPhotoWithTimestamp(rawFile) : rawFile;
         const ext = file.name.split(".").pop() || "jpg";
         const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });

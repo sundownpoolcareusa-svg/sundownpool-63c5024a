@@ -1057,6 +1057,7 @@ function TecnicoPage() {
               value={photoPromptPhotos}
               onChange={setPhotoPromptPhotos}
               folder={`stop-${photoPromptStop.stop_id}/visit`}
+              stamp
             />
           </div>
           <div className="mt-4 flex gap-2">

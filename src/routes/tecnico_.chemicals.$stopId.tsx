@@ -535,6 +535,7 @@ function TechnicianChemicalsPage() {
             value={visitPhotos}
             onChange={(next) => { setVisitPhotos(next); visitPhotosMut.mutate(next); }}
             folder={`stop-${stopId}/visit`}
+            stamp
           />
         </section>
       </main>
