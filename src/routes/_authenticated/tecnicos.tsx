@@ -353,6 +353,7 @@ function TechnicianFormModal({
       onClose={onClose}
       title={editing ? "Edit User" : "New User"}
       maxWidth="max-w-md"
+      fullScreenOnMobile
     >
       <form
         onSubmit={(e) => {
@@ -402,6 +403,14 @@ function TechnicianFormModal({
                 className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm"
               />
             </div>
+            {editing && (
+              <div>
+                <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Email</label>
+                <div className="mt-1 w-full truncate rounded-[10px] border border-[var(--dash-border-input)] bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]">
+                  {editing.auth_email ?? "No login yet"}
+                </div>
+              </div>
+            )}
             <div>
               <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Phone</label>
               <input

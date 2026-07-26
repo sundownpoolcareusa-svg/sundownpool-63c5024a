@@ -2,21 +2,38 @@ import { X } from "lucide-react";
 import { type ReactNode } from "react";
 
 export function Modal({
-  open, onClose, title, children, maxWidth = "max-w-2xl", closeOnOverlayClick = true,
-}: { open: boolean; onClose: () => void; title: string; children: ReactNode; maxWidth?: string; closeOnOverlayClick?: boolean }) {
+  open, onClose, title, children, maxWidth = "max-w-2xl", closeOnOverlayClick = true, fullScreenOnMobile = false,
+}: {
+  open: boolean; onClose: () => void; title: string; children: ReactNode; maxWidth?: string;
+  closeOnOverlayClick?: boolean;
+  // Covers the entire viewport on phones (like a bottom sheet dragged all
+  // the way up) instead of floating as a small centered box — reverts to
+  // the normal centered dialog at the sm breakpoint and up.
+  fullScreenOnMobile?: boolean;
+}) {
   if (!open) return null;
   return (
-    <div className="dash fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={closeOnOverlayClick ? onClose : undefined}>
+    <div
+      className={`dash fixed inset-0 z-50 bg-black/40 ${fullScreenOnMobile ? "sm:grid sm:place-items-center sm:p-4" : "grid place-items-center p-4"}`}
+      onClick={closeOnOverlayClick ? onClose : undefined}
+    >
       <div
-        className={`w-full min-w-0 ${maxWidth} rounded-[22px] bg-white`}
+        className={`flex w-full min-w-0 flex-col bg-white ${maxWidth} ${
+          fullScreenOnMobile ? "h-full rounded-none sm:h-auto sm:max-h-[85vh] sm:rounded-[22px]" : "rounded-[22px]"
+        }`}
         style={{ boxShadow: "0 30px 90px rgba(10,20,40,.4)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-[var(--dash-border)] px-6 py-4">
+        {fullScreenOnMobile && (
+          <div className="flex shrink-0 justify-center pt-2.5 sm:hidden">
+            <div className="h-1.5 w-10 rounded-full bg-[var(--dash-border)]" />
+          </div>
+        )}
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--dash-border)] px-6 py-4">
           <h2 className="text-lg font-bold text-[var(--dash-text)]">{title}</h2>
           <button onClick={onClose} className="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"><X className="h-5 w-5" /></button>
         </div>
-        <div className="max-h-[75vh] min-w-0 overflow-y-auto overflow-x-hidden p-6">{children}</div>
+        <div className={`min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-6 ${fullScreenOnMobile ? "" : "max-h-[75vh]"}`}>{children}</div>
       </div>
     </div>
   );
