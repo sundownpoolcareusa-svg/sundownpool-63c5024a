@@ -530,10 +530,10 @@ function RotasPage() {
   }
 
   const mobileCards = [
-    { icon: MapPin, tint: "#2563EB", value: summary.total, label: "Paradas no total" },
+    { icon: MapPin, tint: "#2563EB", value: summary.total, label: "Paradas" },
     { icon: CheckCircle2, tint: "#16A34A", value: summary.completed, label: "Concluídas" },
-    { icon: Clock, tint: "#E8813A", value: summary.etaLabel, label: "Tempo estimado restante" },
-    { icon: Share2, tint: "#7C3AED", value: summary.distanceLabel, label: "Distância total" },
+    { icon: Clock, tint: "#E8813A", value: summary.etaLabel, label: "Tempo" },
+    { icon: Share2, tint: "#7C3AED", value: summary.distanceLabel, label: "Distância" },
   ];
   const desktopCards = [
     { icon: MapPin, tint: "#2563EB", value: summary.total, label: "Total Stops" },
