@@ -5,8 +5,11 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import { TechAvatar } from "@/components/TechAvatar";
-import { PhotoUploader } from "@/components/PhotoUploader";
-import { Plus, Pencil, UserX, HardHat, Crown, KeyRound, ChevronDown, Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Plus, Pencil, UserX, HardHat, Crown, KeyRound, ChevronDown, Search, Camera, Loader2, Check,
+  Users, Contact, Route as RouteIcon, FileText, Receipt, BarChart3, Wrench,
+} from "lucide-react";
 import {
   listTechniciansAdmin,
   createTechnician,
@@ -243,6 +246,35 @@ function UserRow({
   );
 }
 
+type PermissionKey =
+  | "can_manage_users" | "can_manage_clients" | "can_manage_routes"
+  | "can_manage_estimates" | "can_manage_invoices" | "can_view_earnings" | "can_manage_services";
+
+const PERMISSIONS: { key: PermissionKey; label: string; icon: typeof Users }[] = [
+  { key: "can_manage_users", label: "Manage Users", icon: Users },
+  { key: "can_manage_clients", label: "Manage Clients", icon: Contact },
+  { key: "can_manage_routes", label: "Manage Routes", icon: RouteIcon },
+  { key: "can_manage_estimates", label: "Manage Estimates", icon: FileText },
+  { key: "can_manage_invoices", label: "Manage Invoices", icon: Receipt },
+  { key: "can_view_earnings", label: "View Reports", icon: BarChart3 },
+  { key: "can_manage_services", label: "Manage Services", icon: Wrench },
+];
+
+function PermissionRow({ icon: Icon, label, checked, onToggle }: { icon: typeof Users; label: string; checked: boolean; onToggle: () => void }) {
+  return (
+    <button type="button" onClick={onToggle} className="flex w-full items-center gap-3 bg-white px-4 py-3 text-left">
+      <Icon className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
+      <span className="flex-1 text-sm font-semibold text-[var(--dash-text)]">{label}</span>
+      <span
+        className="grid h-5 w-5 shrink-0 place-items-center rounded-[6px] border"
+        style={checked ? { background: "var(--dash-navy)", borderColor: "var(--dash-navy)" } : { borderColor: "var(--dash-border-input)" }}
+      >
+        {checked && <Check className="h-3.5 w-3.5 text-white" />}
+      </span>
+    </button>
+  );
+}
+
 function TechnicianFormModal({
   open,
   onClose,
@@ -256,9 +288,11 @@ function TechnicianFormModal({
 }) {
   const empty = {
     name: "", phone: "", color: COLORS[0], photo_path: null as string | null, is_owner: false,
-    can_view_earnings: true, can_manage_clients: false,
+    can_view_earnings: true, can_manage_clients: false, can_manage_users: false,
+    can_manage_routes: false, can_manage_estimates: false, can_manage_invoices: false, can_manage_services: false,
   };
   const [form, setForm] = useState(empty);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const editingId = editing?.id ?? null;
   const [loadedId, setLoadedId] = useState<string | null>(null);
@@ -268,6 +302,9 @@ function TechnicianFormModal({
         ? {
           name: editing.name, phone: editing.phone || "", color: editing.color, photo_path: editing.photo_path ?? null, is_owner: editing.is_owner ?? false,
           can_view_earnings: editing.can_view_earnings ?? true, can_manage_clients: editing.can_manage_clients ?? false,
+          can_manage_users: editing.can_manage_users ?? false, can_manage_routes: editing.can_manage_routes ?? false,
+          can_manage_estimates: editing.can_manage_estimates ?? false, can_manage_invoices: editing.can_manage_invoices ?? false,
+          can_manage_services: editing.can_manage_services ?? false,
         }
         : empty,
     );
@@ -294,6 +331,22 @@ function TechnicianFormModal({
     onError: (e: Error) => toast.error(e.message),
   });
 
+  async function handleAvatarFile(file: File) {
+    if (!editing) return;
+    setAvatarUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `technicians/${editing.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("client-photos").upload(path, file, { upsert: false });
+      if (error) throw error;
+      setForm((f) => ({ ...f, photo_path: path }));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
   return (
     <Modal
       open={open}
@@ -306,110 +359,133 @@ function TechnicianFormModal({
           e.preventDefault();
           mut.mutate(form);
         }}
-        className="space-y-4"
+        className="space-y-5"
       >
-        <div>
-          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">
-            Name *
-          </label>
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-            className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">
-            Phone
-          </label>
-          <input
-            value={formatPhone(form.phone)}
-            onChange={(e) => setForm({ ...form, phone: formatPhone(e.target.value) })}
-            className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">
-            Color
-          </label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setForm({ ...form, color: c })}
-                className="h-8 w-8 rounded-full ring-offset-2 transition"
-                style={{
-                  background: c,
-                  boxShadow: form.color === c ? `0 0 0 2px ${c}` : undefined,
-                }}
-              />
-            ))}
+        <div className="flex justify-center">
+          <div className="relative">
+            <TechAvatar name={form.name || "?"} color={form.color} photoPath={form.photo_path} className="h-24 w-24" textClassName="text-2xl" />
+            {editing && (
+              <label
+                className="absolute -bottom-1 -right-1 grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-[var(--dash-border)] bg-white shadow"
+                title="Change photo"
+              >
+                {avatarUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-[var(--dash-text-muted)]" />
+                ) : (
+                  <Camera className="h-4 w-4 text-[var(--dash-text-secondary)]" />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={avatarUploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (f) handleAvatarFile(f);
+                  }}
+                />
+              </label>
+            )}
           </div>
         </div>
-        {editing && (
-          <PhotoUploader
-            label="Photo"
-            value={form.photo_path ? [form.photo_path] : []}
-            onChange={(v) => setForm({ ...form, photo_path: v[0] ?? null })}
-            folder={`technicians/${editing.id}`}
-            max={1}
-          />
-        )}
-        <label className="flex items-center gap-2.5 rounded-[14px] border border-[var(--dash-border)] bg-white p-3.5 text-sm text-[var(--dash-text-secondary)]" style={cardShadow}>
-          <input
-            type="checkbox"
-            checked={form.is_owner}
-            onChange={(e) => setForm({ ...form, is_owner: e.target.checked })}
-            className="h-4 w-4"
-          />
-          This is the Master (company owner)
-        </label>
+
+        <div>
+          <h3 className="text-[15px] font-extrabold text-[var(--dash-text)]">Personal Information</h3>
+          <div className="mt-3 space-y-3">
+            <div>
+              <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Full Name</label>
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Phone</label>
+              <input
+                value={formatPhone(form.phone)}
+                onChange={(e) => setForm({ ...form, phone: formatPhone(e.target.value) })}
+                className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Color</label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setForm({ ...form, color: c })}
+                    className="h-8 w-8 rounded-full ring-offset-2 transition"
+                    style={{
+                      background: c,
+                      boxShadow: form.color === c ? `0 0 0 2px ${c}` : undefined,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-[var(--dash-border)] pt-4">
+          <h3 className="text-[15px] font-extrabold text-[var(--dash-text)]">Role & Status</h3>
+          <div className="mt-3 space-y-3">
+            <div>
+              <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Role</label>
+              <select
+                value={form.is_owner ? "owner" : "user"}
+                onChange={(e) => setForm({ ...form, is_owner: e.target.value === "owner" })}
+                className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2.5 text-sm"
+              >
+                <option value="owner">Owner (Master)</option>
+                <option value="user">User</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Status</label>
+              <div className="mt-1 flex items-center justify-between rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]">
+                <span className="truncate">{editing?.auth_email ?? "No login yet"}</span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {editing && <LoginSection technician={editing} />}
 
         {!form.is_owner && (
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">
-              Permissions
-            </label>
-            <div className="mt-1.5 space-y-2.5">
-              <label className="flex items-center gap-2.5 rounded-[14px] border border-[var(--dash-border)] bg-white p-3.5 text-sm text-[var(--dash-text-secondary)]" style={cardShadow}>
-                <input
-                  type="checkbox"
-                  checked={form.can_view_earnings}
-                  onChange={(e) => setForm({ ...form, can_view_earnings: e.target.checked })}
-                  className="h-4 w-4"
+          <div className="border-t border-[var(--dash-border)] pt-4">
+            <h3 className="text-[15px] font-extrabold text-[var(--dash-text)]">Permissions</h3>
+            <div className="mt-3 divide-y divide-[var(--dash-border)] overflow-hidden rounded-[14px] border border-[var(--dash-border)]" style={cardShadow}>
+              {PERMISSIONS.map((p) => (
+                <PermissionRow
+                  key={p.key}
+                  icon={p.icon}
+                  label={p.label}
+                  checked={form[p.key]}
+                  onToggle={() => setForm({ ...form, [p.key]: !form[p.key] })}
                 />
-                Can see $ values (route totals, averages) on their own dashboard
-              </label>
-              <label className="flex items-center gap-2.5 rounded-[14px] border border-[var(--dash-border)] bg-white p-3.5 text-sm text-[var(--dash-text-secondary)]" style={cardShadow}>
-                <input
-                  type="checkbox"
-                  checked={form.can_manage_clients}
-                  onChange={(e) => setForm({ ...form, can_manage_clients: e.target.checked })}
-                  className="h-4 w-4"
-                />
-                Can add/edit clients (reserved — not available in the technician app yet)
-              </label>
+              ))}
             </div>
           </div>
         )}
 
-        {editing && <LoginSection technician={editing} />}
-
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="space-y-2 pt-2">
+          <button
+            disabled={mut.isPending}
+            className="w-full rounded-[12px] bg-[var(--dash-navy)] py-3 text-sm font-bold text-white disabled:opacity-50"
+          >
+            {mut.isPending ? "Saving..." : "Save Changes"}
+          </button>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[10px] border border-[var(--dash-border)] px-4 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]"
+            className="w-full rounded-[12px] border border-[var(--dash-border)] bg-[var(--dash-bg)] py-3 text-sm font-bold text-[var(--dash-text-secondary)]"
           >
             Cancel
-          </button>
-          <button
-            disabled={mut.isPending}
-            className="rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {mut.isPending ? "Saving..." : editing ? "Update User" : "Save User"}
           </button>
         </div>
       </form>
