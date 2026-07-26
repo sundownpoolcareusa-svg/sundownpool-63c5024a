@@ -3,7 +3,7 @@ import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { geocodeAddress } from "@/lib/geocode";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 
-const GOOGLE_MAPS_KEY = (import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined) ?? "";
+const GOOGLE_MAPS_KEY = (import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY as string | undefined) ?? "";
 const ADDRESS = "4008 Destination Dr Apt 2208, Osprey, FL 34229";
 
 function FooterMapInner() {

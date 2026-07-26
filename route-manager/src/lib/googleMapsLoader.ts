@@ -5,8 +5,8 @@ export function loadGoogleMaps(): Promise<any> {
   if ((window as any).google?.maps?.places) return Promise.resolve((window as any).google);
   if (loaderPromise) return loaderPromise;
 
-  const key = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
-  const channel = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID;
+  const key = import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY;
+  const channel = import.meta.env.VITE_GOOGLE_MAPS_TRACKING_ID;
   if (!key) return Promise.reject(new Error("Google Maps API key não configurada"));
 
   loaderPromise = new Promise((resolve, reject) => {
