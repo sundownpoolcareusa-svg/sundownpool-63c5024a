@@ -48,7 +48,7 @@ export const Route = createFileRoute("/tecnico")({
 });
 
 const STATUS_STYLES: Record<StopStatus, { bg: string; text: string }> = {
-  "Pendente": { bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" },
+  "Pendente": { bg: "var(--dash-badge-unpaid-bg)", text: "var(--dash-badge-unpaid-text)" },
   "Em serviço": { bg: "var(--dash-badge-sent-bg)", text: "var(--dash-badge-sent-text)" },
   "Concluído": { bg: "var(--dash-badge-paid-bg)", text: "var(--dash-badge-paid-text)" },
 };
