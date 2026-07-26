@@ -7,7 +7,7 @@ import { Modal } from "@/components/Modal";
 import { TechAvatar } from "@/components/TechAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Plus, Pencil, UserX, HardHat, Crown, KeyRound, ChevronDown, Search, Camera, Loader2, Check,
+  Plus, Pencil, UserX, HardHat, Crown, ChevronDown, Search, Camera, Loader2, Check,
   Users, Contact, Route as RouteIcon, FileText, Receipt, BarChart3, Wrench,
 } from "lucide-react";
 import {
@@ -293,6 +293,7 @@ function TechnicianFormModal({
   };
   const [form, setForm] = useState(empty);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   const editingId = editing?.id ?? null;
   const [loadedId, setLoadedId] = useState<string | null>(null);
@@ -311,7 +312,7 @@ function TechnicianFormModal({
     setLoadedId(editingId);
   }
   useEffect(() => {
-    if (!open) setLoadedId(null);
+    if (!open) { setLoadedId(null); setLoginOpen(false); }
   }, [open]);
 
   const mut = useMutation({
@@ -453,17 +454,23 @@ function TechnicianFormModal({
                 <option value="user">Tech</option>
               </select>
             </div>
-            <div>
-              <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Status</label>
-              <div className="mt-1 flex items-center justify-between rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]">
-                <span className="truncate">{editing?.auth_email ?? "No login yet"}</span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-[var(--dash-text-muted)]" />
+            {editing && (
+              <div>
+                <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Status</label>
+                <button
+                  type="button"
+                  onClick={() => setLoginOpen((v) => !v)}
+                  className="mt-1 flex w-full items-center justify-between rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]"
+                >
+                  <span className="truncate">{editing.auth_email ?? "No login yet"}</span>
+                  <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--dash-text-muted)] transition-transform ${loginOpen ? "rotate-180" : ""}`} />
+                </button>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {editing && <LoginSection technician={editing} />}
+        {editing && loginOpen && <LoginSection technician={editing} />}
 
         {!form.is_owner && (
           <div className="border-t border-[var(--dash-border)] pt-4">
@@ -511,7 +518,6 @@ function LoginSection({ technician }: { technician: TechnicianAdmin }) {
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [resetOpen, setResetOpen] = useState(false);
 
   const createMut = useMutation({
     mutationFn: () => createTechnicianLogin(technician.id, email, password),
@@ -535,41 +541,26 @@ function LoginSection({ technician }: { technician: TechnicianAdmin }) {
 
   return (
     <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3.5" style={cardShadow}>
-      <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">
-        <KeyRound className="h-3.5 w-3.5" /> Login
-      </div>
       {technician.auth_user_id ? (
-        <div className="mt-2.5 space-y-2.5">
+        <div className="space-y-2.5">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="New password"
+            className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+          />
           <button
             type="button"
-            onClick={() => setResetOpen((v) => !v)}
-            className="flex w-full items-center justify-between text-left"
+            disabled={!password || resetMut.isPending}
+            onClick={() => resetMut.mutate()}
+            className="rounded-[10px] border border-[var(--dash-border)] px-3 py-2 text-sm font-semibold text-[var(--dash-text-secondary)] disabled:opacity-50"
           >
-            <p className="text-sm text-[var(--dash-text-secondary)]">{technician.auth_email}</p>
-            <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--dash-text-muted)] transition-transform ${resetOpen ? "rotate-180" : ""}`} />
+            {resetMut.isPending ? "Saving..." : "Reset Password"}
           </button>
-          {resetOpen && (
-            <>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="New password"
-                className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-              />
-              <button
-                type="button"
-                disabled={!password || resetMut.isPending}
-                onClick={() => resetMut.mutate()}
-                className="rounded-[10px] border border-[var(--dash-border)] px-3 py-2 text-sm font-semibold text-[var(--dash-text-secondary)] disabled:opacity-50"
-              >
-                {resetMut.isPending ? "Saving..." : "Reset Password"}
-              </button>
-            </>
-          )}
         </div>
       ) : (
-        <div className="mt-2.5 space-y-2.5">
+        <div className="space-y-2.5">
           <input
             type="email"
             value={email}
