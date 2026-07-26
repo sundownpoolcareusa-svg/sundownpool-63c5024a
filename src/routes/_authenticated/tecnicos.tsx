@@ -7,7 +7,7 @@ import { Modal } from "@/components/Modal";
 import { TechAvatar } from "@/components/TechAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Plus, Pencil, UserX, HardHat, Crown, ChevronDown, Search, Camera, Loader2, Check,
+  Plus, Pencil, UserX, Crown, ChevronDown, Search, Camera, Loader2, Check,
   Users, Contact, Route as RouteIcon, FileText, Receipt, BarChart3, Wrench,
 } from "lucide-react";
 import {
@@ -99,33 +99,8 @@ function TecnicosPage() {
             </button>
           </div>
 
-          {!isLoading && !technicians.some((t) => t.is_owner) && (
-            <div className="mt-5 flex items-center gap-3 rounded-2xl border border-[var(--dash-border)] bg-white p-4" style={cardShadow}>
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-white" style={{ background: "var(--dash-navy)" }}>
-                <Crown className="h-5 w-5" style={{ color: "var(--dash-orange)" }} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[15px] font-bold text-[var(--dash-text)]">Master</div>
-                <div className="mt-0.5 truncate text-[12.5px] text-[var(--dash-text-muted-2)]">{ownerEmail ?? "—"}</div>
-              </div>
-            </div>
-          )}
-
           {isLoading ? (
             <div className="py-12 text-center text-[var(--dash-text-muted)]">Loading...</div>
-          ) : technicians.length === 0 ? (
-            <div className="mt-8 rounded-[18px] border-2 border-dashed border-[var(--dash-border)] py-16 text-center">
-              <HardHat className="mx-auto h-10 w-10 text-[var(--dash-text-muted)]" />
-              <p className="mt-3 font-semibold text-[var(--dash-text-secondary)]">
-                No users registered
-              </p>
-              <button
-                onClick={() => setOpen(true)}
-                className="mt-4 inline-flex items-center gap-2 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white"
-              >
-                <Plus className="h-4 w-4" /> Add first user
-              </button>
-            </div>
           ) : (
             <>
               <div className="relative mt-5">
@@ -138,11 +113,9 @@ function TecnicosPage() {
                 />
               </div>
 
-              {master.length === 0 && staff.length === 0 ? (
-                <p className="mt-5 py-8 text-center text-sm text-[var(--dash-text-muted)]">No users match "{search}".</p>
-              ) : (
-                <div className="mt-4 divide-y divide-[var(--dash-border)] overflow-hidden rounded-2xl border border-[var(--dash-border)] bg-white">
-                  {master.map((t) => (
+              <div className="mt-4 divide-y divide-[var(--dash-border)] overflow-hidden rounded-2xl border border-[var(--dash-border)] bg-white">
+                {master.length > 0 ? (
+                  master.map((t) => (
                     <UserRow
                       key={t.id}
                       t={t}
@@ -150,12 +123,25 @@ function TecnicosPage() {
                       onRemove={() => setDeactivating(t)}
                       toggle={staff.length > 0 ? { open: staffOpen, onToggle: () => setStaffOpen((v) => !v) } : undefined}
                     />
-                  ))}
-                  {(staffOpen || master.length === 0) && staff.map((t) => (
-                    <UserRow key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
-                  ))}
-                </div>
-              )}
+                  ))
+                ) : (
+                  <MasterRow
+                    email={ownerEmail}
+                    toggle={staff.length > 0 ? { open: staffOpen, onToggle: () => setStaffOpen((v) => !v) } : undefined}
+                  />
+                )}
+                {(staffOpen || master.length === 0) && (
+                  staff.length > 0 ? (
+                    staff.map((t) => (
+                      <UserRow key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
+                    ))
+                  ) : (
+                    <p className="p-4 text-center text-sm text-[var(--dash-text-muted)]">
+                      {search ? `No users match "${search}".` : 'No techs yet — tap "New User" to add one.'}
+                    </p>
+                  )
+                )}
+              </div>
             </>
           )}
         </section>
@@ -263,6 +249,28 @@ function UserRow({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+// Shown in place of a UserRow when the Master has no active technician
+// record of their own — there's nothing to edit/remove here, just their
+// own login identity, so no avatar photo, edit, or remove controls.
+function MasterRow({ email, toggle }: { email?: string | null; toggle?: { open: boolean; onToggle: () => void } }) {
+  return (
+    <div className="flex items-start gap-3 p-4">
+      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-white" style={{ background: "var(--dash-navy)" }}>
+        <Crown className="h-5 w-5" style={{ color: "var(--dash-orange)" }} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <span className="text-[15px] font-bold text-[var(--dash-text)]">Master</span>
+        <div className="mt-1.5 truncate text-[12.5px] text-[var(--dash-text-muted-2)]">{email ?? "—"}</div>
+      </div>
+      {toggle && (
+        <button type="button" onClick={toggle.onToggle} title="Users" className="mt-1 grid h-9 w-9 shrink-0 place-items-center">
+          <ChevronDown className={`h-5 w-5 text-[var(--dash-text-muted)] transition-transform ${toggle.open ? "rotate-180" : ""}`} />
+        </button>
+      )}
     </div>
   );
 }
