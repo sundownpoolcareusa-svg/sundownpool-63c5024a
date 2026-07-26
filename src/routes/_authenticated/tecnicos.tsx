@@ -452,7 +452,7 @@ function TechnicianFormModal({
                 <option value="user">Tech</option>
               </select>
             </div>
-            {editing && (
+            {editing && !form.is_owner && (
               <div>
                 <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Status</label>
                 <button
@@ -468,7 +468,7 @@ function TechnicianFormModal({
           </div>
         </div>
 
-        {editing && loginOpen && <LoginSection technician={editing} />}
+        {editing && !form.is_owner && loginOpen && <LoginSection technician={editing} />}
 
         {!form.is_owner && (
           <div className="border-t border-[var(--dash-border)] pt-4">
