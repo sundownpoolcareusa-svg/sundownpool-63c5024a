@@ -35,12 +35,6 @@ export const Route = createFileRoute("/_authenticated/clientes")({
 
 const cardShadow = { boxShadow: "0 1px 2px rgba(20,36,60,.03)" };
 
-const avatarColors = [
-  "bg-sky-200 text-sky-800", "bg-orange-200 text-orange-800", "bg-purple-200 text-purple-800",
-  "bg-yellow-200 text-yellow-800", "bg-pink-200 text-pink-800", "bg-green-200 text-green-800",
-  "bg-cyan-200 text-cyan-800", "bg-amber-200 text-amber-800",
-];
-
 type ClientFull = Client & {
   address?: string | null; city?: string | null; state?: string | null; zip?: string | null;
   service_days?: string[] | null; notes?: string | null;
@@ -689,7 +683,7 @@ function ClientesPage() {
           ) : (
             <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[360px_1fr]">
               <div className="overflow-hidden rounded-[14px] border border-[var(--dash-border)]">
-                {sorted.map((c, idx) => {
+                {sorted.map((c) => {
                   const cf = c as ClientFull;
                   const activeId = selectedListClientId ?? sorted[0]?.id;
                   const isSelected = activeId === c.id;
@@ -705,9 +699,6 @@ function ClientesPage() {
                       style={{ background: isSelected ? "var(--dash-water-bg)" : "#fff" }}
                     >
                       <input type="checkbox" onClick={(e) => e.stopPropagation()} className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--dash-border)]" aria-label={`Select ${c.name}`} />
-                      <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-bold ${avatarColors[idx % avatarColors.length]}`}>
-                        {initials(c.name)}
-                      </div>
                       <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg">
                         <ClientCardPhoto client={cf} />
                       </div>
