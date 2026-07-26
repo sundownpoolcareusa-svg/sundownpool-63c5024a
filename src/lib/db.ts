@@ -238,6 +238,8 @@ export type RouteStop = {
   started_at: string | null;
   completed_at: string | null;
   notes: string | null;
+  visit_photos?: string[] | null;
+  photo_taken_at?: string | null;
   client?: Client;
 };
 
@@ -487,6 +489,20 @@ export async function updateStopStatus(stopId: string, status: StopStatus, clien
       .update({ last_service_date: now.slice(0, 10) })
       .eq("id", clientId);
   }
+}
+
+// Admin-side equivalent of the technician's own save_my_stop_visit_photos
+// RPC — used when the owner completes a stop from Rotas (rather than the
+// technician completing it themselves via /tecnico). Same table, same
+// column, just a plain RLS-protected update instead of an auth_user_id-
+// scoped RPC, since the caller here is the route's owner, not necessarily
+// the assigned technician's own login.
+export async function saveStopVisitPhotos(stopId: string, photos: string[]) {
+  const { error } = await supabase
+    .from("route_stops")
+    .update({ visit_photos: photos, photo_taken_at: photos.length > 0 ? new Date().toISOString() : null })
+    .eq("id", stopId);
+  if (error) throw error;
 }
 
 export async function reorderStops(orderedStopIds: string[]) {

@@ -7,15 +7,16 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 import { TechAvatar } from "@/components/TechAvatar";
+import { PhotoUploader } from "@/components/PhotoUploader";
 import {
   Plus, Phone, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Check, Play, Trash2, MapPin, CalendarDays,
-  CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X,
+  CheckCircle2, Clock, Share2, LocateFixed, Navigation, FlaskConical, Smartphone, X, Camera,
   Timer, Route as RouteIcon, Car, Building2, Home as HomeIcon, RotateCcw, FileText,
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
   addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, clientFullAddress, setClientTechnician,
-  formatPhone,
+  formatPhone, saveStopVisitPhotos,
   type RouteStop, type StopStatus, type Technician, type Client, type RouteRow,
 } from "@/lib/db";
 import { geocodeAndSaveClient } from "@/lib/geocode";
@@ -363,6 +364,8 @@ function RotasPage() {
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
   const [mapSheetOpen, setMapSheetOpen] = useState(false);
   const [showTraffic, setShowTraffic] = useState(false);
+  const [photoPromptStop, setPhotoPromptStop] = useState<RouteStop | null>(null);
+  const [photoPromptPhotos, setPhotoPromptPhotos] = useState<string[]>([]);
 
   const dateStr = toDateStr(selectedDate);
   const days = weekDays(selectedDate);
@@ -469,6 +472,37 @@ function RotasPage() {
   function handleStatusChange(stop: RouteStop, status: StopStatus) {
     if (status === "Concluído" && !confirm(`Mark ${stop.client?.name ?? "this stop"}'s visit as completed?`)) return;
     statusMut.mutate({ stop, status });
+  }
+
+  // For clients who opted into the photo email, ask for a visit photo right
+  // when the owner marks the stop done from Rotas — mirrors the same
+  // prompt the technician gets completing it themselves via /tecnico,
+  // which this path was missing (it went straight to the plain "mark
+  // completed?" confirm with no chance to attach a photo).
+  function requestStatusChange(stop: RouteStop, status: StopStatus) {
+    if (status === "Concluído" && stop.client?.notify_photo && !(stop.visit_photos && stop.visit_photos.length > 0)) {
+      setPhotoPromptPhotos([]);
+      setPhotoPromptStop(stop);
+      return;
+    }
+    handleStatusChange(stop, status);
+  }
+
+  function resolvePhotoPrompt(withPhoto: boolean) {
+    if (!photoPromptStop) return;
+    const stop = photoPromptStop;
+    const photos = photoPromptPhotos;
+    setPhotoPromptStop(null);
+    (async () => {
+      if (withPhoto && photos.length > 0) {
+        try {
+          await saveStopVisitPhotos(stop.id, photos);
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Erro ao salvar foto");
+        }
+      }
+      statusMut.mutate({ stop, status: "Concluído" });
+    })();
   }
   const reorderMut = useMutation({
     mutationFn: (ids: string[]) => reorderStops(ids),
@@ -642,7 +676,7 @@ function RotasPage() {
                 coords={coords}
                 mapIsLoaded={mapIsLoaded}
                 mapLoadError={mapLoadError}
-                onStatus={handleStatusChange}
+                onStatus={requestStatusChange}
                 statusPending={statusMut.isPending}
                 onOptimize={() => optimizeMut.mutate()}
                 optimizePending={optimizeMut.isPending}
@@ -721,7 +755,7 @@ function RotasPage() {
                 route={activeRoute}
                 stops={stops}
                 onMove={move}
-                onStatus={handleStatusChange}
+                onStatus={requestStatusChange}
                 onRemove={(id) => removeMut.mutate(id)}
                 onAddStop={() => setAddOpen(true)}
                 pending={statusMut.isPending}
@@ -780,6 +814,44 @@ function RotasPage() {
         onAdded={() => { qc.invalidateQueries({ queryKey: ["route-stops", activeRoute?.id] }); qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] }); }}
       />
       <MobilePreviewOverlay open={mobilePreviewOpen} onClose={() => setMobilePreviewOpen(false)} />
+
+      {photoPromptStop && (
+        <Modal
+          open
+          onClose={() => setPhotoPromptStop(null)}
+          title="Foto da visita"
+          maxWidth="max-w-sm"
+        >
+          <p className="text-sm text-[var(--dash-text-secondary)]">
+            <span className="font-bold text-[var(--dash-text)]">{photoPromptStop.client?.name}</span> quer receber uma foto da visita por e-mail. Quer tirar agora?
+          </p>
+          <div className="mt-3">
+            <PhotoUploader
+              label="Foto da visita"
+              value={photoPromptPhotos}
+              onChange={setPhotoPromptPhotos}
+              folder={`stop-${photoPromptStop.id}/visit`}
+              stamp
+            />
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => resolvePhotoPrompt(false)}
+              className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-2.5 text-sm font-bold text-[var(--dash-text-secondary)]"
+            >
+              Esqueci a foto
+            </button>
+            <button
+              onClick={() => resolvePhotoPrompt(true)}
+              disabled={photoPromptPhotos.length === 0}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: "var(--dash-green)" }}
+            >
+              <Camera className="h-4 w-4" /> Enviar e concluir
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
