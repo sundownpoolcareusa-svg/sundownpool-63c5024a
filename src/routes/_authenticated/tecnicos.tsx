@@ -99,6 +99,18 @@ function TecnicosPage() {
             </button>
           </div>
 
+          {!isLoading && !technicians.some((t) => t.is_owner) && (
+            <div className="mt-5 flex items-center gap-3 rounded-2xl border border-[var(--dash-border)] bg-white p-4" style={cardShadow}>
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-white" style={{ background: "var(--dash-navy)" }}>
+                <Crown className="h-5 w-5" style={{ color: "var(--dash-orange)" }} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[15px] font-bold text-[var(--dash-text)]">Master</div>
+                <div className="mt-0.5 truncate text-[12.5px] text-[var(--dash-text-muted-2)]">{ownerEmail ?? "—"}</div>
+              </div>
+            </div>
+          )}
+
           {isLoading ? (
             <div className="py-12 text-center text-[var(--dash-text-muted)]">Loading...</div>
           ) : (
