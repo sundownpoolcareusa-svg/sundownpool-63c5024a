@@ -15,6 +15,7 @@ import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeSt
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
+import { useSignedPhotoUrl } from "@/lib/signedPhotoUrl";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 import poolImg from "@/assets/pool.jpg";
@@ -77,16 +78,7 @@ function fullAddress(c: ClientFull) {
 }
 
 function ClientCardPhoto({ client }: { client: ClientFull }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    const path = client.pool_photos?.[0];
-    if (!path) { setUrl(null); return; }
-    let alive = true;
-    supabase.storage.from("client-photos").createSignedUrl(path, 60 * 60).then(({ data }) => {
-      if (alive && data?.signedUrl) setUrl(data.signedUrl);
-    });
-    return () => { alive = false; };
-  }, [client.pool_photos]);
+  const url = useSignedPhotoUrl("client-photos", client.pool_photos?.[0]);
   return <img src={url || poolImg} alt="" className="h-full w-full object-cover" />;
 }
 

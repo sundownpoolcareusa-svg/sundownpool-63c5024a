@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { PhotoUploader } from "@/components/PhotoUploader";
-import { supabase } from "@/integrations/supabase/client";
+import { useSignedPhotoUrl } from "@/lib/signedPhotoUrl";
 import {
   getMyClientInvoices, getMyClientVisitHistory, getMyClientChemicalsHistory, updateMyClientPoolPhotos, updateMyClientEquipment,
   updateMyClientNotes, logMyClientFilterChange,
@@ -50,16 +50,7 @@ function filterChangeDueDate(client: TechnicianClient): Date | null {
 // private "client-photos" bucket), falling back to a property-type icon in
 // the same blue/purple scheme used on the "Meus Clientes" list.
 function ClientPhoto({ client }: { client: TechnicianClient }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    const path = client.pool_photos?.[0];
-    if (!path) { setUrl(null); return; }
-    let alive = true;
-    supabase.storage.from("client-photos").createSignedUrl(path, 60 * 60).then(({ data }) => {
-      if (alive && data?.signedUrl) setUrl(data.signedUrl);
-    });
-    return () => { alive = false; };
-  }, [client.pool_photos]);
+  const url = useSignedPhotoUrl("client-photos", client.pool_photos?.[0]);
 
   if (url) {
     return <img src={url} alt="" className="h-[130px] w-[100px] shrink-0 rounded-2xl object-cover" />;

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GoogleMap, Marker, TrafficLayer, useJsApiLoader } from "@react-google-maps/api";
 import { supabase } from "@/integrations/supabase/client";
+import { useSignedPhotoUrl } from "@/lib/signedPhotoUrl";
 import { AppLogo } from "@/components/AppLogo";
 import { MapErrorBoundary } from "@/components/MapErrorBoundary";
 import { TecnicoClientDetail } from "@/components/TecnicoClientDetail";
@@ -1687,16 +1688,7 @@ function clientFullAddress(c: TechnicianClient) {
 // private "client-photos" bucket the owner side uses) when one exists,
 // falling back to the initials circle used everywhere else in this app.
 function ClientAvatarPhoto({ client, idx, sizeClass }: { client: TechnicianClient; idx: number; sizeClass: string }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    const path = client.pool_photos?.[0];
-    if (!path) { setUrl(null); return; }
-    let alive = true;
-    supabase.storage.from("client-photos").createSignedUrl(path, 60 * 60).then(({ data }) => {
-      if (alive && data?.signedUrl) setUrl(data.signedUrl);
-    });
-    return () => { alive = false; };
-  }, [client.pool_photos]);
+  const url = useSignedPhotoUrl("client-photos", client.pool_photos?.[0]);
 
   if (url) {
     return <img src={url} alt="" className={`${sizeClass} shrink-0 rounded-full object-cover`} />;

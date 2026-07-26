@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { stampPhotoWithTimestamp } from "@/lib/photoStamp";
+import { useSignedPhotoUrl } from "@/lib/signedPhotoUrl";
 
 export function PhotoUploader({
   label,
@@ -77,14 +78,7 @@ export function PhotoUploader({
 }
 
 export function PhotoThumb({ path, bucket = "client-photos", onRemove }: { path: string; bucket?: string; onRemove?: () => void }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let alive = true;
-    supabase.storage.from(bucket).createSignedUrl(path, 60 * 60).then(({ data }) => {
-      if (alive && data?.signedUrl) setUrl(data.signedUrl);
-    });
-    return () => { alive = false; };
-  }, [path, bucket]);
+  const url = useSignedPhotoUrl(bucket, path);
   return (
     <div className="group relative h-20 w-20 overflow-hidden rounded-[10px] border border-[var(--dash-border)] bg-[var(--dash-bg)]">
       {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full w-full place-items-center"><Loader2 className="h-4 w-4 animate-spin text-[var(--dash-text-muted)]" /></div>}
