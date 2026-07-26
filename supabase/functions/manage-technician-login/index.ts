@@ -1,25 +1,8 @@
-// Creates or resets the login (email + password) a technician uses to sign
-// into /tecnico. This needs the Supabase Admin API (create user / set a
-// user's password directly), which only works with the service role key —
-// never usable from the browser — so it has to go through this function.
-//
-// No secrets to configure here beyond what's automatic: SUPABASE_URL and
-// SUPABASE_SERVICE_ROLE_KEY are provided automatically.
-//
-// Always responds with HTTP 200 and a { ok, error? } body — including for
-// expected failures like "wrong owner" or "already has a login" — so the
-// frontend (calling this via supabase.functions.invoke) can read the actual
-// error message directly from the response body instead of having to dig it
-// out of a thrown FunctionsHttpError.
-
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Used for privileged operations (admin.createUser / admin.updateUserById)
-// and for reading/writing the technicians table without RLS getting in the
-// way — ownership is checked explicitly below instead.
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
 function ok(body: Record<string, unknown> = {}) {
@@ -34,10 +17,6 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return fail("Missing Authorization");
 
-  // A second client, scoped to the caller's own JWT, used only to find out
-  // who is actually calling — kept separate from `admin` above so the
-  // privileged calls always run with the service role's own credentials,
-  // never the caller's.
   const callerClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     global: { headers: { Authorization: authHeader } },
   });
@@ -62,10 +41,6 @@ Deno.serve(async (req) => {
   if (techErr) return fail(techErr.message);
   if (!tech || tech.user_id !== callerId) return fail("Technician not found or not yours");
 
-  // The Master's own admin login must never also be the auth_user_id on
-  // their technician row — _authenticated/route.tsx redirects ANY account
-  // that matches a technician's auth_user_id straight to /tecnico, so
-  // linking one here would lock the owner out of the admin dashboard.
   if (tech.is_owner) return fail("The Master can't have a separate technician login");
 
   if (action === "create") {
