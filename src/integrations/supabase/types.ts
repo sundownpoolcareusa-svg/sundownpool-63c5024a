@@ -708,6 +708,11 @@ export type Database = {
           active: boolean
           auth_user_id: string | null
           can_manage_clients: boolean
+          can_manage_estimates: boolean
+          can_manage_invoices: boolean
+          can_manage_routes: boolean
+          can_manage_services: boolean
+          can_manage_users: boolean
           can_view_earnings: boolean
           color: string
           created_at: string
@@ -726,6 +731,11 @@ export type Database = {
           active?: boolean
           auth_user_id?: string | null
           can_manage_clients?: boolean
+          can_manage_estimates?: boolean
+          can_manage_invoices?: boolean
+          can_manage_routes?: boolean
+          can_manage_services?: boolean
+          can_manage_users?: boolean
           can_view_earnings?: boolean
           color?: string
           created_at?: string
@@ -744,6 +754,11 @@ export type Database = {
           active?: boolean
           auth_user_id?: string | null
           can_manage_clients?: boolean
+          can_manage_estimates?: boolean
+          can_manage_invoices?: boolean
+          can_manage_routes?: boolean
+          can_manage_services?: boolean
+          can_manage_users?: boolean
           can_view_earnings?: boolean
           color?: string
           created_at?: string
@@ -996,6 +1011,11 @@ export type Database = {
           auth_email: string
           auth_user_id: string
           can_manage_clients: boolean
+          can_manage_estimates: boolean
+          can_manage_invoices: boolean
+          can_manage_routes: boolean
+          can_manage_services: boolean
+          can_manage_users: boolean
           can_view_earnings: boolean
           color: string
           created_at: string

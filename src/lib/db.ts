@@ -213,6 +213,11 @@ export type Technician = {
   is_owner?: boolean;
   can_view_earnings?: boolean;
   can_manage_clients?: boolean;
+  can_manage_users?: boolean;
+  can_manage_routes?: boolean;
+  can_manage_estimates?: boolean;
+  can_manage_invoices?: boolean;
+  can_manage_services?: boolean;
   created_at: string;
 };
 
@@ -277,7 +282,11 @@ export async function setClientTechnician(clientId: string, technicianId: string
   if (error) throw error;
 }
 
-export async function createTechnician(values: { name: string; phone?: string; color?: string; photo_path?: string | null; is_owner?: boolean; can_view_earnings?: boolean; can_manage_clients?: boolean }) {
+export async function createTechnician(values: {
+  name: string; phone?: string; color?: string; photo_path?: string | null; is_owner?: boolean;
+  can_view_earnings?: boolean; can_manage_clients?: boolean; can_manage_users?: boolean;
+  can_manage_routes?: boolean; can_manage_estimates?: boolean; can_manage_invoices?: boolean; can_manage_services?: boolean;
+}) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Not authenticated");
   const { data, error } = await supabase
@@ -291,7 +300,11 @@ export async function createTechnician(values: { name: string; phone?: string; c
 
 export async function updateTechnician(
   id: string,
-  values: { name: string; phone?: string | null; color?: string; photo_path?: string | null; is_owner?: boolean; can_view_earnings?: boolean; can_manage_clients?: boolean },
+  values: {
+    name: string; phone?: string | null; color?: string; photo_path?: string | null; is_owner?: boolean;
+    can_view_earnings?: boolean; can_manage_clients?: boolean; can_manage_users?: boolean;
+    can_manage_routes?: boolean; can_manage_estimates?: boolean; can_manage_invoices?: boolean; can_manage_services?: boolean;
+  },
 ) {
   const { error } = await supabase.from("technicians").update(values).eq("id", id);
   if (error) throw error;
