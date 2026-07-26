@@ -195,24 +195,22 @@ function UserRow({
 }) {
   return (
     <div className="flex items-start gap-3 p-4">
-      <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-12 w-12 shrink-0" textClassName="text-sm" />
+      <div className="relative shrink-0">
+        <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-12 w-12" textClassName="text-sm" />
+        {t.auth_user_id && (
+          <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[var(--dash-green)]" />
+        )}
+      </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className="truncate text-[15px] font-bold text-[var(--dash-text)]">{t.name}</span>
           {t.is_owner && <Crown className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-orange)" }} />}
         </div>
-        <div className="mt-1.5">
-          {t.auth_email ? (
+        {t.auth_email && (
+          <div className="mt-1.5">
             <span className="truncate text-[12.5px] text-[var(--dash-text-muted-2)]">{t.auth_email}</span>
-          ) : (
-            <span
-              className="inline-block rounded-full px-2.5 py-1 text-[12px] font-semibold"
-              style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
-            >
-              No login yet
-            </span>
-          )}
-        </div>
+          </div>
+        )}
         {t.phone && <div className="mt-1.5 text-[13px] text-[var(--dash-text-muted-2)]">{formatPhone(t.phone)}</div>}
       </div>
       <div className="flex shrink-0 flex-col items-end gap-2">
@@ -237,8 +235,8 @@ function UserRow({
           </button>
         </div>
         {toggle && (
-          <button type="button" onClick={toggle.onToggle} title="Users" className="grid h-6 w-6 place-items-center">
-            <ChevronDown className={`h-4 w-4 text-[var(--dash-text-muted)] transition-transform ${toggle.open ? "rotate-180" : ""}`} />
+          <button type="button" onClick={toggle.onToggle} title="Users" className="mt-1 grid h-9 w-9 place-items-center">
+            <ChevronDown className={`h-5 w-5 text-[var(--dash-text-muted)] transition-transform ${toggle.open ? "rotate-180" : ""}`} />
           </button>
         )}
       </div>
