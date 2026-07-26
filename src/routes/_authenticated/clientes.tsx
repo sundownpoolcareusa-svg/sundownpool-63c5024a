@@ -11,7 +11,7 @@ import {
   CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, Waves, User,
   Navigation, FlaskConical, Camera,
 } from "lucide-react";
-import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, deleteStop, rescheduleStop, fmtDate, initials, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
+import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, deleteStop, rescheduleStop, fmtDate, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { PhotoUploader, PhotoThumb } from "@/components/PhotoUploader";
 import { supabase } from "@/integrations/supabase/client";
@@ -320,9 +320,6 @@ function ClientDetailPanel({
               </>
             )}
           </div>
-        </div>
-        <div className="absolute bottom-3 left-4 grid h-12 w-12 place-items-center rounded-full text-sm font-bold text-white ring-4 ring-white" style={{ background: "var(--dash-navy)" }}>
-          {initials(client.name)}
         </div>
       </div>
 
