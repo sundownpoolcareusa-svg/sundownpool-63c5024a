@@ -284,7 +284,7 @@ function routeStats(stops: RouteStop[], coords: Record<string, LatLng>) {
   const positioned = stops.map((s) => coords[s.id]).filter((p): p is LatLng => !!p);
   let miles = 0;
   for (let i = 1; i < positioned.length; i++) miles += haversineMiles(positioned[i - 1], positioned[i]);
-  const distanceLabel = positioned.length > 1 ? `${miles.toFixed(1)} mi` : "—";
+  const distanceLabel = positioned.length > 1 ? miles.toFixed(1) : "—";
 
   const etaMinutes = remaining * AVG_MINUTES_PER_STOP;
   const etaLabel = etaMinutes === 0 ? "0m" : etaMinutes >= 60 ? `${Math.floor(etaMinutes / 60)}:${String(etaMinutes % 60).padStart(2, "0")}` : `${etaMinutes}m`;
