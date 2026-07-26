@@ -433,14 +433,30 @@ function RotasPage() {
     if (toSchedule.length === 0) return;
     toSchedule.forEach((c) => autoAttempted.current.add(`${dateStr}:${c.id}`));
     (async () => {
-      for (const c of toSchedule) {
+      // Run these in parallel rather than one at a time — with several
+      // recurring clients this used to serialize into a couple of seconds
+      // of back-to-back round trips every time Rotas opened. Route lookups
+      // are memoized per technician within this batch (not just per call)
+      // so two clients sharing a technician await the same in-flight
+      // getOrCreateRoute instead of racing separate inserts for the same
+      // (technician_id, route_date) row.
+      const routeForTech = new Map<string, ReturnType<typeof getOrCreateRoute>>();
+      function routeFor(technicianId: string) {
+        let p = routeForTech.get(technicianId);
+        if (!p) {
+          p = getOrCreateRoute(technicianId, dateStr);
+          routeForTech.set(technicianId, p);
+        }
+        return p;
+      }
+      await Promise.all(toSchedule.map(async (c) => {
         try {
-          const route = await getOrCreateRoute(c.technician_id!, dateStr);
+          const route = await routeFor(c.technician_id!);
           await addStopToRoute(route.id, c.id);
         } catch {
           // best-effort — a failed auto-add just falls back to the manual suggestion next render
         }
-      }
+      }));
       qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] });
     })();
   }, [clients, routes, dateStr, qc]);
