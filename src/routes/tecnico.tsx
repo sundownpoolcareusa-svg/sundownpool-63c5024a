@@ -1956,32 +1956,32 @@ function TecnicoHomeDashboard({
               <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#DBEAFE", color: "#2563EB" }}>
                 <DollarSign className="h-4 w-4" />
               </div>
-              <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(stats.estimated_route_revenue)}</div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{fmt(stats.estimated_route_revenue)}</div>
               <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Total mensal</div>
             </div>
             <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
               <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#CCFBF1", color: "#0D9488" }}>
                 <DollarSign className="h-4 w-4" />
               </div>
-              <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerPool)}</div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{fmt(avgPerPool)}</div>
               <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por piscina</div>
             </div>
             <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
               <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#EDE4FB", color: "#7C3AED" }}>
                 <DollarSign className="h-4 w-4" />
               </div>
-              <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerVisit)}</div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{fmt(avgPerVisit)}</div>
               <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por visita</div>
             </div>
             <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
               <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#0891B21A", color: "#0891B2" }}>
                 <DollarSign className="h-4 w-4" />
               </div>
-              <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(stats.avg_cost_per_visit)}</div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{fmt(stats.avg_cost_per_visit)}</div>
               <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Custo médio/visita</div>
             </div>
           </div>
-          <p className="-mt-2 text-center text-[11px] text-[var(--dash-text-muted)]">
+          <p className="-mt-2 text-center text-[12px] font-medium text-[var(--dash-link)]">
             {totalWeeklyVisits} visitas/semana · {scheduledClients.length} piscinas com rota
           </p>
         </>
