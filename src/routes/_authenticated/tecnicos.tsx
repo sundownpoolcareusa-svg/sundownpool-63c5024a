@@ -320,7 +320,7 @@ function TechnicianFormModal({
             max={1}
           />
         )}
-        <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+        <label className="flex items-center gap-2.5 rounded-[14px] border border-[var(--dash-border)] bg-white p-3.5 text-sm text-[var(--dash-text-secondary)]" style={cardShadow}>
           <input
             type="checkbox"
             checked={form.is_owner}
@@ -335,8 +335,8 @@ function TechnicianFormModal({
             <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">
               Permissions
             </label>
-            <div className="mt-1 space-y-2">
-              <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+            <div className="mt-1.5 space-y-2.5">
+              <label className="flex items-center gap-2.5 rounded-[14px] border border-[var(--dash-border)] bg-white p-3.5 text-sm text-[var(--dash-text-secondary)]" style={cardShadow}>
                 <input
                   type="checkbox"
                   checked={form.can_view_earnings}
@@ -345,7 +345,7 @@ function TechnicianFormModal({
                 />
                 Can see $ values (route totals, averages) on their own dashboard
               </label>
-              <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+              <label className="flex items-center gap-2.5 rounded-[14px] border border-[var(--dash-border)] bg-white p-3.5 text-sm text-[var(--dash-text-secondary)]" style={cardShadow}>
                 <input
                   type="checkbox"
                   checked={form.can_manage_clients}
@@ -411,12 +411,12 @@ function LoginSection({ technician }: { technician: TechnicianAdmin }) {
   });
 
   return (
-    <div className="rounded-[10px] border border-[var(--dash-border-input)] p-3">
+    <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-3.5" style={cardShadow}>
       <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">
         <KeyRound className="h-3.5 w-3.5" /> Login
       </div>
       {technician.auth_user_id ? (
-        <div className="mt-2 space-y-2">
+        <div className="mt-2.5 space-y-2.5">
           <p className="text-sm text-[var(--dash-text-secondary)]">{technician.auth_email}</p>
           <input
             type="password"
@@ -435,7 +435,7 @@ function LoginSection({ technician }: { technician: TechnicianAdmin }) {
           </button>
         </div>
       ) : (
-        <div className="mt-2 space-y-2">
+        <div className="mt-2.5 space-y-2.5">
           <input
             type="email"
             value={email}
