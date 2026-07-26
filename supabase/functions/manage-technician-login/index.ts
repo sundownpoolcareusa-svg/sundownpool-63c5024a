@@ -56,11 +56,17 @@ Deno.serve(async (req) => {
 
   const { data: tech, error: techErr } = await admin
     .from("technicians")
-    .select("id, user_id, auth_user_id")
+    .select("id, user_id, auth_user_id, is_owner")
     .eq("id", technician_id)
     .maybeSingle();
   if (techErr) return fail(techErr.message);
   if (!tech || tech.user_id !== callerId) return fail("Technician not found or not yours");
+
+  // The Master's own admin login must never also be the auth_user_id on
+  // their technician row — _authenticated/route.tsx redirects ANY account
+  // that matches a technician's auth_user_id straight to /tecnico, so
+  // linking one here would lock the owner out of the admin dashboard.
+  if (tech.is_owner) return fail("The Master can't have a separate technician login");
 
   if (action === "create") {
     if (!email || !password) return fail("Email and password are required");
