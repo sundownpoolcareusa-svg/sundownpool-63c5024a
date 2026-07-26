@@ -11,6 +11,10 @@ ALTER TABLE public.technicians
   ADD COLUMN IF NOT EXISTS can_manage_invoices BOOLEAN NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS can_manage_services BOOLEAN NOT NULL DEFAULT false;
 
+-- CREATE OR REPLACE can't change a function's return columns — has to be
+-- dropped first since this adds 5 new output columns.
+DROP FUNCTION IF EXISTS public.get_my_technicians_admin();
+
 CREATE OR REPLACE FUNCTION public.get_my_technicians_admin()
 RETURNS TABLE (
   id uuid,
