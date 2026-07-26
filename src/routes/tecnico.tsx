@@ -1923,19 +1923,12 @@ function TecnicoHomeDashboard({
     return <p className="py-10 text-center text-sm text-[var(--dash-text-muted)]">Carregando...</p>;
   }
 
-  const totalAlerts = stats.filters_overdue + stats.pools_with_alert + stats.overdue_invoices;
   const weekCards = [
     { label: "Segunda", value: stats.seg_routes },
     { label: "Terça", value: stats.ter_routes },
     { label: "Quarta", value: stats.qua_routes },
     { label: "Quinta", value: stats.qui_routes },
     { label: "Sexta", value: stats.sex_routes },
-  ];
-  const statCards: { icon: typeof CalendarDays; tint: string; value: string | number; label: string; onClick?: () => void }[] = [
-    { icon: CalendarDays, tint: "#2563EB", value: stats.clients_today, label: "Clientes hoje" },
-    { icon: CheckCircle2, tint: "#16A34A", value: stats.completed_today, label: "Concluídos" },
-    { icon: AlertTriangle, tint: "#DC2626", value: totalAlerts, label: "Alertas", onClick: onOpenActions },
-    { icon: DollarSign, tint: "#0891B2", value: canViewEarnings ? fmt(stats.avg_cost_per_visit) : "—", label: "Custo médio/visita" },
   ];
   const openJobs = serviceJobs.filter((j) => j.status !== "Concluído");
 
@@ -1956,25 +1949,9 @@ function TecnicoHomeDashboard({
         <ChevronDown className="h-4 w-4 text-[var(--dash-text-muted)]" />
       </button>
 
-      <div className="grid grid-cols-4 gap-2">
-        {statCards.map((c) => {
-          const Icon = c.icon;
-          const Tag = c.onClick ? "button" : "div";
-          return (
-            <Tag key={c.label} onClick={c.onClick} className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
-              <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: `${c.tint}1A`, color: c.tint }}>
-                <Icon className="h-4 w-4" />
-              </div>
-              <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{c.value}</div>
-              <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">{c.label}</div>
-            </Tag>
-          );
-        })}
-      </div>
-
       {canViewEarnings && (
         <>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
               <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#DBEAFE", color: "#2563EB" }}>
                 <DollarSign className="h-4 w-4" />
@@ -1995,6 +1972,13 @@ function TecnicoHomeDashboard({
               </div>
               <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(avgPerVisit)}</div>
               <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Média por visita</div>
+            </div>
+            <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
+              <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#0891B21A", color: "#0891B2" }}>
+                <DollarSign className="h-4 w-4" />
+              </div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight tabular-nums text-[var(--dash-text)]">{fmt(stats.avg_cost_per_visit)}</div>
+              <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Custo médio/visita</div>
             </div>
           </div>
           <p className="-mt-2 text-center text-[11px] text-[var(--dash-text-muted)]">
