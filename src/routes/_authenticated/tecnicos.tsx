@@ -450,7 +450,7 @@ function TechnicianFormModal({
                 className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2.5 text-sm"
               >
                 <option value="owner">Owner (Master)</option>
-                <option value="user">User</option>
+                <option value="user">Tech</option>
               </select>
             </div>
             <div>
@@ -511,6 +511,7 @@ function LoginSection({ technician }: { technician: TechnicianAdmin }) {
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
 
   const createMut = useMutation({
     mutationFn: () => createTechnicianLogin(technician.id, email, password),
@@ -539,22 +540,33 @@ function LoginSection({ technician }: { technician: TechnicianAdmin }) {
       </div>
       {technician.auth_user_id ? (
         <div className="mt-2.5 space-y-2.5">
-          <p className="text-sm text-[var(--dash-text-secondary)]">{technician.auth_email}</p>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="New password"
-            className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-          />
           <button
             type="button"
-            disabled={!password || resetMut.isPending}
-            onClick={() => resetMut.mutate()}
-            className="rounded-[10px] border border-[var(--dash-border)] px-3 py-2 text-sm font-semibold text-[var(--dash-text-secondary)] disabled:opacity-50"
+            onClick={() => setResetOpen((v) => !v)}
+            className="flex w-full items-center justify-between text-left"
           >
-            {resetMut.isPending ? "Saving..." : "Reset Password"}
+            <p className="text-sm text-[var(--dash-text-secondary)]">{technician.auth_email}</p>
+            <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--dash-text-muted)] transition-transform ${resetOpen ? "rotate-180" : ""}`} />
           </button>
+          {resetOpen && (
+            <>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="New password"
+                className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                disabled={!password || resetMut.isPending}
+                onClick={() => resetMut.mutate()}
+                className="rounded-[10px] border border-[var(--dash-border)] px-3 py-2 text-sm font-semibold text-[var(--dash-text-secondary)] disabled:opacity-50"
+              >
+                {resetMut.isPending ? "Saving..." : "Reset Password"}
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <div className="mt-2.5 space-y-2.5">
