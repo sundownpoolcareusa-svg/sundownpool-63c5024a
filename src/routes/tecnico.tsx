@@ -155,7 +155,7 @@ function isCommercial(clientType: string) {
   return clientType.toLowerCase().startsWith("comm") || clientType.toLowerCase().startsWith("comer");
 }
 
-const GOOGLE_MAPS_KEY = (import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined) ?? "";
+const GOOGLE_MAPS_KEY = (import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY as string | undefined) ?? "";
 const SARASOTA_CENTER = { lat: 27.3364, lng: -82.5307 };
 const mapContainerStyle = { width: "100%", height: "100%" };
 const AVG_MINUTES_PER_STOP = 30;
