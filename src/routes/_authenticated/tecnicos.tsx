@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
 import { TechAvatar } from "@/components/TechAvatar";
 import { PhotoUploader } from "@/components/PhotoUploader";
-import { Plus, Pencil, UserX, HardHat, Crown, KeyRound } from "lucide-react";
+import { Plus, Pencil, UserX, HardHat, Crown, KeyRound, ChevronDown } from "lucide-react";
 import {
   listTechniciansAdmin,
   createTechnician,
@@ -41,6 +41,7 @@ function TecnicosPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TechnicianAdmin | null>(null);
   const [deactivating, setDeactivating] = useState<TechnicianAdmin | null>(null);
+  const [staffOpen, setStaffOpen] = useState(false);
   const { data: technicians = [], isLoading } = useQuery({
     queryKey: ["technicians-admin"],
     queryFn: listTechniciansAdmin,
@@ -95,44 +96,30 @@ function TecnicosPage() {
               </button>
             </div>
           ) : (
-            <div className="-mx-4 mt-5 overflow-x-auto sm:mx-0">
-              <table className="w-full min-w-[520px] text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--dash-border-table)] text-left text-[var(--dash-text-muted)]">
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">
-                      User
-                    </th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Email</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Phone</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Color</th>
-                    <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                {master.length > 0 && (
-                  <tbody>
-                    <tr>
-                      <td colSpan={5} className="pb-1 pt-4 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted-2)]">
-                        Master
-                      </td>
-                    </tr>
-                    {master.map((t) => (
-                      <UserRow key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
-                    ))}
-                  </tbody>
-                )}
-                <tbody>
-                  <tr>
-                    <td colSpan={5} className="pb-1 pt-4 text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-muted-2)]">
-                      Users
-                    </td>
-                  </tr>
-                  {staff.map((t) => (
-                    <UserRow key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-5 space-y-3">
+              {master.map((t) => (
+                <UserCard key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
+              ))}
+
+              {staff.length > 0 && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setStaffOpen((v) => !v)}
+                    className="flex w-full items-center justify-between rounded-2xl border border-[var(--dash-border)] bg-white px-4 py-3"
+                  >
+                    <span className="text-sm font-bold text-[var(--dash-text)]">Users ({staff.length})</span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--dash-text-muted)] transition-transform ${staffOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {staffOpen && (
+                    <div className="mt-3 space-y-3">
+                      {staff.map((t) => (
+                        <UserCard key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -185,53 +172,41 @@ function TecnicosPage() {
   );
 }
 
-function UserRow({ t, onEdit, onRemove }: { t: TechnicianAdmin; onEdit: () => void; onRemove: () => void }) {
+function UserCard({ t, onEdit, onRemove }: { t: TechnicianAdmin; onEdit: () => void; onRemove: () => void }) {
   return (
-    <tr className="border-b border-[var(--dash-border-table)]">
-      <td className="py-4">
-        <div className="flex items-center gap-3">
-          <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-10 w-10" textClassName="text-xs" />
-          <div className="flex items-center gap-1.5">
-            <div className="font-bold text-[var(--dash-text)]">{t.name}</div>
-            {t.is_owner && <Crown className="h-3.5 w-3.5" style={{ color: "var(--dash-orange)" }} />}
-          </div>
+    <div className="flex items-center gap-3 rounded-2xl border border-[var(--dash-border)] bg-white p-4" style={cardShadow}>
+      <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-11 w-11" textClassName="text-sm" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate text-[14px] font-bold text-[var(--dash-text)]">{t.name}</span>
+          {t.is_owner && <Crown className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--dash-orange)" }} />}
         </div>
-      </td>
-      <td className="py-4 text-[var(--dash-text-secondary)]">
-        {t.auth_email ?? <span className="text-[var(--dash-text-muted)]">No login yet</span>}
-      </td>
-      <td className="py-4 text-[var(--dash-text)]">
-        {t.phone ? formatPhone(t.phone) : "—"}
-      </td>
-      <td className="py-4">
-        <span
-          className="inline-block h-4 w-4 rounded-full"
-          style={{ background: t.color }}
-        />
-      </td>
-      <td className="py-4">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onEdit}
-            title="Edit"
-            className="hover:opacity-70"
-            style={{ color: "var(--dash-navy)" }}
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onRemove}
-            title="Remove"
-            className="hover:opacity-70"
-            style={{ color: "var(--dash-red)" }}
-          >
-            <UserX className="h-4 w-4" />
-          </button>
+        <div className="mt-0.5 truncate text-[12px] text-[var(--dash-text-muted-2)]">
+          {t.auth_email ?? <span className="text-[var(--dash-text-muted)]">No login yet</span>}
         </div>
-      </td>
-    </tr>
+        {t.phone && <div className="mt-0.5 text-[12px] text-[var(--dash-text-muted-2)]">{formatPhone(t.phone)}</div>}
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={onEdit}
+          title="Edit"
+          className="grid h-9 w-9 place-items-center rounded-full hover:bg-[var(--dash-bg)]"
+          style={{ color: "var(--dash-navy)" }}
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          title="Remove"
+          className="grid h-9 w-9 place-items-center rounded-full hover:bg-[var(--dash-bg)]"
+          style={{ color: "var(--dash-red)" }}
+        >
+          <UserX className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   );
 }
 
