@@ -16,7 +16,7 @@ import {
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
   addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, clientFullAddress, setClientTechnician,
-  formatPhone, saveStopVisitPhotos,
+  formatPhone, saveStopVisitPhotos, errorMessage,
   type RouteStop, type StopStatus, type Technician, type Client, type RouteRow,
 } from "@/lib/db";
 import { geocodeAndSaveClient } from "@/lib/geocode";
@@ -498,7 +498,7 @@ function RotasPage() {
         try {
           await saveStopVisitPhotos(stop.id, photos);
         } catch (e) {
-          toast.error(e instanceof Error ? e.message : "Erro ao salvar foto");
+          toast.error(errorMessage(e, "Erro ao salvar foto"));
         }
       }
       statusMut.mutate({ stop, status: "Concluído" });
