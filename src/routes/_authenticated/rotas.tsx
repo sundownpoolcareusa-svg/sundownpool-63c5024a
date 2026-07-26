@@ -250,7 +250,7 @@ function RouteMap({
   );
 }
 
-type StatItem = { icon: typeof MapPin; tint: string; value: string | number; label: string };
+type StatItem = { icon: typeof MapPin; tint: string; value: string | number; label: string; compact?: boolean };
 
 function StatRow({ items }: { items: StatItem[] }) {
   return (
@@ -261,7 +261,7 @@ function StatRow({ items }: { items: StatItem[] }) {
           <div key={it.label} className={`min-w-0 flex-1 ${i > 0 ? "ml-3 border-l border-[var(--dash-border)] pl-3" : ""}`}>
             <div className="flex items-center gap-1.5">
               <Icon className="h-5 w-5 shrink-0" style={{ color: it.tint }} />
-              <span className="text-lg font-extrabold text-[var(--dash-text)]">{it.value}</span>
+              <span className={`font-extrabold text-[var(--dash-text)] ${it.compact ? "text-[15.3px]" : "text-lg"}`}>{it.value}</span>
             </div>
             <div className="mt-1 text-[11px] font-medium leading-tight text-[var(--dash-text-muted-2)]">{it.label}</div>
           </div>
@@ -287,7 +287,7 @@ function routeStats(stops: RouteStop[], coords: Record<string, LatLng>) {
   const distanceLabel = positioned.length > 1 ? `${miles.toFixed(1)} mi` : "—";
 
   const etaMinutes = remaining * AVG_MINUTES_PER_STOP;
-  const etaLabel = etaMinutes === 0 ? "0m" : etaMinutes >= 60 ? `${Math.floor(etaMinutes / 60)}h ${etaMinutes % 60 || ""}${etaMinutes % 60 ? "m" : ""}`.trim() : `${etaMinutes}m`;
+  const etaLabel = etaMinutes === 0 ? "0m" : etaMinutes >= 60 ? `${Math.floor(etaMinutes / 60)}:${String(etaMinutes % 60).padStart(2, "0")}` : `${etaMinutes}m`;
 
   return { total: stops.length, completed, remaining, finish, distanceLabel, etaLabel };
 }
@@ -533,7 +533,7 @@ function RotasPage() {
     { icon: MapPin, tint: "#2563EB", value: summary.total, label: "Paradas" },
     { icon: CheckCircle2, tint: "#16A34A", value: summary.completed, label: "Concluídas" },
     { icon: Clock, tint: "#E8813A", value: summary.etaLabel, label: "Tempo" },
-    { icon: Share2, tint: "#7C3AED", value: summary.distanceLabel, label: "Distância" },
+    { icon: Share2, tint: "#7C3AED", value: summary.distanceLabel, label: "Distância", compact: true },
   ];
   const desktopCards = [
     { icon: MapPin, tint: "#2563EB", value: summary.total, label: "Total Stops" },
