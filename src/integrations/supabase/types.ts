@@ -780,6 +780,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_client_photo: { Args: { p_name: string }; Returns: boolean }
       complete_my_service_job: {
         Args: { p_job_id: string }
         Returns: undefined
