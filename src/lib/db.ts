@@ -489,6 +489,12 @@ export async function updateStopStatus(stopId: string, status: StopStatus, clien
       .update({ last_service_date: now.slice(0, 10) })
       .eq("id", clientId);
   }
+
+  // Same immediate nudge updateMyStopStatus already does for the
+  // technician's own /tecnico app — without it, "on the way" emails
+  // triggered from the admin's Rotas page only went out on the next cron
+  // sweep (a few minutes later) instead of right away.
+  if (status === "Em serviço") triggerClientEmailSweep();
 }
 
 // Admin-side equivalent of the technician's own save_my_stop_visit_photos
