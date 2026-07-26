@@ -1067,6 +1067,10 @@ export type Database = {
         Args: { p_photos: string[]; p_stop_id: string }
         Returns: undefined
       }
+      save_stop_visit_photos: {
+        Args: { p_photos: string[]; p_stop_id: string }
+        Returns: undefined
+      }
       update_my_client_equipment: {
         Args: { p_client_id: string; p_notes: string; p_photos: string[] }
         Returns: undefined
