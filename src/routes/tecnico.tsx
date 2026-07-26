@@ -22,7 +22,7 @@ import {
   getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
   getMyServiceJobs, createMyServiceJob, updateMyServiceJob, completeMyServiceJob, saveMyPushSubscription,
   saveMyStopVisitPhotos,
-  initials, fmt, fmtDate, formatPhone, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
+  initials, fmt, fmtDate, formatPhone, errorMessage, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
   type ServiceJob, type ServiceJobPriority,
 } from "@/lib/db";
 import { toast } from "sonner";
@@ -424,7 +424,7 @@ function TecnicoPage() {
         try {
           await saveMyStopVisitPhotos(stop.stop_id, photos);
         } catch (e) {
-          toast.error(e instanceof Error ? e.message : "Erro ao salvar foto");
+          toast.error(errorMessage(e, "Erro ao salvar foto"));
         }
       }
       statusMut.mutate({ stopId: stop.stop_id, status: "Concluído" });

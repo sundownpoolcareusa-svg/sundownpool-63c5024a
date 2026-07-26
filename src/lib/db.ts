@@ -1311,6 +1311,18 @@ export function formatPhone(raw: string | null | undefined): string {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
+// `e instanceof Error` is false for Supabase/PostgREST errors — they're
+// plain objects shaped like { message, details, hint, code }, not real
+// Error instances — so that check alone was silently swallowing the real
+// database error text and always falling back to a generic message.
+export function errorMessage(e: unknown, fallback: string): string {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === "object" && "message" in e && typeof (e as { message: unknown }).message === "string") {
+    return (e as { message: string }).message;
+  }
+  return fallback;
+}
+
 export function initials(name: string) {
   return name
     .split(/\s+/)
