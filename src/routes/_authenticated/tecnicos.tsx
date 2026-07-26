@@ -96,29 +96,25 @@ function TecnicosPage() {
               </button>
             </div>
           ) : (
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 divide-y divide-[var(--dash-border)] overflow-hidden rounded-2xl border border-[var(--dash-border)] bg-white">
               {master.map((t) => (
-                <UserCard key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
+                <UserRow key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
               ))}
 
               {staff.length > 0 && (
-                <div>
+                <>
                   <button
                     type="button"
                     onClick={() => setStaffOpen((v) => !v)}
-                    className="flex w-full items-center justify-between rounded-2xl border border-[var(--dash-border)] bg-white px-4 py-3"
+                    className="flex w-full items-center justify-between px-4 py-3"
                   >
                     <span className="text-sm font-bold text-[var(--dash-text)]">Users ({staff.length})</span>
                     <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--dash-text-muted)] transition-transform ${staffOpen ? "rotate-180" : ""}`} />
                   </button>
-                  {staffOpen && (
-                    <div className="mt-3 space-y-3">
-                      {staff.map((t) => (
-                        <UserCard key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
-                      ))}
-                    </div>
-                  )}
-                </div>
+                  {staffOpen && staff.map((t) => (
+                    <UserRow key={t.id} t={t} onEdit={() => setEditing(t)} onRemove={() => setDeactivating(t)} />
+                  ))}
+                </>
               )}
             </div>
           )}
@@ -172,9 +168,9 @@ function TecnicosPage() {
   );
 }
 
-function UserCard({ t, onEdit, onRemove }: { t: TechnicianAdmin; onEdit: () => void; onRemove: () => void }) {
+function UserRow({ t, onEdit, onRemove }: { t: TechnicianAdmin; onEdit: () => void; onRemove: () => void }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-[var(--dash-border)] bg-white p-4" style={cardShadow}>
+    <div className="flex items-center gap-3 p-4">
       <TechAvatar name={t.name} color={t.color} photoPath={t.photo_path} className="h-11 w-11" textClassName="text-sm" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
