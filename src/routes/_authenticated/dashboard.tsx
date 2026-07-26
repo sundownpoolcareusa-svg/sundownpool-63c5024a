@@ -19,6 +19,7 @@ import {
   type ChemicalVisitEntry,
 } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
+import { useSignedPhotoUrl } from "@/lib/signedPhotoUrl";
 import poolImg from "@/assets/pool.jpg";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -411,16 +412,7 @@ function stopDisplayStatus(status: StopStatus, isNext: boolean): { label: string
 }
 
 function StopClientPhoto({ client }: { client: (Client & { pool_photos?: string[] | null }) | undefined }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    const path = client?.pool_photos?.[0];
-    if (!path) { setUrl(null); return; }
-    let alive = true;
-    supabase.storage.from("client-photos").createSignedUrl(path, 60 * 60).then(({ data }) => {
-      if (alive && data?.signedUrl) setUrl(data.signedUrl);
-    });
-    return () => { alive = false; };
-  }, [client?.pool_photos]);
+  const url = useSignedPhotoUrl("client-photos", client?.pool_photos?.[0]);
   return <img src={url || poolImg} alt="" className="h-9 w-9 shrink-0 rounded-[9px] object-cover" />;
 }
 
