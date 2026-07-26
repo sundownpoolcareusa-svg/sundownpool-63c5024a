@@ -1956,7 +1956,7 @@ function TecnicoHomeDashboard({
               <div className="mx-auto grid h-7 w-7 place-items-center rounded-full" style={{ background: "#DBEAFE", color: "#2563EB" }}>
                 <DollarSign className="h-4 w-4" />
               </div>
-              <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">{fmt(stats.estimated_route_revenue)}</div>
+              <div className="mt-1.5 text-[15px] font-extrabold leading-tight text-[var(--dash-text)]">${Math.round(stats.estimated_route_revenue)}</div>
               <div className="text-[9.5px] font-medium leading-tight text-[var(--dash-text-muted-2)]">Total mensal</div>
             </div>
             <div className="rounded-[14px] border border-[var(--dash-border)] bg-white p-2.5 text-center">
