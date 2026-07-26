@@ -498,10 +498,7 @@ export async function updateStopStatus(stopId: string, status: StopStatus, clien
 // scoped RPC, since the caller here is the route's owner, not necessarily
 // the assigned technician's own login.
 export async function saveStopVisitPhotos(stopId: string, photos: string[]) {
-  const { error } = await supabase
-    .from("route_stops")
-    .update({ visit_photos: photos, photo_taken_at: photos.length > 0 ? new Date().toISOString() : null })
-    .eq("id", stopId);
+  const { error } = await supabase.rpc("save_stop_visit_photos", { p_stop_id: stopId, p_photos: photos });
   if (error) throw error;
 }
 
