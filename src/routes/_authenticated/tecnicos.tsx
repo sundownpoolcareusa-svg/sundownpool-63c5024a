@@ -452,17 +452,23 @@ function TechnicianFormModal({
                 <option value="user">Tech</option>
               </select>
             </div>
-            {editing && !form.is_owner && (
+            {editing && (
               <div>
                 <label className="text-[12px] font-semibold text-[var(--dash-text-secondary-2)]">Status</label>
-                <button
-                  type="button"
-                  onClick={() => setLoginOpen((v) => !v)}
-                  className="mt-1 flex w-full items-center justify-between rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]"
-                >
-                  <span className="truncate">{editing.auth_email ?? "No login yet"}</span>
-                  <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--dash-text-muted)] transition-transform ${loginOpen ? "rotate-180" : ""}`} />
-                </button>
+                {form.is_owner ? (
+                  <div className="mt-1 truncate rounded-[10px] border border-[var(--dash-border-input)] bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]">
+                    {editing.auth_email ?? "—"}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setLoginOpen((v) => !v)}
+                    className="mt-1 flex w-full items-center justify-between rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]"
+                  >
+                    <span className="truncate">{editing.auth_email ?? "No login yet"}</span>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--dash-text-muted)] transition-transform ${loginOpen ? "rotate-180" : ""}`} />
+                  </button>
+                )}
               </div>
             )}
           </div>
