@@ -198,8 +198,8 @@ function SortableStopCard({
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1, zIndex: isDragging ? 10 : undefined, position: "relative" }}
-      className="mb-3 flex items-stretch gap-1.5"
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1, zIndex: isDragging ? 10 : undefined }}
+      className="relative mb-3"
     >
       <div
         className="absolute -left-2 -top-2 z-10 grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold text-white ring-2 ring-white"
@@ -207,7 +207,7 @@ function SortableStopCard({
       >
         {index + 1}
       </div>
-      <div className="min-w-0 flex-1 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 pl-5">
+      <div className="flex-1 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 pl-5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="truncate text-[14px] font-bold text-[var(--dash-text)]">{stop.client_name}</div>
@@ -250,62 +250,64 @@ function SortableStopCard({
           </div>
         )}
 
-        <div className="mt-2 flex flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <span
-            title={commercial ? "Comercial" : "Residencial"}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
-            style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
-          >
-            {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
-          </span>
-          <Link
-            to="/tecnico/chemicals/$stopId"
-            params={{ stopId: stop.stop_id }}
-            title="Chemical"
-            className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-1 text-[11px] font-bold text-white"
-            style={{ background: "var(--dash-green)" }}
-          >
-            <FlaskConical className="h-3 w-3" />
-            Chemical
-          </Link>
-          {stop.client_phone && (
-            <a href={`tel:${stop.client_phone}`} title={formatPhone(stop.client_phone)} className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-              <Phone className="h-3.5 w-3.5" />
-            </a>
-          )}
-          {address && (
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
-              target="_blank"
-              rel="noreferrer"
-              title="Navigate"
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
+        <div className="mt-2 flex items-center gap-1">
+          <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <span
+              title={commercial ? "Comercial" : "Residencial"}
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
+              style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
             >
-              <Navigation className="h-3.5 w-3.5" />
-            </a>
-          )}
-          {next && (
-            <button
-              onClick={() => next === "Concluído" ? onRequestComplete(stop) : onSetStatus(stop.stop_id, next)}
-              disabled={statusPending}
-              className="flex shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"
-              style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
+              {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
+            </span>
+            <Link
+              to="/tecnico/chemicals/$stopId"
+              params={{ stopId: stop.stop_id }}
+              title="Chemical"
+              className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-1 text-[11px] font-bold text-white"
+              style={{ background: "var(--dash-green)" }}
             >
-              {next === "Concluído" ? <Check className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-              {next === "Concluído" ? "Concluir" : "Iniciar"}
-            </button>
-          )}
+              <FlaskConical className="h-3 w-3" />
+              Chemical
+            </Link>
+            {stop.client_phone && (
+              <a href={`tel:${stop.client_phone}`} title={formatPhone(stop.client_phone)} className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+                <Phone className="h-3.5 w-3.5" />
+              </a>
+            )}
+            {address && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                target="_blank"
+                rel="noreferrer"
+                title="Navigate"
+                className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
+              >
+                <Navigation className="h-3.5 w-3.5" />
+              </a>
+            )}
+            {next && (
+              <button
+                onClick={() => next === "Concluído" ? onRequestComplete(stop) : onSetStatus(stop.stop_id, next)}
+                disabled={statusPending}
+                className="flex shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"
+                style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
+              >
+                {next === "Concluído" ? <Check className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                {next === "Concluído" ? "Concluir" : "Iniciar"}
+              </button>
+            )}
+          </div>
+          <button
+            {...attributes}
+            {...listeners}
+            title="Segure e arraste para reordenar"
+            style={{ touchAction: "none" }}
+            className="grid h-7 w-7 shrink-0 cursor-grab touch-none place-items-center rounded-full text-[var(--dash-text-muted-2)] active:cursor-grabbing"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
         </div>
       </div>
-      <button
-        {...attributes}
-        {...listeners}
-        title="Segure e arraste para reordenar"
-        style={{ touchAction: "none" }}
-        className="grid w-9 shrink-0 cursor-grab touch-none place-items-center rounded-[14px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-muted-2)] active:cursor-grabbing"
-      >
-        <GripVertical className="h-4 w-4" />
-      </button>
     </div>
   );
 }
