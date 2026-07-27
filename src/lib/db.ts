@@ -870,6 +870,14 @@ export async function updateMyStopStatus(stopId: string, status: StopStatus) {
   if (status === "Em serviço") triggerClientEmailSweep();
 }
 
+// Technician-scoped reorder — route_stops' RLS only allows the route's
+// owner to update via plain REST, so a technician dragging their own day's
+// stops needs this RPC instead of reorderStops().
+export async function reorderMyStops(orderedStopIds: string[]) {
+  const { error } = await supabase.rpc("reorder_my_stops", { p_stop_ids: orderedStopIds });
+  if (error) throw error;
+}
+
 export async function getMyStopDetail(stopId: string) {
   const { data, error } = await supabase.rpc("get_my_stop_detail", { p_stop_id: stopId });
   if (error) throw error;

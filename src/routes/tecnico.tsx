@@ -2,6 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GoogleMap, Marker, TrafficLayer, useJsApiLoader } from "@react-google-maps/api";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
 import { useSignedPhotoUrl } from "@/lib/signedPhotoUrl";
 import { AppLogo } from "@/components/AppLogo";
@@ -13,13 +16,13 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Home, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
   AlertTriangle, DollarSign, Filter, FileText, X, RotateCcw,
-  Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal, Pencil, Camera,
+  Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal, Pencil, Camera, GripVertical,
 } from "lucide-react";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { TechAvatar } from "@/components/TechAvatar";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
-  getMyTechnicianDashboard, getMyTechnicianAlerts, reorderStops, updateMyTechnicianProfile,
+  getMyTechnicianDashboard, getMyTechnicianAlerts, reorderMyStops, updateMyTechnicianProfile,
   getMyServiceJobs, createMyServiceJob, updateMyServiceJob, completeMyServiceJob, saveMyPushSubscription,
   saveMyStopVisitPhotos,
   initials, fmt, fmtDate, formatPhone, errorMessage, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
@@ -172,6 +175,141 @@ const PIN_PATH = "M 12 0 C 7.03 0 3 4.03 3 9 c 0 6.75 9 15 9 15 s 9 -8.25 9 -15 
 
 type LatLng = { lat: number; lng: number };
 
+// A single draggable stop card in the day's route list. The grip handle on
+// the right is the only draggable region — every other button (call,
+// navigate, chemical, status) keeps working as a normal tap since it never
+// gets the sortable listeners attached to it.
+function SortableStopCard({
+  stop, index, onSetStatus, statusPending, onRequestComplete, onUndo,
+}: {
+  stop: TechnicianStop;
+  index: number;
+  onSetStatus: (stopId: string, status: StopStatus) => void;
+  statusPending: boolean;
+  onRequestComplete: (stop: TechnicianStop) => void;
+  onUndo: (stop: TechnicianStop) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.stop_id });
+  const badgeStyle = STATUS_STYLES[stop.status] ?? STATUS_STYLES["Pendente"];
+  const next = nextStatus(stop.status);
+  const address = stopAddress(stop);
+  const commercial = isCommercial(stop.client_type);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1, zIndex: isDragging ? 10 : undefined, position: "relative" }}
+      className="mb-3 flex items-stretch gap-1.5"
+    >
+      <div
+        className="absolute -left-2 -top-2 z-10 grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold text-white ring-2 ring-white"
+        style={{ background: statusMarkerColor(stop.status) }}
+      >
+        {index + 1}
+      </div>
+      <div className="min-w-0 flex-1 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 pl-5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="truncate text-[14px] font-bold text-[var(--dash-text)]">{stop.client_name}</div>
+            {address ? (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="truncate text-[12px] text-[var(--dash-text-muted-2)] underline decoration-dotted underline-offset-2"
+              >
+                {address}
+              </a>
+            ) : (
+              <span className="text-[12px] text-[var(--dash-text-muted-2)]">—</span>
+            )}
+          </div>
+          <div className="shrink-0 text-right">
+            <div className="flex items-center justify-end gap-1">
+              <span className="whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badgeStyle.bg, color: badgeStyle.text }}>
+                {stopStatusLabel(stop.status)}
+              </span>
+              {stop.status === "Concluído" && (
+                <button
+                  onClick={() => onUndo(stop)}
+                  title="Desfazer conclusão"
+                  className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[var(--dash-text-muted-2)]"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+            <div className="mt-1 text-[11px] font-semibold text-[var(--dash-text-muted-2)]">{stop.scheduled_time ? stop.scheduled_time.slice(0, 5) : "—"}</div>
+          </div>
+        </div>
+
+        {stop.stop_notes && (
+          <div className="mt-2 flex items-start gap-1.5 rounded-[10px] bg-[#FEF3C7] px-2.5 py-1.5 text-[12px] text-[#92400E]">
+            <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {stop.stop_notes}
+          </div>
+        )}
+
+        <div className="mt-2 flex flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <span
+            title={commercial ? "Comercial" : "Residencial"}
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
+            style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
+          >
+            {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
+          </span>
+          <Link
+            to="/tecnico/chemicals/$stopId"
+            params={{ stopId: stop.stop_id }}
+            title="Chemical"
+            className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-1 text-[11px] font-bold text-white"
+            style={{ background: "var(--dash-green)" }}
+          >
+            <FlaskConical className="h-3 w-3" />
+            Chemical
+          </Link>
+          {stop.client_phone && (
+            <a href={`tel:${stop.client_phone}`} title={formatPhone(stop.client_phone)} className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
+              <Phone className="h-3.5 w-3.5" />
+            </a>
+          )}
+          {address && (
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
+              target="_blank"
+              rel="noreferrer"
+              title="Navigate"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
+            >
+              <Navigation className="h-3.5 w-3.5" />
+            </a>
+          )}
+          {next && (
+            <button
+              onClick={() => next === "Concluído" ? onRequestComplete(stop) : onSetStatus(stop.stop_id, next)}
+              disabled={statusPending}
+              className="flex shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"
+              style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
+            >
+              {next === "Concluído" ? <Check className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+              {next === "Concluído" ? "Concluir" : "Iniciar"}
+            </button>
+          )}
+        </div>
+      </div>
+      <button
+        {...attributes}
+        {...listeners}
+        title="Segure e arraste para reordenar"
+        style={{ touchAction: "none" }}
+        className="grid w-9 shrink-0 cursor-grab touch-none place-items-center rounded-[14px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-muted-2)] active:cursor-grabbing"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 function TecnicoRouteMap({ stops, showTraffic, onToggleTraffic }: { stops: TechnicianStop[]; showTraffic: boolean; onToggleTraffic: () => void }) {
   const { isLoaded, loadError } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY, libraries: MAP_LIBRARIES });
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -311,7 +449,11 @@ function TecnicoPage() {
     typeof Notification === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window) ? "unsupported" : Notification.permission,
   );
   const [pushBusy, setPushBusy] = useState(false);
+  const [dragOrderIds, setDragOrderIds] = useState<string[] | null>(null);
   const { isLoaded: mapsLoaded } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY, libraries: MAP_LIBRARIES });
+  const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  useEffect(() => setDragOrderIds(null), [dateStr]);
 
   useEffect(() => {
     (async () => {
@@ -460,7 +602,7 @@ function TecnicoPage() {
         });
         const order = result.routes[0]?.waypoint_order ?? withCoords.map((_, i) => i);
         const newOrder = [...order.map((i) => withCoords[i]), ...withoutCoords];
-        await reorderStops(newOrder.map((s) => s.stop_id));
+        await reorderMyStops(newOrder.map((s) => s.stop_id));
         return;
       }
 
@@ -478,7 +620,7 @@ function TecnicoPage() {
       const order = result.routes[0]?.waypoint_order ?? middle.map((_, i) => i);
       const optimizedMiddle = order.map((i) => middle[i]);
       const newOrder = [first, ...optimizedMiddle, last, ...withoutCoords];
-      await reorderStops(newOrder.map((s) => s.stop_id));
+      await reorderMyStops(newOrder.map((s) => s.stop_id));
     },
     onSuccess: () => {
       toast.success("Rota otimizada!");
@@ -486,6 +628,27 @@ function TecnicoPage() {
     },
     onError: (e: Error) => toast.error(e.message || "Não foi possível otimizar a rota"),
   });
+
+  const reorderMut = useMutation({
+    mutationFn: (ids: string[]) => reorderMyStops(ids),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-technician-stops", dateStr] }),
+    onError: (e: Error) => {
+      toast.error(errorMessage(e, "Não foi possível reordenar a rota"));
+      setDragOrderIds(null);
+    },
+  });
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const ids = sorted.map((s) => s.stop_id);
+    const oldIndex = ids.indexOf(String(active.id));
+    const newIndex = ids.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    const newOrder = arrayMove(ids, oldIndex, newIndex);
+    setDragOrderIds(newOrder);
+    reorderMut.mutate(newOrder);
+  }
 
   const updateProfileMut = useMutation({
     mutationFn: () => updateMyTechnicianProfile({
@@ -562,6 +725,8 @@ function TecnicoPage() {
   if (!checkedSession) return null;
 
   const sorted = stops.slice().sort((a, b) => a.position - b.position);
+  const byId = new Map(sorted.map((s) => [s.stop_id, s]));
+  const displayStops = dragOrderIds ? (dragOrderIds.map((id) => byId.get(id)).filter(Boolean) as TechnicianStop[]) : sorted;
   const completedCount = sorted.filter((s) => s.status === "Concluído").length;
   const pendingCount = sorted.filter((s) => s.status !== "Concluído").length;
   const etaMinutes = pendingCount * AVG_MINUTES_PER_STOP;
@@ -829,112 +994,21 @@ function TecnicoPage() {
               <p className="mt-3 text-sm font-semibold text-[var(--dash-text-secondary)]">Nenhuma parada neste dia</p>
             </div>
           ) : (
-            sorted.map((stop, i) => {
-              const badgeStyle = STATUS_STYLES[stop.status] ?? STATUS_STYLES["Pendente"];
-              const next = nextStatus(stop.status);
-              const address = stopAddress(stop);
-              const commercial = isCommercial(stop.client_type);
-              return (
-                <div key={stop.stop_id} className="relative mb-3">
-                  <div
-                    className="absolute -left-2 -top-2 z-10 grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold text-white ring-2 ring-white"
-                    style={{ background: statusMarkerColor(stop.status) }}
-                  >
-                    {i + 1}
-                  </div>
-                  <div className="flex-1 rounded-[14px] border border-[var(--dash-border)] bg-white p-3 pl-5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="truncate text-[14px] font-bold text-[var(--dash-text)]">{stop.client_name}</div>
-                        {address ? (
-                          <a
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="truncate text-[12px] text-[var(--dash-text-muted-2)] underline decoration-dotted underline-offset-2"
-                          >
-                            {address}
-                          </a>
-                        ) : (
-                          <span className="text-[12px] text-[var(--dash-text-muted-2)]">—</span>
-                        )}
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <span className="whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: badgeStyle.bg, color: badgeStyle.text }}>
-                            {stopStatusLabel(stop.status)}
-                          </span>
-                          {stop.status === "Concluído" && (
-                            <button
-                              onClick={() => setUndoStop(stop)}
-                              title="Desfazer conclusão"
-                              className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[var(--dash-text-muted-2)]"
-                            >
-                              <RotateCcw className="h-3 w-3" />
-                            </button>
-                          )}
-                        </div>
-                        <div className="mt-1 text-[11px] font-semibold text-[var(--dash-text-muted-2)]">{stop.scheduled_time ? stop.scheduled_time.slice(0, 5) : "—"}</div>
-                      </div>
-                    </div>
-
-                    {stop.stop_notes && (
-                      <div className="mt-2 flex items-start gap-1.5 rounded-[10px] bg-[#FEF3C7] px-2.5 py-1.5 text-[12px] text-[#92400E]">
-                        <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        {stop.stop_notes}
-                      </div>
-                    )}
-
-                    <div className="mt-2 flex flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                      <span
-                        title={commercial ? "Comercial" : "Residencial"}
-                        className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
-                        style={commercial ? { background: "#EDE4FB", color: "#7C3AED" } : { background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}
-                      >
-                        {commercial ? <Building2 className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}
-                      </span>
-                      <Link
-                        to="/tecnico/chemicals/$stopId"
-                        params={{ stopId: stop.stop_id }}
-                        title="Chemical"
-                        className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-1 text-[11px] font-bold text-white"
-                        style={{ background: "var(--dash-green)" }}
-                      >
-                        <FlaskConical className="h-3 w-3" />
-                        Chemical
-                      </Link>
-                      {stop.client_phone && (
-                        <a href={`tel:${stop.client_phone}`} title={formatPhone(stop.client_phone)} className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]">
-                          <Phone className="h-3.5 w-3.5" />
-                        </a>
-                      )}
-                      {address && (
-                        <a
-                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          title="Navigate"
-                          className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
-                        >
-                          <Navigation className="h-3.5 w-3.5" />
-                        </a>
-                      )}
-                      {next && (
-                        <button
-                          onClick={() => next === "Concluído" ? requestCompleteStop(stop) : statusMut.mutate({ stopId: stop.stop_id, status: next })}
-                          disabled={statusMut.isPending}
-                          className="flex shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-white disabled:opacity-50"
-                          style={{ background: next === "Concluído" ? "var(--dash-green)" : "var(--dash-navy)" }}
-                        >
-                          {next === "Concluído" ? <Check className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                          {next === "Concluído" ? "Concluir" : "Iniciar"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+            <DndContext sensors={dragSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={displayStops.map((s) => s.stop_id)} strategy={verticalListSortingStrategy}>
+                {displayStops.map((stop, i) => (
+                  <SortableStopCard
+                    key={stop.stop_id}
+                    stop={stop}
+                    index={i}
+                    onSetStatus={(stopId, status) => statusMut.mutate({ stopId, status })}
+                    statusPending={statusMut.isPending}
+                    onRequestComplete={requestCompleteStop}
+                    onUndo={setUndoStop}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
 
