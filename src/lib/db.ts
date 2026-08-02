@@ -13,6 +13,7 @@ export type Client = {
   client_type: string;
   status: string;
   stage?: string;
+  monthly_value: number;
   service_days?: string[];
   service_frequency?: string | null;
   technician_id?: string | null;

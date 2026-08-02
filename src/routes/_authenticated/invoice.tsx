@@ -374,6 +374,17 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
     }
   }
 
+  // Picking a client directly (no estimate) pre-fills a single line using
+  // that client's own monthly pool value, instead of the generic $100 default.
+  function applyClient(id: string) {
+    setClientId(id);
+    if (!id || estimateId) return;
+    const c = clients.find((x) => x.id === id);
+    if (c) {
+      setItems([{ service: "Pool Cleaning", description: "Standard cleaning", qty: 1, rate: Number(c.monthly_value ?? 0) }]);
+    }
+  }
+
   const mut = useMutation({
     mutationFn: async () => {
       if (!clientId) throw new Error("Select a client");
@@ -430,7 +441,7 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Client *</label>
-              <select value={clientId} onChange={(e) => setClientId(e.target.value)} required className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
+              <select value={clientId} onChange={(e) => applyClient(e.target.value)} required className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
                 <option value="">Select...</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
