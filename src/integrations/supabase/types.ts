@@ -1056,10 +1056,7 @@ export type Database = {
           filter_last_cleaned_at: string
         }[]
       }
-      reorder_my_stops: {
-        Args: { p_stop_ids: string[] }
-        Returns: undefined
-      }
+      reorder_my_stops: { Args: { p_stop_ids: string[] }; Returns: undefined }
       save_my_push_subscription: {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string }
         Returns: undefined
