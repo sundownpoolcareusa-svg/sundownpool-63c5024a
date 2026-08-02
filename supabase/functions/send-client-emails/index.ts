@@ -20,18 +20,26 @@ const FROM_ADDRESS = "Sundown Pool Care <no_reply@sundownpoolcare.com>";
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(to: string[], subject: string, html: string) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from: FROM_ADDRESS, to: [to], subject, html }),
+    body: JSON.stringify({ from: FROM_ADDRESS, to, subject, html }),
   });
   if (!res.ok) {
     throw new Error(`Resend error ${res.status}: ${await res.text()}`);
   }
+}
+
+// clients.email is a single text field, but the client form lets an admin
+// enter more than one address (comma or semicolon separated) for clients
+// who want alerts sent to two people — split it into real separate
+// recipients instead of handing Resend one literal comma-joined string.
+function parseEmails(raw: string): string[] {
+  return raw.split(/[,;]/).map((e) => e.trim()).filter(Boolean);
 }
 
 const CHEMICAL_LABELS: Record<string, string> = {
@@ -86,11 +94,12 @@ Deno.serve(async () => {
     client: (ClientRow & { notify_on_way: boolean; notify_on_way_since: string | null }) | (ClientRow & { notify_on_way: boolean; notify_on_way_since: string | null })[];
   }[]) {
     const client = firstOf(stop.client);
-    if (!client?.email) continue;
+    const recipients = client?.email ? parseEmails(client.email) : [];
+    if (recipients.length === 0) continue;
     if (!isOnOrAfterCutoff(stop.started_at, client.notify_on_way_since)) continue;
     try {
       await sendEmail(
-        client.email,
+        recipients,
         "Your Sundown Pool Care technician is on the way!",
         `<p>Hi ${client.name},</p>
          <p>Just a quick heads up — your Sundown Pool Care technician is on the way to service your pool today.</p>
@@ -121,7 +130,8 @@ Deno.serve(async () => {
     client: (ClientRow & { notify_chemicals: boolean; notify_chemicals_since: string | null; has_salt_system: boolean }) | (ClientRow & { notify_chemicals: boolean; notify_chemicals_since: string | null; has_salt_system: boolean })[];
   }[]) {
     const client = firstOf(stop.client);
-    if (!client?.email) continue;
+    const recipients = client?.email ? parseEmails(client.email) : [];
+    if (recipients.length === 0) continue;
     if (!isOnOrAfterCutoff(stop.completed_at, client.notify_chemicals_since)) continue;
 
     const { data: chem } = await supabase
@@ -151,7 +161,7 @@ Deno.serve(async () => {
 
     try {
       await sendEmail(
-        client.email,
+        recipients,
         "Your pool chemical readings",
         `<p>Hi ${client.name},</p>
          <p>Your pool was serviced on ${dateLabel} at ${timeLabel}. Here are the chemical readings from today's visit:</p>
@@ -187,7 +197,8 @@ Deno.serve(async () => {
     client: (ClientRow & { notify_photo: boolean; notify_photo_since: string | null }) | (ClientRow & { notify_photo: boolean; notify_photo_since: string | null })[];
   }[]) {
     const client = firstOf(stop.client);
-    if (!client?.email) continue;
+    const recipients = client?.email ? parseEmails(client.email) : [];
+    if (recipients.length === 0) continue;
     if (!isOnOrAfterCutoff(stop.photo_taken_at ?? stop.completed_at, client.notify_photo_since)) continue;
 
     const photoPath = stop.visit_photos?.[0];
@@ -211,7 +222,7 @@ Deno.serve(async () => {
 
     try {
       await sendEmail(
-        client.email,
+        recipients,
         "A photo from your pool visit",
         `<p>Hi ${client.name},</p>
          <p>Here's a photo from your pool visit on ${dateLabel} at ${timeLabel}.</p>
