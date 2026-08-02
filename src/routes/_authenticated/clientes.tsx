@@ -991,7 +991,7 @@ function ClientFormModal({
           <>
             <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+              <Field label="Email (comma-separated for multiple)" type="email" multiple value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
               <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} />
             </div>
             <div>
@@ -1439,11 +1439,11 @@ function ClientScheduledStops({ clientId }: { clientId: string }) {
   );
 }
 
-function Field({ label, value, onChange, type = "text", required = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean }) {
+function Field({ label, value, onChange, type = "text", required = false, multiple = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; multiple?: boolean }) {
   return (
     <div>
       <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
+      <input type={type} multiple={multiple} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
     </div>
   );
 }
