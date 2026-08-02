@@ -38,8 +38,11 @@ export type Database = {
           name: string
           notes: string | null
           notify_chemicals: boolean
+          notify_chemicals_since: string | null
           notify_on_way: boolean
+          notify_on_way_since: string | null
           notify_photo: boolean
+          notify_photo_since: string | null
           phone: string | null
           pool_capacity_gallons: number | null
           pool_filter_type: string | null
@@ -77,8 +80,11 @@ export type Database = {
           name: string
           notes?: string | null
           notify_chemicals?: boolean
+          notify_chemicals_since?: string | null
           notify_on_way?: boolean
+          notify_on_way_since?: string | null
           notify_photo?: boolean
+          notify_photo_since?: string | null
           phone?: string | null
           pool_capacity_gallons?: number | null
           pool_filter_type?: string | null
@@ -116,8 +122,11 @@ export type Database = {
           name?: string
           notes?: string | null
           notify_chemicals?: boolean
+          notify_chemicals_since?: string | null
           notify_on_way?: boolean
+          notify_on_way_since?: string | null
           notify_photo?: boolean
+          notify_photo_since?: string | null
           phone?: string | null
           pool_capacity_gallons?: number | null
           pool_filter_type?: string | null
