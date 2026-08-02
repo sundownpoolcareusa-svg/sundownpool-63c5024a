@@ -49,6 +49,16 @@ function firstOf<T>(v: T | T[]): T {
 
 type ClientRow = { id: string; name: string; email: string | null };
 
+// A flag being opted into shouldn't retroactively email about a visit that
+// already happened before it was turned on — sinceIso is null for clients
+// whose flag has been on since before this cutoff tracking existed, which is
+// treated as "no cutoff" so nothing already working today gets suppressed.
+function isOnOrAfterCutoff(dateIso: string | null, sinceIso: string | null | undefined) {
+  if (!sinceIso) return true;
+  if (!dateIso) return true;
+  return new Date(dateIso) >= new Date(sinceIso);
+}
+
 Deno.serve(async () => {
   let onWaySent = 0;
   let chemicalsSent = 0;
@@ -64,16 +74,20 @@ Deno.serve(async () => {
   // Concluído without one.
   const { data: startedStops, error: startedErr } = await supabase
     .from("route_stops")
-    .select("id, client:clients!inner(id, name, email, notify_on_way)")
+    .select("id, started_at, client:clients!inner(id, name, email, notify_on_way, notify_on_way_since)")
     .not("started_at", "is", null)
     .is("on_way_email_sent_at", null)
     .eq("clients.notify_on_way", true);
 
   if (startedErr) return new Response(JSON.stringify({ error: startedErr.message }), { status: 500 });
 
-  for (const stop of (startedStops ?? []) as { id: string; client: (ClientRow & { notify_on_way: boolean }) | (ClientRow & { notify_on_way: boolean })[] }[]) {
+  for (const stop of (startedStops ?? []) as {
+    id: string; started_at: string | null;
+    client: (ClientRow & { notify_on_way: boolean; notify_on_way_since: string | null }) | (ClientRow & { notify_on_way: boolean; notify_on_way_since: string | null })[];
+  }[]) {
     const client = firstOf(stop.client);
     if (!client?.email) continue;
+    if (!isOnOrAfterCutoff(stop.started_at, client.notify_on_way_since)) continue;
     try {
       await sendEmail(
         client.email,
@@ -95,7 +109,7 @@ Deno.serve(async () => {
   // until it does, picked up on a later cron run.
   const { data: chemStops, error: chemErr } = await supabase
     .from("route_stops")
-    .select("id, completed_at, client:clients!inner(id, name, email, notify_chemicals, has_salt_system)")
+    .select("id, completed_at, client:clients!inner(id, name, email, notify_chemicals, notify_chemicals_since, has_salt_system)")
     .eq("status", "Concluído")
     .is("chemicals_email_sent_at", null)
     .eq("clients.notify_chemicals", true);
@@ -104,10 +118,11 @@ Deno.serve(async () => {
 
   for (const stop of (chemStops ?? []) as {
     id: string; completed_at: string | null;
-    client: (ClientRow & { notify_chemicals: boolean; has_salt_system: boolean }) | (ClientRow & { notify_chemicals: boolean; has_salt_system: boolean })[];
+    client: (ClientRow & { notify_chemicals: boolean; notify_chemicals_since: string | null; has_salt_system: boolean }) | (ClientRow & { notify_chemicals: boolean; notify_chemicals_since: string | null; has_salt_system: boolean })[];
   }[]) {
     const client = firstOf(stop.client);
     if (!client?.email) continue;
+    if (!isOnOrAfterCutoff(stop.completed_at, client.notify_chemicals_since)) continue;
 
     const { data: chem } = await supabase
       .from("stop_chemicals")
@@ -160,7 +175,7 @@ Deno.serve(async () => {
   // without a photo (picked up on a later run once one is added).
   const { data: photoStops, error: photoErr } = await supabase
     .from("route_stops")
-    .select("id, completed_at, photo_taken_at, visit_photos, client:clients!inner(id, name, email, notify_photo)")
+    .select("id, completed_at, photo_taken_at, visit_photos, client:clients!inner(id, name, email, notify_photo, notify_photo_since)")
     .eq("status", "Concluído")
     .is("photo_email_sent_at", null)
     .eq("clients.notify_photo", true);
@@ -169,10 +184,11 @@ Deno.serve(async () => {
 
   for (const stop of (photoStops ?? []) as {
     id: string; completed_at: string | null; photo_taken_at: string | null; visit_photos: string[] | null;
-    client: (ClientRow & { notify_photo: boolean }) | (ClientRow & { notify_photo: boolean })[];
+    client: (ClientRow & { notify_photo: boolean; notify_photo_since: string | null }) | (ClientRow & { notify_photo: boolean; notify_photo_since: string | null })[];
   }[]) {
     const client = firstOf(stop.client);
     if (!client?.email) continue;
+    if (!isOnOrAfterCutoff(stop.photo_taken_at ?? stop.completed_at, client.notify_photo_since)) continue;
 
     const photoPath = stop.visit_photos?.[0];
     if (!photoPath) continue;
