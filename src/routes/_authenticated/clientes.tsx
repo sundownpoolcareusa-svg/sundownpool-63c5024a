@@ -424,7 +424,7 @@ function ClientDetailPanel({
                       </div>
                       <div className="text-right">
                         <div className="font-bold tabular-nums text-[var(--dash-text)]">{fmt(inv.total)}</div>
-                        <div className="text-xs font-semibold" style={{ color: inv.status === "PAID" ? "var(--dash-green)" : "var(--dash-badge-unpaid-text)" }}>{inv.status === "PAID" ? "Paid" : "Unpaid"}</div>
+                        <div className="text-xs font-semibold" style={{ color: inv.status === "PAID" ? "var(--dash-green)" : "var(--dash-badge-unpaid-text)" }}>{inv.status === "PAID" ? "Paid" : "Unpaid"}{inv.status === "PAID" && inv.payment_method ? ` · ${inv.payment_method}` : ""}</div>
                       </div>
                     </div>
                   ))}
@@ -1506,7 +1506,7 @@ function ClientInvoicesHistory({ clientId }: { clientId: string }) {
                         color: inv.status === "PAID" ? "var(--dash-badge-paid-text)" : inv.status === "OVERDUE" ? "var(--dash-badge-expired-text)" : "var(--dash-badge-unpaid-text)",
                       }}
                     >
-                      {inv.status}
+                      {inv.status}{inv.status === "PAID" && inv.payment_method ? ` · ${inv.payment_method}` : ""}
                     </span>
                   </td>
                   <td className="py-2 text-right font-semibold tabular-nums text-[var(--dash-text)]">{fmt(Number(inv.total || 0))}</td>

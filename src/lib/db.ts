@@ -88,6 +88,7 @@ export type Invoice = {
   invoice_date: string;
   due_date: string | null;
   status: string;
+  payment_method?: string | null;
   subtotal: number;
   tax: number;
   total: number;

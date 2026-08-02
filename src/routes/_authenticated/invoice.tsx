@@ -35,7 +35,9 @@ const footerCats = [
 
 const cardShadow = { boxShadow: "0 1px 2px rgba(20,36,60,.03)" };
 
-function statusBadge(s: string) {
+const PAYMENT_METHODS = ["Stripe", "Zelle", "Cash", "Cheque"];
+
+function statusBadge(s: string, paymentMethod?: string | null) {
   const isPaid = s === "PAID";
   return (
     <span
@@ -45,7 +47,7 @@ function statusBadge(s: string) {
         color: isPaid ? "var(--dash-badge-paid-text)" : "var(--dash-badge-unpaid-text)",
       }}
     >
-      {isPaid ? "Paid" : "Unpaid"}
+      {isPaid ? "Paid" : "Unpaid"}{isPaid && paymentMethod ? ` · ${paymentMethod}` : ""}
     </span>
   );
 }
@@ -133,7 +135,7 @@ function InvoicePage() {
                       <div className="text-sm text-[var(--dash-text-secondary)]">{inv.client?.name}</div>
                       <div className="text-xs text-[var(--dash-text-muted)]">{fmtDate(inv.invoice_date)}</div>
                     </div>
-                    {statusBadge(inv.status)}
+                    {statusBadge(inv.status, inv.payment_method)}
                   </div>
                 </button>
               ))}
@@ -211,16 +213,26 @@ function InvoicePage() {
 
 function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: () => void }) {
   const [editOpen, setEditOpen] = useState(false);
+  const [paymentMethodOpen, setPaymentMethodOpen] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
   const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.position - b.position);
   const isPaid = invoice.status === "PAID";
 
-  const toggle = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("invoices").update({ status: isPaid ? "UNPAID" : "PAID" }).eq("id", invoice.id);
+  const markPaid = useMutation({
+    mutationFn: async (method: string) => {
+      const { error } = await supabase.from("invoices").update({ status: "PAID", payment_method: method }).eq("id", invoice.id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success(isPaid ? "Marked as unpaid" : "Marked as paid"); onChanged(); },
+    onSuccess: () => { toast.success("Marked as paid"); onChanged(); setPaymentMethodOpen(false); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const markUnpaid = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("invoices").update({ status: "UNPAID", payment_method: null }).eq("id", invoice.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Marked as unpaid"); onChanged(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -233,7 +245,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-extrabold text-[var(--dash-text)] sm:text-2xl">Invoice</h2>
-          {statusBadge(invoice.status)}
+          {statusBadge(invoice.status, invoice.payment_method)}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -243,8 +255,8 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             <Pencil className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Edit
           </button>
           <button
-            onClick={() => toggle.mutate()}
-            disabled={toggle.isPending}
+            onClick={() => isPaid ? markUnpaid.mutate() : setPaymentMethodOpen(true)}
+            disabled={markPaid.isPending || markUnpaid.isPending}
             className="flex items-center gap-2 rounded-[11px] px-3 py-2 text-sm font-semibold text-white"
             style={{ background: isPaid ? "var(--dash-orange)" : "var(--dash-green)" }}
           >
@@ -270,6 +282,21 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
       </div>
       <EditInvoiceModal key={invoice.id} invoice={invoice} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => { onChanged(); setEditOpen(false); }} />
+      <Modal open={paymentMethodOpen} onClose={() => setPaymentMethodOpen(false)} title="Payment Method">
+        <p className="mb-3 text-sm text-[var(--dash-text-secondary)]">How was this invoice paid?</p>
+        <div className="grid grid-cols-2 gap-2">
+          {PAYMENT_METHODS.map((m) => (
+            <button
+              key={m}
+              onClick={() => markPaid.mutate(m)}
+              disabled={markPaid.isPending}
+              className="rounded-[11px] border border-[var(--dash-border)] bg-white py-3 text-sm font-semibold text-[var(--dash-text-secondary)] hover:border-[var(--dash-navy)] hover:text-[var(--dash-navy)] disabled:opacity-50"
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+      </Modal>
       <div ref={pdfRef} className="pdf-print rounded-[20px] border border-[var(--dash-border)] bg-white px-[26px] pb-[26px] pt-1 print:border-0 print:shadow-none" style={cardShadow}>
         <DocCardHeader title="INVOICE" number={invoice.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
@@ -282,7 +309,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
           <div className="space-y-1 text-[var(--dash-text-secondary)] sm:text-right">
             <div><span className="font-semibold text-[var(--dash-text)]">Date:</span> {fmtDate(invoice.invoice_date)}</div>
             <div><span className="font-semibold text-[var(--dash-text)]">Due Date:</span> {fmtDate(invoice.due_date)}</div>
-            <div><span className="font-semibold text-[var(--dash-text)]">Status:</span> <span className="font-bold" style={{ color: isPaid ? "var(--dash-green)" : "var(--dash-badge-unpaid-text)" }}>{isPaid ? "PAID" : "UNPAID"}</span></div>
+            <div><span className="font-semibold text-[var(--dash-text)]">Status:</span> <span className="font-bold" style={{ color: isPaid ? "var(--dash-green)" : "var(--dash-badge-unpaid-text)" }}>{isPaid ? "PAID" : "UNPAID"}{isPaid && invoice.payment_method ? ` · ${invoice.payment_method}` : ""}</span></div>
           </div>
         </div>
 
