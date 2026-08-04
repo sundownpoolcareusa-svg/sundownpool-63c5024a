@@ -10,7 +10,7 @@ import {
   Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, type Invoice } from "@/lib/db";
+import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, sendInvoiceReceipt, errorMessage, type Invoice } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
@@ -213,7 +213,9 @@ function InvoicePage() {
 
 function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: () => void }) {
   const [editOpen, setEditOpen] = useState(false);
-  const [paymentMethodOpen, setPaymentMethodOpen] = useState(false);
+  // "method" — pick Stripe/Zelle/Cash/Cheque; "send-receipt" — follow-up
+  // asking whether to email the client a paid receipt right away.
+  const [paymentStep, setPaymentStep] = useState<"method" | "send-receipt" | null>(null);
   const pdfRef = useRef<HTMLDivElement>(null);
   const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.position - b.position);
   const isPaid = invoice.status === "PAID";
@@ -223,8 +225,14 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
       const { error } = await supabase.from("invoices").update({ status: "PAID", payment_method: method }).eq("id", invoice.id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Marked as paid"); onChanged(); setPaymentMethodOpen(false); },
+    onSuccess: () => { toast.success("Marked as paid"); onChanged(); setPaymentStep("send-receipt"); },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const sendReceipt = useMutation({
+    mutationFn: () => sendInvoiceReceipt(invoice.id),
+    onSuccess: () => { toast.success("Receipt emailed to client!"); setPaymentStep(null); },
+    onError: (e: Error) => { toast.error(errorMessage(e, "Could not send receipt")); setPaymentStep(null); },
   });
 
   const markUnpaid = useMutation({
@@ -255,7 +263,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             <Pencil className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Edit
           </button>
           <button
-            onClick={() => isPaid ? markUnpaid.mutate() : setPaymentMethodOpen(true)}
+            onClick={() => isPaid ? markUnpaid.mutate() : setPaymentStep("method")}
             disabled={markPaid.isPending || markUnpaid.isPending}
             className="flex items-center gap-2 rounded-[11px] px-3 py-2 text-sm font-semibold text-white"
             style={{ background: isPaid ? "var(--dash-orange)" : "var(--dash-green)" }}
@@ -282,7 +290,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         </div>
       </div>
       <EditInvoiceModal key={invoice.id} invoice={invoice} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => { onChanged(); setEditOpen(false); }} />
-      <Modal open={paymentMethodOpen} onClose={() => setPaymentMethodOpen(false)} title="Payment Method">
+      <Modal open={paymentStep === "method"} onClose={() => setPaymentStep(null)} title="Payment Method">
         <p className="mb-3 text-sm text-[var(--dash-text-secondary)]">How was this invoice paid?</p>
         <div className="grid grid-cols-2 gap-2">
           {PAYMENT_METHODS.map((m) => (
@@ -296,6 +304,32 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             </button>
           ))}
         </div>
+      </Modal>
+      <Modal open={paymentStep === "send-receipt"} onClose={() => setPaymentStep(null)} title="Send Receipt?">
+        {invoice.client?.email ? (
+          <>
+            <p className="mb-4 text-sm text-[var(--dash-text-secondary)]">Email {invoice.client.name} a receipt for this paid invoice now?</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setPaymentStep(null)}
+                disabled={sendReceipt.isPending}
+                className="rounded-[11px] border border-[var(--dash-border)] bg-white py-2.5 text-sm font-semibold text-[var(--dash-text-secondary)] disabled:opacity-50"
+              >
+                Not now
+              </button>
+              <button
+                onClick={() => sendReceipt.mutate()}
+                disabled={sendReceipt.isPending}
+                className="rounded-[11px] py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                style={{ background: "var(--dash-navy)" }}
+              >
+                {sendReceipt.isPending ? "Sending..." : "Yes, send"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-[var(--dash-text-secondary)]">This client has no email on file, so there's no way to send them a receipt.</p>
+        )}
       </Modal>
       <div ref={pdfRef} className="pdf-print rounded-[20px] border border-[var(--dash-border)] bg-white px-[26px] pb-[26px] pt-1 print:border-0 print:shadow-none" style={cardShadow}>
         <DocCardHeader title="INVOICE" number={invoice.number} />
