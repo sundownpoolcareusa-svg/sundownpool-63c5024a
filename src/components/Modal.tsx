@@ -2,9 +2,9 @@ import { X } from "lucide-react";
 import { type ReactNode } from "react";
 
 export function Modal({
-  open, onClose, title, children, maxWidth = "max-w-2xl", closeOnOverlayClick = true, fullScreenOnMobile = false,
+  open, onClose, title, subtitle, headerAction, children, maxWidth = "max-w-2xl", closeOnOverlayClick = true, fullScreenOnMobile = false,
 }: {
-  open: boolean; onClose: () => void; title: string; children: ReactNode; maxWidth?: string;
+  open: boolean; onClose: () => void; title: string; subtitle?: string; headerAction?: ReactNode; children: ReactNode; maxWidth?: string;
   closeOnOverlayClick?: boolean;
   // Covers the entire viewport on phones (like a bottom sheet dragged all
   // the way up) instead of floating as a small centered box — reverts to
@@ -30,8 +30,14 @@ export function Modal({
           </div>
         )}
         <div className="flex shrink-0 items-center justify-between border-b border-[var(--dash-border)] px-6 py-4">
-          <h2 className="text-lg font-bold text-[var(--dash-text)]">{title}</h2>
-          <button onClick={onClose} className="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"><X className="h-5 w-5" /></button>
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-[var(--dash-text)]">{title}</h2>
+            {subtitle && <p className="text-xs font-medium text-[var(--dash-text-muted)]">{subtitle}</p>}
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            {headerAction}
+            <button onClick={onClose} className="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"><X className="h-5 w-5" /></button>
+          </div>
         </div>
         <div className={`min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-6 ${fullScreenOnMobile ? "" : "max-h-[75vh]"}`}>{children}</div>
       </div>

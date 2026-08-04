@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { MapPin } from "lucide-react";
 import { loadGoogleMaps } from "@/lib/googleMapsLoader";
 
 type Suggestion = { id: string; text: string; placeId: string };
@@ -93,14 +94,17 @@ export function AddressAutocomplete({
   return (
     <div className="relative">
       <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">{label}</label>
-      <input
-        value={value}
-        onChange={(e) => handleInput(e.target.value)}
-        onFocus={() => items.length && setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        placeholder="Start typing the address..."
-        className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-      />
+      <div className="relative mt-1">
+        <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
+        <input
+          value={value}
+          onChange={(e) => handleInput(e.target.value)}
+          onFocus={() => items.length && setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder="Start typing the address..."
+          className="w-full rounded-[10px] border border-[var(--dash-border-input)] py-2 pl-9 pr-3 text-sm"
+        />
+      </div>
       {open && (
         <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-[10px] border border-[var(--dash-border)] bg-white shadow-lg">
           {items.map((s) => (
