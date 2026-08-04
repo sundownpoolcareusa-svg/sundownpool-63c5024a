@@ -17,6 +17,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const FROM_ADDRESS = "Sundown Pool Care <no_reply@sundownpoolcare.com>";
+// Edge Functions run in UTC — without an explicit zone, toLocaleDateString/
+// toLocaleTimeString would print the raw UTC clock time as if it were local,
+// showing visits hours ahead of when they actually happened for Sarasota, FL.
+const BUSINESS_TIMEZONE = "America/New_York";
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
@@ -156,8 +160,8 @@ Deno.serve(async () => {
       .join("");
 
     const visitDate = stop.completed_at ? new Date(stop.completed_at) : new Date();
-    const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-    const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: BUSINESS_TIMEZONE });
+    const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: BUSINESS_TIMEZONE });
 
     try {
       await sendEmail(
@@ -217,8 +221,8 @@ Deno.serve(async () => {
     // last flipped to Concluído, which can be long before a photo gets
     // added or replaced from the Chemicals screen afterward.
     const visitDate = stop.photo_taken_at ? new Date(stop.photo_taken_at) : stop.completed_at ? new Date(stop.completed_at) : new Date();
-    const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-    const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: BUSINESS_TIMEZONE });
+    const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: BUSINESS_TIMEZONE });
 
     try {
       await sendEmail(
