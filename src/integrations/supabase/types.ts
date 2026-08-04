@@ -1057,10 +1057,6 @@ export type Database = {
         }[]
       }
       reorder_my_stops: { Args: { p_stop_ids: string[] }; Returns: undefined }
-      reschedule_my_stop: {
-        Args: { p_all_future?: boolean; p_new_date: string; p_stop_id: string }
-        Returns: undefined
-      }
       save_my_push_subscription: {
         Args: { p_auth: string; p_endpoint: string; p_p256dh: string }
         Returns: undefined
