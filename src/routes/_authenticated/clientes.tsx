@@ -9,7 +9,7 @@ import {
   ChevronRight, Pencil, Trash2, Users, CalendarDays,
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
   CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, Waves, User,
-  Navigation, FlaskConical, Camera, Bell,
+  Navigation, FlaskConical, Camera, Bell, Building2, Hash,
 } from "lucide-react";
 import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, deleteStop, rescheduleStop, fmtDate, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -1008,9 +1008,28 @@ function ClientFormModal({
     mut.mutate(form);
   }
 
+  const formTabSubtitle: Record<typeof formTab, string> = {
+    client: editing ? "Update contact & address" : "Add a new pool care client",
+    pool: "Pool details & equipment",
+    service: "Recurring schedule & pricing",
+    alerts: "Email notification preferences",
+    notes: "Additional notes",
+  };
+
   return (
-    <Modal open={open} onClose={onClose} title={editing ? "Edit Client" : "New Client"} fullScreenOnMobile>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={editing ? "Edit Client" : "New Client"}
+      subtitle={formTabSubtitle[formTab]}
+      fullScreenOnMobile
+      headerAction={
+        <button form="client-form" type="submit" disabled={mut.isPending} className="rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          {mut.isPending ? "Saving..." : "Save"}
+        </button>
+      }
+    >
+      <form id="client-form" onSubmit={handleSubmit} className="space-y-4">
         <div className="-mt-1 flex items-start gap-1 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {CLIENT_FORM_TABS.map((t, i) => {
             const active = formTab === t.key;
@@ -1020,7 +1039,7 @@ function ClientFormModal({
                 <button
                   type="button"
                   onClick={() => setFormTab(t.key)}
-                  className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center"
+                  className="flex w-16 shrink-0 flex-col items-center gap-1 text-center"
                 >
                   <div
                     className="grid h-10 w-10 place-items-center rounded-full border-2 transition"
@@ -1035,6 +1054,12 @@ function ClientFormModal({
                   <span className="text-[10.5px] font-bold leading-tight" style={{ color: active ? "var(--dash-navy)" : "var(--dash-text-muted)" }}>
                     {t.label}
                   </span>
+                  <span
+                    className="grid h-4 w-4 shrink-0 place-items-center rounded-full text-[9px] font-bold text-white"
+                    style={{ background: active ? "var(--dash-navy)" : "var(--dash-text-muted)" }}
+                  >
+                    {i + 1}
+                  </span>
                 </button>
               </div>
             );
@@ -1044,10 +1069,10 @@ function ClientFormModal({
         {formTab === "client" && (
           <div className="space-y-4">
             <FormSection icon={User} title="Client Information" subtitle="Contact details and address">
-              <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
+              <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required icon={User} />
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Email (comma-separated for multiple)" type="email" multiple value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-                <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} />
+                <Field label="Email (comma-separated for multiple)" type="email" multiple value={form.email} onChange={(v) => setForm({ ...form, email: v })} icon={Mail} />
+                <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} icon={Phone} />
               </div>
               <AddressAutocomplete
                 value={form.address}
@@ -1063,9 +1088,9 @@ function ClientFormModal({
                 }))}
               />
               <div className="grid grid-cols-3 gap-4">
-                <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+                <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} icon={Building2} />
                 <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
-                <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
+                <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} icon={Hash} />
               </div>
             </FormSection>
 
@@ -1359,13 +1384,6 @@ function ClientFormModal({
             />
           </FormSection>
         )}
-
-        <div className="flex justify-end gap-2 border-t border-[var(--dash-border)] pt-4">
-          <button type="button" onClick={onClose} className="rounded-[10px] border border-[var(--dash-border)] px-4 py-2 text-sm font-semibold text-[var(--dash-text-secondary)]">Cancel</button>
-          <button disabled={mut.isPending} className="rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-            {mut.isPending ? "Saving..." : editing ? "Update Client" : "Save Client"}
-          </button>
-        </div>
       </form>
 
       {editing && (
@@ -1511,11 +1529,19 @@ function ClientScheduledStops({ clientId }: { clientId: string }) {
   );
 }
 
-function Field({ label, value, onChange, type = "text", required = false, multiple = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; multiple?: boolean }) {
+function Field({
+  label, value, onChange, type = "text", required = false, multiple = false, icon: Icon,
+}: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; multiple?: boolean; icon?: typeof User }) {
   return (
     <div>
       <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">{label}</label>
-      <input type={type} multiple={multiple} value={value} onChange={(e) => onChange(e.target.value)} required={required} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
+      <div className="relative mt-1">
+        {Icon && <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />}
+        <input
+          type={type} multiple={multiple} value={value} onChange={(e) => onChange(e.target.value)} required={required}
+          className={`w-full rounded-[10px] border border-[var(--dash-border-input)] py-2 pr-3 text-sm ${Icon ? "pl-9" : "pl-3"}`}
+        />
+      </div>
     </div>
   );
 }
