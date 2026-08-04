@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import {
   listTechnicians, createTechnician, listRoutesForDate, getOrCreateRoute, listRouteStops,
-  addStopToRoute, updateStopStatus, reorderStops, deleteStop, listClients, clientFullAddress, setClientTechnician,
+  addStopToRoute, getNextRoutePosition, updateStopStatus, reorderStops, deleteStop, listClients, clientFullAddress, setClientTechnician,
   formatPhone, saveStopVisitPhotos, errorMessage,
   type RouteStop, type StopStatus, type Technician, type Client, type RouteRow,
 } from "@/lib/db";
@@ -436,28 +436,40 @@ function RotasPage() {
     if (toSchedule.length === 0) return;
     toSchedule.forEach((c) => autoAttempted.current.add(`${dateStr}:${c.id}`));
     (async () => {
-      // Run these in parallel rather than one at a time — with several
-      // recurring clients this used to serialize into a couple of seconds
-      // of back-to-back round trips every time Rotas opened. Route lookups
-      // are memoized per technician within this batch (not just per call)
-      // so two clients sharing a technician await the same in-flight
-      // getOrCreateRoute instead of racing separate inserts for the same
-      // (technician_id, route_date) row.
-      const routeForTech = new Map<string, ReturnType<typeof getOrCreateRoute>>();
-      function routeFor(technicianId: string) {
-        let p = routeForTech.get(technicianId);
-        if (!p) {
-          p = getOrCreateRoute(technicianId, dateStr);
-          routeForTech.set(technicianId, p);
-        }
-        return p;
+      // Different technicians' batches still run in parallel (that's what
+      // used to serialize into a couple of seconds of back-to-back round
+      // trips every time Rotas opened), but each technician's own clients
+      // are inserted sequentially, sorted by route_position — the position
+      // each client last landed at after a manual reorder — so a previously
+      // fixed order carries over to the next matching weekday instead of
+      // depending on which parallel insert happens to finish first.
+      const byTechnician = new Map<string, typeof toSchedule>();
+      for (const c of toSchedule) {
+        const arr = byTechnician.get(c.technician_id!) ?? [];
+        arr.push(c);
+        byTechnician.set(c.technician_id!, arr);
       }
-      await Promise.all(toSchedule.map(async (c) => {
+
+      await Promise.all(Array.from(byTechnician.entries()).map(async ([technicianId, techClients]) => {
         try {
-          const route = await routeFor(c.technician_id!);
-          await addStopToRoute(route.id, c.id);
+          const route = await getOrCreateRoute(technicianId, dateStr);
+          const sorted = techClients.slice().sort((a, b) => {
+            const pa = a.route_position ?? Infinity;
+            const pb = b.route_position ?? Infinity;
+            if (pa !== pb) return pa - pb;
+            return a.name.localeCompare(b.name);
+          });
+          let nextPosition = await getNextRoutePosition(route.id);
+          for (const c of sorted) {
+            try {
+              await addStopToRoute(route.id, c.id, undefined, undefined, false, nextPosition);
+              nextPosition++;
+            } catch {
+              // best-effort — a failed auto-add just falls back to the manual suggestion next render
+            }
+          }
         } catch {
-          // best-effort — a failed auto-add just falls back to the manual suggestion next render
+          // best-effort — a failed route lookup just falls back to the manual suggestion next render
         }
       }));
       qc.invalidateQueries({ queryKey: ["routes-for-date", dateStr] });
