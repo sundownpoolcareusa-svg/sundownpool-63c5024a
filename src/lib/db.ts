@@ -888,6 +888,18 @@ function triggerClientEmailSweep() {
   }).catch(() => {});
 }
 
+// One-off "payment received" email for a single invoice, sent on demand
+// right after the admin marks it paid — goes through an Edge Function since
+// it needs the RESEND_API_KEY secret, which can never be used from the
+// browser.
+export async function sendInvoiceReceipt(invoiceId: string) {
+  const { data, error } = await supabase.functions.invoke("send-invoice-receipt", {
+    body: { invoice_id: invoiceId },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error ?? "Failed to send receipt");
+}
+
 export async function updateMyStopStatus(stopId: string, status: StopStatus) {
   const { error } = await supabase.rpc("update_my_stop_status", {
     p_stop_id: stopId,
