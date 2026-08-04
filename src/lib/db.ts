@@ -14,6 +14,7 @@ export type Client = {
   status: string;
   stage?: string;
   monthly_value: number;
+  route_position?: number | null;
   service_days?: string[];
   service_frequency?: string | null;
   technician_id?: string | null;
@@ -425,15 +426,23 @@ export async function logFilterCleaning(clientId: string) {
   return data;
 }
 
-export async function addStopToRoute(routeId: string, clientId: string, scheduledTime?: string, notes?: string, manual = false) {
-  const { data: existing, error: countErr } = await supabase
+export async function getNextRoutePosition(routeId: string) {
+  const { data, error } = await supabase
     .from("route_stops")
     .select("position")
     .eq("route_id", routeId)
     .order("position", { ascending: false })
     .limit(1);
-  if (countErr) throw countErr;
-  const nextPosition = existing && existing.length > 0 ? existing[0].position + 1 : 0;
+  if (error) throw error;
+  return data && data.length > 0 ? data[0].position + 1 : 0;
+}
+
+// explicitPosition lets a caller inserting several stops in one batch
+// (the auto-schedule sweep) assign each a pre-computed sequential slot
+// instead of every call racing to read-then-append "current max + 1" —
+// under Promise.all that race is what made auto-scheduled order arbitrary.
+export async function addStopToRoute(routeId: string, clientId: string, scheduledTime?: string, notes?: string, manual = false, explicitPosition?: number) {
+  const nextPosition = explicitPosition ?? (await getNextRoutePosition(routeId));
 
   const { error } = await supabase.from("route_stops").insert({
     route_id: routeId,
@@ -510,11 +519,28 @@ export async function saveStopVisitPhotos(stopId: string, photos: string[]) {
   if (error) throw error;
 }
 
+// Also remembers each client's resulting slot on clients.route_position, so
+// the next time this route auto-schedules a new day it reuses this order
+// instead of falling back to insert-completion order (see addStopToRoute).
 export async function reorderStops(orderedStopIds: string[]) {
+  const { data: stops, error: fetchErr } = await supabase
+    .from("route_stops")
+    .select("id, client_id")
+    .in("id", orderedStopIds);
+  if (fetchErr) throw fetchErr;
+  const clientByStop = new Map((stops ?? []).map((s) => [s.id, s.client_id]));
+
   await Promise.all(
     orderedStopIds.map((id, idx) =>
       supabase.from("route_stops").update({ position: idx }).eq("id", id),
     ),
+  );
+  await Promise.all(
+    orderedStopIds.map((id, idx) => {
+      const clientId = clientByStop.get(id);
+      if (!clientId) return Promise.resolve();
+      return supabase.from("clients").update({ route_position: idx }).eq("id", clientId);
+    }),
   );
 }
 
