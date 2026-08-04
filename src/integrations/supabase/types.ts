@@ -47,7 +47,6 @@ export type Database = {
           pool_capacity_gallons: number | null
           pool_filter_type: string | null
           pool_photos: string[]
-          route_position: number | null
           service_days: string[]
           service_frequency: string | null
           stage: string
@@ -90,7 +89,6 @@ export type Database = {
           pool_capacity_gallons?: number | null
           pool_filter_type?: string | null
           pool_photos?: string[]
-          route_position?: number | null
           service_days?: string[]
           service_frequency?: string | null
           stage?: string
@@ -133,7 +131,6 @@ export type Database = {
           pool_capacity_gallons?: number | null
           pool_filter_type?: string | null
           pool_photos?: string[]
-          route_position?: number | null
           service_days?: string[]
           service_frequency?: string | null
           stage?: string
