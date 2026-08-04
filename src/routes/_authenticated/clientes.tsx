@@ -31,7 +31,7 @@ function formatPhone(input: string): string {
 }
 
 export const Route = createFileRoute("/_authenticated/clientes")({
-  component: ClientesPage,
+  component: () => <ClientesPage mode="clients" />,
 });
 
 const cardShadow = { boxShadow: "0 1px 2px rgba(20,36,60,.03)" };
@@ -172,8 +172,11 @@ const WEEKDAY_FILTERS = [
   { v: "Sex", label: "Fri" },
 ];
 
-type DayFilter = "all" | "Seg" | "Ter" | "Qua" | "Qui" | "Sex" | "prospects" | "inactive";
+type DayFilter = "all" | "Seg" | "Ter" | "Qua" | "Qui" | "Sex" | "inactive";
 type SortBy = "name-asc" | "name-desc" | "value-desc" | "recent";
+// "clients" shows only real clients (stage !== Prospecção); "leads" shows
+// only prospects — same page, same components, split by stage.
+export type ClientsMode = "clients" | "leads";
 
 function todayDateStr() {
   const d = new Date();
@@ -479,7 +482,7 @@ function ClientDetailPanel({
   );
 }
 
-function ClientesPage() {
+export function ClientesPage({ mode }: { mode: ClientsMode }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -496,15 +499,18 @@ function ClientesPage() {
   const todayStr = todayDateStr();
   const { data: todayRoutes = [] } = useQuery({ queryKey: ["routes-for-date", todayStr], queryFn: () => listRoutesForDate(todayStr) });
 
-  const filtered = clients.filter((c) => {
+  const baseClients = mode === "leads"
+    ? clients.filter((c) => c.stage === "Prospecção")
+    : clients.filter((c) => c.stage !== "Prospecção");
+
+  const filtered = baseClients.filter((c) => {
     const q = search.toLowerCase();
     const matchesSearch = !search
       || c.name.toLowerCase().includes(q)
       || c.email?.toLowerCase().includes(q)
       || (c.address || "").toLowerCase().includes(q);
     let matchesFilter = true;
-    if (dayFilter === "prospects") matchesFilter = c.stage === "Prospecção";
-    else if (dayFilter === "inactive") matchesFilter = c.status !== "Ativo";
+    if (dayFilter === "inactive") matchesFilter = c.status !== "Ativo";
     else if (dayFilter !== "all") matchesFilter = (c.service_days ?? []).includes(dayFilter);
     return matchesSearch && matchesFilter;
   });
@@ -516,13 +522,12 @@ function ClientesPage() {
     return a.name.localeCompare(b.name);
   });
 
-  const total = clients.length;
-  const ativos = clients.filter((c) => c.status === "Ativo" && c.stage !== "Prospecção").length;
-  const prospectCount = clients.filter((c) => c.stage === "Prospecção").length;
-  const inactiveCount = clients.filter((c) => c.status !== "Ativo").length;
-  const countByDay = (d: string) => clients.filter((c) => (c.service_days ?? []).includes(d)).length;
-  const monthlyRevenue = clients
-    .filter((c) => c.status === "Ativo" && c.stage !== "Prospecção")
+  const total = baseClients.length;
+  const ativos = baseClients.filter((c) => c.status === "Ativo").length;
+  const inactiveCount = baseClients.filter((c) => c.status !== "Ativo").length;
+  const countByDay = (d: string) => baseClients.filter((c) => (c.service_days ?? []).includes(d)).length;
+  const monthlyRevenue = baseClients
+    .filter((c) => c.status === "Ativo")
     .reduce((s, c) => s + Number((c as ClientFull).monthly_value || 0), 0);
   const overdueInvoices = invoices.filter((i) => i.status !== "PAID" && i.due_date && i.due_date < todayStr);
   const invoicesDueCount = overdueInvoices.length;
@@ -550,59 +555,74 @@ function ClientesPage() {
       <main className="space-y-5 p-3 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-[22px] font-extrabold text-[var(--dash-text)]">Clients</h1>
+            <h1 className="text-[22px] font-extrabold text-[var(--dash-text)]">{mode === "leads" ? "Leads" : "Clients"}</h1>
           </div>
           <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90">
-            <Plus className="h-4 w-4" /> New Client
+            <Plus className="h-4 w-4" /> {mode === "leads" ? "New Lead" : "New Client"}
           </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[220px] flex-1">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-[var(--dash-text-muted)]" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clients..." className="w-full rounded-[11px] border border-[var(--dash-border-input)] bg-white py-2 pl-9 pr-3 text-sm" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={mode === "leads" ? "Search leads..." : "Search clients..."} className="w-full rounded-[11px] border border-[var(--dash-border-input)] bg-white py-2 pl-9 pr-3 text-sm" />
           </div>
           <button className="flex shrink-0 items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm text-[var(--dash-text-secondary)]"><Filter className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> Filter</button>
           <button className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary)]" aria-label="More options"><MoreVertical className="h-4 w-4" /></button>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-5">
-          <SummaryStat
-            icon={Users} iconColor="#0B63F6" iconBg="#DBEAFE"
-            value={total} label="Total Clients"
-            sub="View all" subColor="#0B63F6" subArrow
-            onClick={() => { setDayFilter("all"); setSearch(""); }}
-          />
-          <SummaryStat
-            icon={CheckCircle2} iconColor="var(--dash-green)" iconBg="#DCFCE7"
-            value={ativos} label="Active Clients"
-            sub={`${total > 0 ? Math.round((ativos / total) * 100) : 0}% of total`} subColor="var(--dash-green)"
-          />
-          <SummaryStat
-            icon={RouteIcon} iconColor="var(--dash-orange)" iconBg="#FFEDD5"
-            value={todayRouteCount} label="Today's Route"
-            sub={`${todayTechnicianCount} technician${todayTechnicianCount === 1 ? "" : "s"}`}
-          />
-          <SummaryStat
-            icon={DollarSign} iconColor="#7C3AED" iconBg="#EDE4FB"
-            value={fmt(monthlyRevenue).replace(/\.00$/, "")} label="Monthly Revenue"
-            sub="Expected this month" subColor="#7C3AED" subArrow
-          />
-          <SummaryStat
-            icon={AlertTriangle} iconColor="var(--dash-red)" iconBg="#FEE2E2"
-            value={invoicesDueCount} label="Invoices Due"
-            sub={invoicesDueCount > 0 ? `${fmt(invoicesDueAmount).replace(/\.00$/, "")} outstanding` : "All caught up"}
-            subColor={invoicesDueCount > 0 ? "var(--dash-red)" : "var(--dash-green)"}
-          />
-        </div>
+        {mode === "leads" ? (
+          <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible">
+            <SummaryStat
+              icon={Users} iconColor="#0B63F6" iconBg="#DBEAFE"
+              value={total} label="Total Leads"
+              sub="View all" subColor="#0B63F6" subArrow
+              onClick={() => { setDayFilter("all"); setSearch(""); }}
+            />
+            <SummaryStat
+              icon={CheckCircle2} iconColor="var(--dash-green)" iconBg="#DCFCE7"
+              value={ativos} label="Active Leads"
+              sub={`${total > 0 ? Math.round((ativos / total) * 100) : 0}% of total`} subColor="var(--dash-green)"
+            />
+          </div>
+        ) : (
+          <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-5">
+            <SummaryStat
+              icon={Users} iconColor="#0B63F6" iconBg="#DBEAFE"
+              value={total} label="Total Clients"
+              sub="View all" subColor="#0B63F6" subArrow
+              onClick={() => { setDayFilter("all"); setSearch(""); }}
+            />
+            <SummaryStat
+              icon={CheckCircle2} iconColor="var(--dash-green)" iconBg="#DCFCE7"
+              value={ativos} label="Active Clients"
+              sub={`${total > 0 ? Math.round((ativos / total) * 100) : 0}% of total`} subColor="var(--dash-green)"
+            />
+            <SummaryStat
+              icon={RouteIcon} iconColor="var(--dash-orange)" iconBg="#FFEDD5"
+              value={todayRouteCount} label="Today's Route"
+              sub={`${todayTechnicianCount} technician${todayTechnicianCount === 1 ? "" : "s"}`}
+            />
+            <SummaryStat
+              icon={DollarSign} iconColor="#7C3AED" iconBg="#EDE4FB"
+              value={fmt(monthlyRevenue).replace(/\.00$/, "")} label="Monthly Revenue"
+              sub="Expected this month" subColor="#7C3AED" subArrow
+            />
+            <SummaryStat
+              icon={AlertTriangle} iconColor="var(--dash-red)" iconBg="#FEE2E2"
+              value={invoicesDueCount} label="Invoices Due"
+              sub={invoicesDueCount > 0 ? `${fmt(invoicesDueAmount).replace(/\.00$/, "")} outstanding` : "All caught up"}
+              subColor={invoicesDueCount > 0 ? "var(--dash-red)" : "var(--dash-green)"}
+            />
+          </div>
+        )}
 
         <div className="rounded-[18px] border border-[var(--dash-border)] bg-white p-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-3" style={cardShadow}>
           <div className="flex items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:min-w-0 sm:flex-1 sm:pb-0">
             <FilterChip active={dayFilter === "all"} onClick={() => setDayFilter("all")} label="All" count={total} />
-            {WEEKDAY_FILTERS.map((d) => (
+            {mode === "clients" && WEEKDAY_FILTERS.map((d) => (
               <FilterChip key={d.v} active={dayFilter === d.v} onClick={() => setDayFilter(d.v as DayFilter)} label={d.label} count={countByDay(d.v)} />
             ))}
-            <FilterChip active={dayFilter === "prospects"} onClick={() => setDayFilter("prospects")} label="Prospects" count={prospectCount} tint={{ bg: "#FEF3C7", text: "#B45309" }} />
             <FilterChip active={dayFilter === "inactive"} onClick={() => setDayFilter("inactive")} label="Inactive" count={inactiveCount} tint={{ bg: "var(--dash-border-table)", text: "var(--dash-text-muted-2)" }} />
           </div>
           <div className="mt-2 flex shrink-0 items-center gap-2 sm:mt-0">
@@ -651,10 +671,10 @@ function ClientesPage() {
           ) : filtered.length === 0 ? (
             <div className="mt-8 rounded-[18px] border-2 border-dashed border-[var(--dash-border)] py-16 text-center">
               <Users className="mx-auto h-10 w-10 text-[var(--dash-text-muted)]" />
-              <p className="mt-3 font-semibold text-[var(--dash-text-secondary)]">No clients registered</p>
-              <p className="text-sm text-[var(--dash-text-muted)]">Clique em "New Client" para começar.</p>
+              <p className="mt-3 font-semibold text-[var(--dash-text-secondary)]">{mode === "leads" ? "No leads yet" : "No clients registered"}</p>
+              <p className="text-sm text-[var(--dash-text-muted)]">{mode === "leads" ? 'Clique em "New Lead" para começar.' : 'Clique em "New Client" para começar.'}</p>
               <button onClick={() => setOpen(true)} className="mt-4 inline-flex items-center gap-2 rounded-[11px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white">
-                <Plus className="h-4 w-4" /> Add first client
+                <Plus className="h-4 w-4" /> {mode === "leads" ? "Add first lead" : "Add first client"}
               </button>
             </div>
           ) : viewMode === "grid" ? (
@@ -732,6 +752,7 @@ function ClientesPage() {
         open={open}
         onClose={() => setOpen(false)}
         onSaved={() => qc.invalidateQueries({ queryKey: ["clients"] })}
+        defaultStage={mode === "leads" ? "Prospecção" : "Cliente"}
       />
       <ClientFormModal
         open={!!editClient}
@@ -871,11 +892,11 @@ function FormSection({ icon: Icon, title, subtitle, children }: { icon: typeof U
 }
 
 function ClientFormModal({
-  open, onClose, onSaved, editing,
-}: { open: boolean; onClose: () => void; onSaved: () => void; editing?: ClientFull | null }) {
+  open, onClose, onSaved, editing, defaultStage = "Prospecção",
+}: { open: boolean; onClose: () => void; onSaved: () => void; editing?: ClientFull | null; defaultStage?: string }) {
   const empty = {
     name: "", email: "", phone: "", address: "", city: "", state: "", zip: "",
-    client_type: "Residential", status: "Ativo", stage: "Prospecção", service_days: [] as string[],
+    client_type: "Residential", status: "Ativo", stage: defaultStage, service_days: [] as string[],
     monthly_value: 0 as number,
     pool_photos: [] as string[],
     equipment_photos: [] as string[],

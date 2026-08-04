@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  Bell, Search, FileText, Users, ClipboardList, Map, ChevronDown, LogOut, X, LayoutDashboard,
+  Bell, Search, FileText, Users, UserPlus, ClipboardList, Map, ChevronDown, LogOut, X, LayoutDashboard,
   Home, Route as RouteIcon, Plus, Menu, HardHat, FlaskConical,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
@@ -22,6 +22,7 @@ const tabs = [
 const allTabs = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/clientes", label: "Clients", icon: Users },
+  { to: "/leads", label: "Leads", icon: UserPlus },
   { to: "/rotas", label: "Routes", icon: Map },
   { to: "/tecnicos", label: "Users", icon: HardHat },
   { to: "/quimicos", label: "Chemicals", icon: FlaskConical },
