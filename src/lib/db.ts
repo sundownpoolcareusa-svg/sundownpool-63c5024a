@@ -880,6 +880,13 @@ export async function reorderMyStops(orderedStopIds: string[]) {
   if (error) throw error;
 }
 
+// allFuture also swaps the client's recurring service_days from this stop's
+// weekday to the new one, and clears now-stale future auto-generated stops.
+export async function rescheduleMyStop(stopId: string, newDate: string, allFuture: boolean) {
+  const { error } = await supabase.rpc("reschedule_my_stop", { p_stop_id: stopId, p_new_date: newDate, p_all_future: allFuture });
+  if (error) throw error;
+}
+
 export async function getMyStopDetail(stopId: string) {
   const { data, error } = await supabase.rpc("get_my_stop_detail", { p_stop_id: stopId });
   if (error) throw error;
