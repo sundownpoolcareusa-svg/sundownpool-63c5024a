@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -9,7 +9,7 @@ import {
   ChevronRight, Pencil, Trash2, Users, CalendarDays,
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
   CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, Waves, User,
-  Navigation, FlaskConical, Camera,
+  Navigation, FlaskConical, Camera, Bell,
 } from "lucide-react";
 import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, deleteStop, rescheduleStop, fmtDate, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -846,8 +846,29 @@ const CLIENT_FORM_TABS = [
   { key: "client" as const, label: "Client Info", icon: User },
   { key: "pool" as const, label: "Pool Info", icon: Waves },
   { key: "service" as const, label: "Service Plan", icon: CalendarDays },
+  { key: "alerts" as const, label: "Alertas", icon: Bell },
   { key: "notes" as const, label: "Notes", icon: FileText },
 ];
+
+// Icon-headed card wrapper, matching the sectioned-form look used
+// throughout — every tab's fields live inside one or more of these
+// instead of a flat unbroken list.
+function FormSection({ icon: Icon, title, subtitle, children }: { icon: typeof User; title: string; subtitle?: string; children: ReactNode }) {
+  return (
+    <div className="rounded-[16px] border border-[var(--dash-border)] bg-white p-4">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <div>
+          <div className="text-[15px] font-bold text-[var(--dash-text)]">{title}</div>
+          {subtitle && <div className="text-[12px] text-[var(--dash-text-muted)]">{subtitle}</div>}
+        </div>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </div>
+  );
+}
 
 function ClientFormModal({
   open, onClose, onSaved, editing,
@@ -871,7 +892,7 @@ function ClientFormModal({
     notes: "",
   };
   const [form, setForm] = useState(empty);
-  const [formTab, setFormTab] = useState<"client" | "pool" | "service" | "notes">("client");
+  const [formTab, setFormTab] = useState<"client" | "pool" | "service" | "alerts" | "notes">("client");
   const [visitMode, setVisitMode] = useState<"recorrente" | "unica">("recorrente");
   const [oneTimeDate, setOneTimeDate] = useState(tomorrowStr());
   const [oneTimeNote, setOneTimeNote] = useState("");
@@ -967,36 +988,69 @@ function ClientFormModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={editing ? "Edit Client" : "New Client"}>
+    <Modal open={open} onClose={onClose} title={editing ? "Edit Client" : "New Client"} fullScreenOnMobile>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="-mt-1 flex items-center gap-1 overflow-x-auto border-b border-[var(--dash-border)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {CLIENT_FORM_TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setFormTab(t.key)}
-              className="flex shrink-0 flex-col items-center gap-1 border-b-2 px-4 pb-2.5 text-[12px] font-bold"
-              style={{
-                borderColor: formTab === t.key ? "var(--dash-navy)" : "transparent",
-                color: formTab === t.key ? "var(--dash-navy)" : "var(--dash-text-muted)",
-              }}
-            >
-              <t.icon className="h-5 w-5" />
-              {t.label}
-            </button>
-          ))}
+        <div className="-mt-1 flex items-start gap-1 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {CLIENT_FORM_TABS.map((t, i) => {
+            const active = formTab === t.key;
+            return (
+              <div key={t.key} className="flex shrink-0 items-start">
+                {i > 0 && <div className="mx-1 mt-5 h-px w-4 shrink-0 bg-[var(--dash-border)]" />}
+                <button
+                  type="button"
+                  onClick={() => setFormTab(t.key)}
+                  className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center"
+                >
+                  <div
+                    className="grid h-10 w-10 place-items-center rounded-full border-2 transition"
+                    style={{
+                      borderColor: active ? "var(--dash-navy)" : "var(--dash-border)",
+                      background: active ? "var(--dash-water-bg)" : "#fff",
+                      color: active ? "var(--dash-navy)" : "var(--dash-text-muted)",
+                    }}
+                  >
+                    <t.icon className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10.5px] font-bold leading-tight" style={{ color: active ? "var(--dash-navy)" : "var(--dash-text-muted)" }}>
+                    {t.label}
+                  </span>
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         {formTab === "client" && (
-          <>
-            <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Email (comma-separated for multiple)" type="email" multiple value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-              <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} />
-            </div>
-            <div>
+          <div className="space-y-4">
+            <FormSection icon={User} title="Client Information" subtitle="Contact details and address">
+              <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Email (comma-separated for multiple)" type="email" multiple value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+                <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} />
+              </div>
+              <AddressAutocomplete
+                value={form.address}
+                onChange={(v) => setForm((f) => ({ ...f, address: v }))}
+                onSelectPlace={(p) => setForm((f) => ({
+                  ...f,
+                  address: p.address,
+                  city: p.city || f.city,
+                  state: p.state || f.state,
+                  zip: p.zip || f.zip,
+                  lat: p.lat ?? f.lat,
+                  lng: p.lng ?? f.lng,
+                }))}
+              />
+              <div className="grid grid-cols-3 gap-4">
+                <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
+                <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
+                <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
+              </div>
+            </FormSection>
+
+            <FormSection icon={Phone} title="Additional Contacts" subtitle="Extra people to reach for this client (optional)">
               {form.contacts.map((c, i) => (
-                <div key={i} className="mb-2 flex items-center gap-2">
+                <div key={i} className="flex items-center gap-2">
                   <input
                     value={c.name}
                     onChange={(e) => setForm((f) => ({
@@ -1032,124 +1086,119 @@ function ClientFormModal({
               >
                 <Plus className="h-3 w-3" /> Add contact
               </button>
-            </div>
-            <AddressAutocomplete
-              value={form.address}
-              onChange={(v) => setForm((f) => ({ ...f, address: v }))}
-              onSelectPlace={(p) => setForm((f) => ({
-                ...f,
-                address: p.address,
-                city: p.city || f.city,
-                state: p.state || f.state,
-                zip: p.zip || f.zip,
-                lat: p.lat ?? f.lat,
-                lng: p.lng ?? f.lng,
-              }))}
-            />
-            <div className="grid grid-cols-3 gap-4">
-              <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} />
-              <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
-              <Field label="Zipcode" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} />
-            </div>
-          </>
+            </FormSection>
+          </div>
         )}
 
         {formTab === "pool" && (
-          <>
-            <Field label="Gate code" value={form.gate_code} onChange={(v) => setForm({ ...form, gate_code: v })} />
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Type</label>
-              <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
-                <option>Residential</option><option>Commercial</option>
-              </select>
-            </div>
-            <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
-              <input
-                type="checkbox"
-                checked={form.has_spa}
-                onChange={(e) => setForm({ ...form, has_spa: e.target.checked })}
-                className="h-4 w-4"
-              />
-              This client has a Spa (tracked independently from the Pool)
-            </label>
-            <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
-              <input
-                type="checkbox"
-                checked={form.has_salt_system}
-                onChange={(e) => setForm({ ...form, has_salt_system: e.target.checked })}
-                className="h-4 w-4"
-              />
-              This pool has a Salt chlorination system
-            </label>
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Email notifications</label>
-              <div className="mt-1 space-y-2">
-                <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
-                  <input
-                    type="checkbox"
-                    checked={form.notify_on_way}
-                    onChange={(e) => setForm({ ...form, notify_on_way: e.target.checked })}
-                    className="h-4 w-4"
-                  />
-                  <Navigation className="h-4 w-4 shrink-0" />
-                  Email when the technician is on the way
-                </label>
-                <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
-                  <input
-                    type="checkbox"
-                    checked={form.notify_chemicals}
-                    onChange={(e) => setForm({ ...form, notify_chemicals: e.target.checked })}
-                    className="h-4 w-4"
-                  />
-                  <FlaskConical className="h-4 w-4 shrink-0" />
-                  Email the pool's chemical readings after the visit
-                </label>
-                <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
-                  <input
-                    type="checkbox"
-                    checked={form.notify_photo}
-                    onChange={(e) => setForm({ ...form, notify_photo: e.target.checked })}
-                    className="h-4 w-4"
-                  />
-                  <Camera className="h-4 w-4 shrink-0" />
-                  Email a photo from the visit
-                </label>
+          <div className="space-y-4">
+            <FormSection icon={Waves} title="Pool Details" subtitle="Basic information about the pool">
+              <Field label="Gate code" value={form.gate_code} onChange={(v) => setForm({ ...form, gate_code: v })} />
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Type</label>
+                <select value={form.client_type} onChange={(e) => setForm({ ...form, client_type: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
+                  <option>Residential</option><option>Commercial</option>
+                </select>
               </div>
-            </div>
-            <PhotoUploader
-              label="Pool photos"
-              value={form.pool_photos}
-              onChange={(v) => setForm({ ...form, pool_photos: v })}
-              folder={`${userId}/pool`}
-            />
-            <PhotoUploader
-              label="Equipment photos"
-              value={form.equipment_photos}
-              onChange={(v) => setForm({ ...form, equipment_photos: v })}
-              folder={`${userId}/equipment`}
-            />
-          </>
+              <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+                <input
+                  type="checkbox"
+                  checked={form.has_spa}
+                  onChange={(e) => setForm({ ...form, has_spa: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                This client has a Spa (tracked independently from the Pool)
+              </label>
+              <label className="flex items-center gap-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm text-[var(--dash-text-secondary)]">
+                <input
+                  type="checkbox"
+                  checked={form.has_salt_system}
+                  onChange={(e) => setForm({ ...form, has_salt_system: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                This pool has a Salt chlorination system
+              </label>
+            </FormSection>
+
+            <FormSection icon={Camera} title="Pool Photos" subtitle="Optional — helps identify the pool and equipment">
+              <PhotoUploader
+                label="Pool photos"
+                value={form.pool_photos}
+                onChange={(v) => setForm({ ...form, pool_photos: v })}
+                folder={`${userId}/pool`}
+              />
+              <PhotoUploader
+                label="Equipment photos"
+                value={form.equipment_photos}
+                onChange={(v) => setForm({ ...form, equipment_photos: v })}
+                folder={`${userId}/equipment`}
+              />
+            </FormSection>
+          </div>
+        )}
+
+        {formTab === "alerts" && (
+          <FormSection icon={Bell} title="Email Alerts" subtitle="What this client gets emailed about automatically">
+            <label className="flex items-center gap-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]">
+              <input
+                type="checkbox"
+                checked={form.notify_on_way}
+                onChange={(e) => setForm({ ...form, notify_on_way: e.target.checked })}
+                className="h-4 w-4 shrink-0"
+              />
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
+                <Navigation className="h-4 w-4" />
+              </span>
+              Email when the technician is on the way
+            </label>
+            <label className="flex items-center gap-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]">
+              <input
+                type="checkbox"
+                checked={form.notify_chemicals}
+                onChange={(e) => setForm({ ...form, notify_chemicals: e.target.checked })}
+                className="h-4 w-4 shrink-0"
+              />
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
+                <FlaskConical className="h-4 w-4" />
+              </span>
+              Email the pool's chemical readings after the visit
+            </label>
+            <label className="flex items-center gap-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm text-[var(--dash-text-secondary)]">
+              <input
+                type="checkbox"
+                checked={form.notify_photo}
+                onChange={(e) => setForm({ ...form, notify_photo: e.target.checked })}
+                className="h-4 w-4 shrink-0"
+              />
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
+                <Camera className="h-4 w-4" />
+              </span>
+              Email a photo from the visit
+            </label>
+          </FormSection>
         )}
 
         {formTab === "service" && (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Status</label>
-                <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
-                  <option>Ativo</option><option>Inativo</option>
-                </select>
+          <div className="space-y-4">
+            <FormSection icon={CheckCircle2} title="Client Status" subtitle="Where this client stands right now">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Status</label>
+                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
+                    <option>Ativo</option><option>Inativo</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Stage</label>
+                  <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
+                    <option>Cliente</option><option>Prospecção</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Stage</label>
-                <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
-                  <option>Cliente</option><option>Prospecção</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Schedule</label>
-              <div className="mt-1.5 grid grid-cols-2 gap-2">
+            </FormSection>
+
+            <FormSection icon={CalendarDays} title="Schedule" subtitle="How often this client is serviced">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setVisitMode("recorrente")}
@@ -1247,45 +1296,47 @@ function ClientFormModal({
                   )}
                 </div>
               )}
-            </div>
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Assigned Technician</label>
-              <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring days to auto-schedule</p>
-              <select
-                value={form.technician_id ?? ""}
-                onChange={(e) => setForm({ ...form, technician_id: e.target.value || null })}
-                className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
-              >
-                <option value="">None</option>
-                {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Monthly pool value (USD)</label>
-              <div className="relative mt-1">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[var(--dash-text-muted)]">$</span>
-                <input
-                  type="number" min="0" step="0.01"
-                  value={form.monthly_value}
-                  onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
-                  className="w-full rounded-[10px] border border-[var(--dash-border-input)] py-2 pl-7 pr-3 text-sm"
-                />
+            </FormSection>
+
+            <FormSection icon={DollarSign} title="Technician & Pricing" subtitle="Who services this pool and what it's worth">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Assigned Technician</label>
+                <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring days to auto-schedule</p>
+                <select
+                  value={form.technician_id ?? ""}
+                  onChange={(e) => setForm({ ...form, technician_id: e.target.value || null })}
+                  className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+                >
+                  <option value="">None</option>
+                  {technicians.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
               </div>
-            </div>
-          </>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Monthly pool value (USD)</label>
+                <div className="relative mt-1">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[var(--dash-text-muted)]">$</span>
+                  <input
+                    type="number" min="0" step="0.01"
+                    value={form.monthly_value}
+                    onChange={(e) => setForm({ ...form, monthly_value: Number(e.target.value) })}
+                    className="w-full rounded-[10px] border border-[var(--dash-border-input)] py-2 pl-7 pr-3 text-sm"
+                  />
+                </div>
+              </div>
+            </FormSection>
+          </div>
         )}
 
         {formTab === "notes" && (
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Notes</label>
+          <FormSection icon={FileText} title="Notes" subtitle="Anything else worth remembering about this client">
             <textarea
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               rows={8}
               placeholder="Add any notes about this client..."
-              className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+              className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
             />
-          </div>
+          </FormSection>
         )}
 
         <div className="flex justify-end gap-2 border-t border-[var(--dash-border)] pt-4">
