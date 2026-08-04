@@ -16,13 +16,13 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, ChevronDown, Phone, Navigation, Play, Check, FlaskConical, LogOut, MapPin, Mail,
   CheckCircle2, Timer, Route as RouteIcon, Car, Home, Building2, MoreHorizontal, Users, Wrench, Menu, Plus,
   AlertTriangle, DollarSign, Filter, FileText, X, RotateCcw,
-  Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal, Pencil, Camera, GripVertical,
+  Search, Waves, Bell, Clock, ShieldCheck, Cylinder, Droplet, ChevronUp, Equal, Pencil, Camera, GripVertical, CalendarClock,
 } from "lucide-react";
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { TechAvatar } from "@/components/TechAvatar";
 import {
   getMyTechnician, getMyTechnicianStops, ensureMyTechnicianStops, updateMyStopStatus, getMyTechnicianClients,
-  getMyTechnicianDashboard, getMyTechnicianAlerts, reorderMyStops, updateMyTechnicianProfile,
+  getMyTechnicianDashboard, getMyTechnicianAlerts, reorderMyStops, rescheduleMyStop, updateMyTechnicianProfile,
   getMyServiceJobs, createMyServiceJob, updateMyServiceJob, completeMyServiceJob, saveMyPushSubscription,
   saveMyStopVisitPhotos,
   initials, fmt, fmtDate, formatPhone, errorMessage, type StopStatus, type TechnicianStop, type TechnicianClient, type TechnicianDashboardStats, type TechnicianAlert,
@@ -180,7 +180,7 @@ type LatLng = { lat: number; lng: number };
 // navigate, chemical, status) keeps working as a normal tap since it never
 // gets the sortable listeners attached to it.
 function SortableStopCard({
-  stop, index, onSetStatus, statusPending, onRequestComplete, onUndo,
+  stop, index, onSetStatus, statusPending, onRequestComplete, onUndo, currentDate, onReschedule, reschedulePending,
 }: {
   stop: TechnicianStop;
   index: number;
@@ -188,12 +188,18 @@ function SortableStopCard({
   statusPending: boolean;
   onRequestComplete: (stop: TechnicianStop) => void;
   onUndo: (stop: TechnicianStop) => void;
+  currentDate: string;
+  onReschedule: (stopId: string, newDate: string, allFuture: boolean) => void;
+  reschedulePending: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.stop_id });
   const badgeStyle = STATUS_STYLES[stop.status] ?? STATUS_STYLES["Pendente"];
   const next = nextStatus(stop.status);
   const address = stopAddress(stop);
   const commercial = isCommercial(stop.client_type);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [newDate, setNewDate] = useState(currentDate);
+  const [allFuture, setAllFuture] = useState(false);
 
   return (
     <div
@@ -236,6 +242,15 @@ function SortableStopCard({
                   className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[var(--dash-text-muted-2)]"
                 >
                   <RotateCcw className="h-3 w-3" />
+                </button>
+              )}
+              {stop.status === "Pendente" && (
+                <button
+                  onClick={() => { setNewDate(currentDate); setAllFuture(false); setRescheduleOpen(true); }}
+                  title="Reagendar"
+                  className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[var(--dash-text-muted-2)]"
+                >
+                  <CalendarClock className="h-3 w-3" />
                 </button>
               )}
             </div>
@@ -308,6 +323,38 @@ function SortableStopCard({
           </button>
         </div>
       </div>
+      <Modal open={rescheduleOpen} onClose={() => setRescheduleOpen(false)} title="Reagendar visita">
+        <div className="space-y-4">
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Nova data</label>
+            <input
+              type="date"
+              value={newDate}
+              min={currentDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="flex items-start gap-2 text-sm text-[var(--dash-text-secondary)]">
+              <input type="radio" checked={!allFuture} onChange={() => setAllFuture(false)} className="mt-1" />
+              Só esta visita
+            </label>
+            <label className="flex items-start gap-2 text-sm text-[var(--dash-text-secondary)]">
+              <input type="radio" checked={allFuture} onChange={() => setAllFuture(true)} className="mt-1" />
+              Esta e as próximas
+            </label>
+          </div>
+          <button
+            onClick={() => { onReschedule(stop.stop_id, newDate, allFuture); setRescheduleOpen(false); }}
+            disabled={reschedulePending || newDate === currentDate}
+            className="w-full rounded-[11px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            style={{ background: "var(--dash-navy)" }}
+          >
+            Confirmar
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -638,6 +685,16 @@ function TecnicoPage() {
       toast.error(errorMessage(e, "Não foi possível reordenar a rota"));
       setDragOrderIds(null);
     },
+  });
+
+  const rescheduleMut = useMutation({
+    mutationFn: ({ stopId, newDate, allFuture }: { stopId: string; newDate: string; allFuture: boolean }) =>
+      rescheduleMyStop(stopId, newDate, allFuture),
+    onSuccess: () => {
+      toast.success("Visita reagendada!");
+      qc.invalidateQueries({ queryKey: ["my-technician-stops"] });
+    },
+    onError: (e: Error) => toast.error(errorMessage(e, "Não foi possível reagendar")),
   });
 
   function handleDragEnd(event: DragEndEvent) {
@@ -1007,6 +1064,9 @@ function TecnicoPage() {
                     statusPending={statusMut.isPending}
                     onRequestComplete={requestCompleteStop}
                     onUndo={setUndoStop}
+                    currentDate={dateStr}
+                    onReschedule={(stopId, newDate, allFuture) => rescheduleMut.mutate({ stopId, newDate, allFuture })}
+                    reschedulePending={rescheduleMut.isPending}
                   />
                 ))}
               </SortableContext>
