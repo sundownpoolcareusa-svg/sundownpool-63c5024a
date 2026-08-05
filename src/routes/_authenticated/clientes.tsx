@@ -1069,7 +1069,7 @@ function ClientFormModal({
         <AccordionSection index={1} title="Client Information" open={openSections.client} onToggle={() => toggleSection("client")}>
           <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required icon={User} placeholder="Full name" />
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Email (comma-separated)" type="email" multiple value={form.email} onChange={(v) => setForm({ ...form, email: v })} icon={Mail} placeholder="Email address" />
+            <Field label="Email" type="email" multiple value={form.email} onChange={(v) => setForm({ ...form, email: v })} icon={Mail} placeholder="Email (comma-separated)" />
             <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} icon={Phone} placeholder="Phone number" />
           </div>
           <AddressAutocomplete
@@ -1089,7 +1089,7 @@ function ClientFormModal({
           <div className="grid grid-cols-3 gap-4">
             <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} icon={Building2} placeholder="City" />
             <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} placeholder="State" />
-            <Field label="Zip Code" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} icon={Hash} placeholder="Zip code" />
+            <Field label="Zip Code" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} icon={Hash} placeholder="ZIP" />
           </div>
 
           <div className="space-y-3 border-t border-[var(--dash-border)] pt-4">
