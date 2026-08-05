@@ -27,6 +27,7 @@ import { Route as AuthenticatedRotasRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTecnicosRouteImport } from './routes/_authenticated/tecnicos'
 import { Route as ETokenRouteImport } from './routes/e.$token'
 import { Route as ITokenRouteImport } from './routes/i.$token'
+import { Route as TecnicoInvoicesRouteImport } from './routes/tecnico_.invoices'
 import { Route as AuthenticatedChemicalsStopIdRouteImport } from './routes/_authenticated/chemicals.$stopId'
 import { Route as TecnicoChemicalsStopIdRouteImport } from './routes/tecnico_.chemicals.$stopId'
 
@@ -119,6 +120,11 @@ const ITokenRoute = ITokenRouteImport.update({
   path: '/i/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TecnicoInvoicesRoute = TecnicoInvoicesRouteImport.update({
+  id: '/tecnico_/invoices',
+  path: '/tecnico/invoices',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedChemicalsStopIdRoute =
   AuthenticatedChemicalsStopIdRouteImport.update({
     id: '/chemicals/$stopId',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/tecnicos': typeof AuthenticatedTecnicosRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
+  '/tecnico/invoices': typeof TecnicoInvoicesRoute
   '/chemicals/$stopId': typeof AuthenticatedChemicalsStopIdRoute
   '/tecnico/chemicals/$stopId': typeof TecnicoChemicalsStopIdRoute
 }
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/tecnicos': typeof AuthenticatedTecnicosRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
+  '/tecnico/invoices': typeof TecnicoInvoicesRoute
   '/chemicals/$stopId': typeof AuthenticatedChemicalsStopIdRoute
   '/tecnico/chemicals/$stopId': typeof TecnicoChemicalsStopIdRoute
 }
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/_authenticated/tecnicos': typeof AuthenticatedTecnicosRoute
   '/e/$token': typeof ETokenRoute
   '/i/$token': typeof ITokenRoute
+  '/tecnico_/invoices': typeof TecnicoInvoicesRoute
   '/_authenticated/chemicals/$stopId': typeof AuthenticatedChemicalsStopIdRoute
   '/tecnico_/chemicals/$stopId': typeof TecnicoChemicalsStopIdRoute
 }
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/tecnicos'
     | '/e/$token'
     | '/i/$token'
+    | '/tecnico/invoices'
     | '/chemicals/$stopId'
     | '/tecnico/chemicals/$stopId'
   fileRoutesByTo: FileRoutesByTo
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/tecnicos'
     | '/e/$token'
     | '/i/$token'
+    | '/tecnico/invoices'
     | '/chemicals/$stopId'
     | '/tecnico/chemicals/$stopId'
   id:
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tecnicos'
     | '/e/$token'
     | '/i/$token'
+    | '/tecnico_/invoices'
     | '/_authenticated/chemicals/$stopId'
     | '/tecnico_/chemicals/$stopId'
   fileRoutesById: FileRoutesById
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   TecnicoRoute: typeof TecnicoRoute
   ETokenRoute: typeof ETokenRoute
   ITokenRoute: typeof ITokenRoute
+  TecnicoInvoicesRoute: typeof TecnicoInvoicesRoute
   TecnicoChemicalsStopIdRoute: typeof TecnicoChemicalsStopIdRoute
 }
 
@@ -405,6 +418,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ITokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tecnico_/invoices': {
+      id: '/tecnico_/invoices'
+      path: '/tecnico/invoices'
+      fullPath: '/tecnico/invoices'
+      preLoaderRoute: typeof TecnicoInvoicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/chemicals/$stopId': {
       id: '/_authenticated/chemicals/$stopId'
       path: '/chemicals/$stopId'
@@ -460,6 +480,7 @@ const rootRouteChildren: RootRouteChildren = {
   TecnicoRoute: TecnicoRoute,
   ETokenRoute: ETokenRoute,
   ITokenRoute: ITokenRoute,
+  TecnicoInvoicesRoute: TecnicoInvoicesRoute,
   TecnicoChemicalsStopIdRoute: TecnicoChemicalsStopIdRoute,
 }
 export const routeTree = rootRouteImport

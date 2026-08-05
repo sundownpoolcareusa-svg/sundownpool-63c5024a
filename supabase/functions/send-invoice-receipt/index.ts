@@ -64,7 +64,20 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (invErr) return fail(invErr.message);
   if (!invoice) return fail("Invoice not found");
-  if (invoice.user_id !== callerData.user.id) return fail("Not your invoice");
+  if (invoice.user_id !== callerData.user.id) {
+    // Not the invoice owner directly — allow a technician managing
+    // invoices on their employer's behalf (same check the technician
+    // manages employer invoices RLS policy uses).
+    const { data: tech } = await admin
+      .from("technicians")
+      .select("id")
+      .eq("auth_user_id", callerData.user.id)
+      .eq("user_id", invoice.user_id)
+      .eq("can_manage_invoices", true)
+      .eq("active", true)
+      .maybeSingle();
+    if (!tech) return fail("Not your invoice");
+  }
 
   const client = firstOf(invoice.client as { name: string; email: string | null } | { name: string; email: string | null }[]);
   const recipients = client?.email ? parseEmails(client.email) : [];

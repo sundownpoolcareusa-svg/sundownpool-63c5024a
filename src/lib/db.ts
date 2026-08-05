@@ -204,6 +204,7 @@ export async function deleteService(id: string) {
 
 export type Technician = {
   id: string;
+  user_id: string;
   name: string;
   phone: string | null;
   color: string;
