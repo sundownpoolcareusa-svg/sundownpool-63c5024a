@@ -1058,6 +1058,7 @@ function ClientFormModal({
       title={editing ? "Edit Client" : "New Client"}
       subtitle={editing ? "Update this client's information" : "Add a new pool care client"}
       fullScreenOnMobile
+      closeButtonSide="left"
       headerAction={
         <button form="client-form" type="submit" disabled={mut.isPending} className="flex items-center gap-1.5 rounded-[10px] bg-[var(--dash-navy)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
           <Save className="h-4 w-4" /> {mut.isPending ? "Saving..." : "Save"}
@@ -1066,10 +1067,10 @@ function ClientFormModal({
     >
       <form id="client-form" onSubmit={handleSubmit} className="space-y-3">
         <AccordionSection index={1} title="Client Information" open={openSections.client} onToggle={() => toggleSection("client")}>
-          <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required icon={User} />
+          <Field label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} required icon={User} placeholder="Full name" />
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Email (comma-separated)" type="email" multiple value={form.email} onChange={(v) => setForm({ ...form, email: v })} icon={Mail} />
-            <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} icon={Phone} />
+            <Field label="Email (comma-separated)" type="email" multiple value={form.email} onChange={(v) => setForm({ ...form, email: v })} icon={Mail} placeholder="Email address" />
+            <Field label="Phone" value={formatPhone(form.phone)} onChange={(v) => setForm({ ...form, phone: formatPhone(v) })} icon={Phone} placeholder="Phone number" />
           </div>
           <AddressAutocomplete
             value={form.address}
@@ -1083,11 +1084,12 @@ function ClientFormModal({
               lat: p.lat ?? f.lat,
               lng: p.lng ?? f.lng,
             }))}
+            labelClassName="text-sm font-bold text-[var(--dash-text)]"
           />
           <div className="grid grid-cols-3 gap-4">
-            <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} icon={Building2} />
-            <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
-            <Field label="Zip Code" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} icon={Hash} />
+            <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} icon={Building2} placeholder="City" />
+            <Field label="State" value={form.state} onChange={(v) => setForm({ ...form, state: v })} placeholder="State" />
+            <Field label="Zip Code" value={form.zip} onChange={(v) => setForm({ ...form, zip: v })} icon={Hash} placeholder="Zip code" />
           </div>
 
           <div className="space-y-3 border-t border-[var(--dash-border)] pt-4">
@@ -1148,10 +1150,10 @@ function ClientFormModal({
         </AccordionSection>
 
         <AccordionSection index={2} title="Pool Details" open={openSections.pool} onToggle={() => toggleSection("pool")}>
-          <Field label="Gate Code (Optional)" value={form.gate_code} onChange={(v) => setForm({ ...form, gate_code: v })} icon={Lock} />
+          <Field label="Gate Code (Optional)" value={form.gate_code} onChange={(v) => setForm({ ...form, gate_code: v })} icon={Lock} placeholder="Enter gate code" />
 
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Type</label>
+            <label className="text-sm font-bold text-[var(--dash-text)]">Type</label>
             <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {CLIENT_TYPES.map((ct) => {
                 const active = form.client_type === ct.value;
@@ -1192,13 +1194,13 @@ function ClientFormModal({
             <div>
               <SubLabel title="Pool Photos" badge="(Optional)" />
               <div className="mt-2">
-                <PhotoUploader label="" value={form.pool_photos} onChange={(v) => setForm({ ...form, pool_photos: v })} folder={`${userId}/pool`} />
+                <PhotoUploader label="" value={form.pool_photos} onChange={(v) => setForm({ ...form, pool_photos: v })} folder={`${userId}/pool`} variant="button" />
               </div>
             </div>
             <div>
               <SubLabel title="Equipment Photos" badge="(Optional)" />
               <div className="mt-2">
-                <PhotoUploader label="" value={form.equipment_photos} onChange={(v) => setForm({ ...form, equipment_photos: v })} folder={`${userId}/equipment`} />
+                <PhotoUploader label="" value={form.equipment_photos} onChange={(v) => setForm({ ...form, equipment_photos: v })} folder={`${userId}/equipment`} variant="button" />
               </div>
             </div>
           </div>
@@ -1208,13 +1210,13 @@ function ClientFormModal({
           <SubLabel title="Client Status" />
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Status</label>
+              <label className="text-sm font-bold text-[var(--dash-text)]">Status</label>
               <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
                 <option>Ativo</option><option>Inativo</option>
               </select>
             </div>
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Stage</label>
+              <label className="text-sm font-bold text-[var(--dash-text)]">Stage</label>
               <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm">
                 <option>Cliente</option><option>Prospecção</option>
               </select>
@@ -1279,7 +1281,7 @@ function ClientFormModal({
                 <p className="text-xs text-[var(--dash-text-muted)]">Doesn't change the client's recurring days — just adds one extra visit. Add as many as you need, even more than one on the same day with a different technician.</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Date</label>
+                    <label className="text-sm font-bold text-[var(--dash-text)]">Date</label>
                     <input
                       type="date"
                       value={oneTimeDate}
@@ -1288,7 +1290,7 @@ function ClientFormModal({
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Technician</label>
+                    <label className="text-sm font-bold text-[var(--dash-text)]">Technician</label>
                     <select
                       value={oneTimeTechnicianId ?? ""}
                       onChange={(e) => setOneTimeTechnicianId(e.target.value || null)}
@@ -1300,7 +1302,7 @@ function ClientFormModal({
                   </div>
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Service note</label>
+                  <label className="text-sm font-bold text-[var(--dash-text)]">Service note</label>
                   <textarea
                     value={oneTimeNote}
                     onChange={(e) => setOneTimeNote(e.target.value)}
@@ -1326,7 +1328,7 @@ function ClientFormModal({
           <div className="space-y-3 border-t border-[var(--dash-border)] pt-4">
             <SubLabel title="Technician & Pricing" subtitle="Who services this pool and what it's worth" />
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Assigned Technician</label>
+              <label className="text-sm font-bold text-[var(--dash-text)]">Assigned Technician</label>
               <p className="text-xs text-[var(--dash-text-muted)]">Who normally services this client — required for recurring days to auto-schedule</p>
               <select
                 value={form.technician_id ?? ""}
@@ -1338,7 +1340,7 @@ function ClientFormModal({
               </select>
             </div>
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Monthly Pool Value (USD)</label>
+              <label className="text-sm font-bold text-[var(--dash-text)]">Monthly Pool Value (USD)</label>
               <div className="relative mt-1">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[var(--dash-text-muted)]">$</span>
                 <input
@@ -1549,15 +1551,15 @@ function ClientScheduledStops({ clientId }: { clientId: string }) {
 }
 
 function Field({
-  label, value, onChange, type = "text", required = false, multiple = false, icon: Icon,
-}: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; multiple?: boolean; icon?: typeof User }) {
+  label, value, onChange, type = "text", required = false, multiple = false, icon: Icon, placeholder,
+}: { label: string; value: string; onChange: (v: string) => void; type?: string; required?: boolean; multiple?: boolean; icon?: typeof User; placeholder?: string }) {
   return (
     <div>
-      <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">{label}</label>
+      <label className="text-sm font-bold text-[var(--dash-text)]">{label}</label>
       <div className="relative mt-1">
         {Icon && <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />}
         <input
-          type={type} multiple={multiple} value={value} onChange={(e) => onChange(e.target.value)} required={required}
+          type={type} multiple={multiple} value={value} onChange={(e) => onChange(e.target.value)} required={required} placeholder={placeholder}
           className={`w-full rounded-[10px] border border-[var(--dash-border-input)] py-2 pr-3 text-sm ${Icon ? "pl-9" : "pl-3"}`}
         />
       </div>

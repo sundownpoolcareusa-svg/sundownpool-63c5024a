@@ -9,11 +9,13 @@ export function AddressAutocomplete({
   onChange,
   onSelectPlace,
   label = "Address",
+  labelClassName = "text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]",
 }: {
   value: string;
   onChange: (v: string) => void;
   onSelectPlace?: (p: { address: string; city: string; state: string; zip: string; lat?: number; lng?: number }) => void;
   label?: string;
+  labelClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Suggestion[]>([]);
@@ -93,7 +95,7 @@ export function AddressAutocomplete({
 
   return (
     <div className="relative">
-      <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">{label}</label>
+      <label className={labelClassName}>{label}</label>
       <div className="relative mt-1">
         <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-text-muted)]" />
         <input
