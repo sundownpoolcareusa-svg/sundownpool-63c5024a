@@ -499,6 +499,7 @@ function TecnicoPage() {
   );
   const [pushBusy, setPushBusy] = useState(false);
   const [dragOrderIds, setDragOrderIds] = useState<string[] | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
   const { isLoaded: mapsLoaded } = useJsApiLoader({ id: "sundown-google-maps", googleMapsApiKey: GOOGLE_MAPS_KEY, libraries: MAP_LIBRARIES });
   const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -1129,11 +1130,39 @@ function TecnicoPage() {
           <Wrench className="h-5 w-5" />
           Serviços
         </button>
-        <button onClick={() => comingSoon("Mais")} className="flex flex-col items-center gap-0.5 px-2 text-[10px] font-medium text-[var(--dash-text-muted-2)]">
+        <button onClick={() => setMoreOpen(true)} className="flex flex-col items-center gap-0.5 px-2 text-[10px] font-medium text-[var(--dash-text-muted-2)]">
           <Menu className="h-5 w-5" />
           Mais
         </button>
       </nav>
+
+      {moreOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="dash absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-4 pb-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-[var(--dash-border)]" />
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-[var(--dash-text)]">Mais</h2>
+              <button onClick={() => setMoreOpen(false)} className="grid h-9 w-9 place-items-center rounded-full text-[var(--dash-text-secondary)]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {technician?.can_manage_invoices ? (
+              <button
+                onClick={() => { setMoreOpen(false); navigate({ to: "/tecnico/invoices" }); }}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[var(--dash-text-secondary-2)] hover:bg-[var(--dash-bg)]"
+              >
+                <FileText className="h-5 w-5" /> Faturas
+              </button>
+            ) : (
+              <p className="px-4 py-6 text-center text-sm text-[var(--dash-text-muted)]">Nenhuma opção disponível ainda.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {selectedClient && (
         <TecnicoClientDetail

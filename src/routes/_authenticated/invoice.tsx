@@ -10,7 +10,7 @@ import {
   Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, sendInvoiceReceipt, errorMessage, type Invoice } from "@/lib/db";
+import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, sendInvoiceReceipt, errorMessage, getMyTechnician, type Invoice } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
@@ -52,7 +52,13 @@ function statusBadge(s: string, paymentMethod?: string | null) {
   );
 }
 
-function InvoicePage() {
+// Everything below the top chrome — reused as-is by the admin /invoice
+// route (wrapped in AppSidebar/AppHeader) and by the technician-facing
+// /tecnico_/invoices route (wrapped in its own back-button header) for
+// technicians with can_manage_invoices. layout="technician" hides the
+// admin-only estimate-promo aside and drops the duplicate "Invoices"
+// heading (the technician page already shows one in its header).
+export function InvoicesContent({ layout = "admin" }: { layout?: "admin" | "technician" } = {}) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState("All");
@@ -60,7 +66,7 @@ function InvoicePage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices });
-  const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates });
+  const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates, enabled: layout === "admin" });
 
   const filtered = invoices.filter((inv) => {
     if (tab === "Paid" && inv.status !== "PAID") return false;
@@ -73,14 +79,12 @@ function InvoicePage() {
   const pendingEstimate = estimates.find((e) => e.status === "PENDENTE" || e.status === "ENVIADA");
 
   return (
-    <div className="dash min-h-screen bg-[var(--dash-bg)] pb-20 lg:pb-0 lg:pl-60">
-      <AppSidebar />
-      <AppHeader />
-      <main className="grid grid-cols-1 gap-5 p-3 sm:p-5 lg:grid-cols-12 print:block print:p-0">
+    <>
+      <main className={`grid grid-cols-1 gap-5 ${layout === "admin" ? "p-3 sm:p-5 lg:grid-cols-12" : ""} print:block print:p-0`}>
         {/* LEFT */}
-        <aside className="space-y-4 lg:col-span-3 print:hidden">
+        <aside className={`space-y-4 print:hidden ${layout === "admin" ? "lg:col-span-3" : ""}`}>
           <div className="flex items-center justify-between">
-            <h1 className="text-[20px] font-extrabold text-[var(--dash-text)]">Invoices</h1>
+            {layout === "admin" && <h1 className="text-[20px] font-extrabold text-[var(--dash-text)]">Invoices</h1>}
             <button onClick={() => setOpen(true)} className="flex items-center gap-1.5 rounded-[11px] bg-[var(--dash-navy)] px-3 py-2 text-sm font-semibold text-white hover:opacity-90">
               <Plus className="h-4 w-4" /> New Invoice
             </button>
@@ -144,7 +148,7 @@ function InvoicePage() {
         </aside>
 
         {/* CENTER */}
-        <section className="space-y-4 lg:col-span-6 print:col-span-12">
+        <section className={`space-y-4 print:col-span-12 ${layout === "admin" ? "lg:col-span-6" : ""}`}>
           {selected ? (
             <InvoiceDetail invoice={selected} onChanged={() => qc.invalidateQueries({ queryKey: ["invoices"] })} />
           ) : (
@@ -157,56 +161,70 @@ function InvoicePage() {
         </section>
 
         {/* RIGHT */}
-        <aside className="space-y-4 lg:col-span-3 print:hidden">
-          {pendingEstimate ? (
-            <>
-              <h3 className="text-lg font-extrabold text-[var(--dash-text)]">Estimate #{pendingEstimate.number}</h3>
-              <div className="overflow-hidden rounded-[18px] border border-[var(--dash-border)] bg-white" style={cardShadow}>
-                <img src={poolImg} alt="Pool" className="h-44 w-full object-cover" width={1024} height={640} loading="lazy" />
-                <div className="p-[18px]">
-                  <div className="font-bold text-[var(--dash-text)]">{pendingEstimate.title || "Estimate"}</div>
-                  <p className="mt-1 text-sm text-[var(--dash-text-secondary)]">Client: {pendingEstimate.client?.name}</p>
-                  <hr className="my-4 border-[var(--dash-border)]" />
-                  <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(pendingEstimate.subtotal)}</span></div>
-                    <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums" style={{ color: "var(--dash-green)" }}>-{fmt(pendingEstimate.discount)}</span></div>
-                    <div className="mt-2 flex items-center justify-between border-t border-[var(--dash-border)] pt-2">
-                      <span className="font-bold text-[var(--dash-text)]">Total</span>
-                      <span className="text-xl font-extrabold tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(pendingEstimate.total)}</span>
+        {layout === "admin" && (
+          <aside className="space-y-4 lg:col-span-3 print:hidden">
+            {pendingEstimate ? (
+              <>
+                <h3 className="text-lg font-extrabold text-[var(--dash-text)]">Estimate #{pendingEstimate.number}</h3>
+                <div className="overflow-hidden rounded-[18px] border border-[var(--dash-border)] bg-white" style={cardShadow}>
+                  <img src={poolImg} alt="Pool" className="h-44 w-full object-cover" width={1024} height={640} loading="lazy" />
+                  <div className="p-[18px]">
+                    <div className="font-bold text-[var(--dash-text)]">{pendingEstimate.title || "Estimate"}</div>
+                    <p className="mt-1 text-sm text-[var(--dash-text-secondary)]">Client: {pendingEstimate.client?.name}</p>
+                    <hr className="my-4 border-[var(--dash-border)]" />
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(pendingEstimate.subtotal)}</span></div>
+                      <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums" style={{ color: "var(--dash-green)" }}>-{fmt(pendingEstimate.discount)}</span></div>
+                      <div className="mt-2 flex items-center justify-between border-t border-[var(--dash-border)] pt-2">
+                        <span className="font-bold text-[var(--dash-text)]">Total</span>
+                        <span className="text-xl font-extrabold tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(pendingEstimate.total)}</span>
+                      </div>
                     </div>
+                    <Link to="/estimativa" className="mt-4 flex w-full items-center justify-center gap-2 rounded-[11px] bg-[var(--dash-navy)] py-2.5 text-sm font-semibold text-white">
+                      View Estimate
+                    </Link>
                   </div>
-                  <Link to="/estimativa" className="mt-4 flex w-full items-center justify-center gap-2 rounded-[11px] bg-[var(--dash-navy)] py-2.5 text-sm font-semibold text-white">
-                    View Estimate
-                  </Link>
                 </div>
+              </>
+            ) : (
+              <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white p-6 text-center">
+                <p className="text-sm font-semibold text-[var(--dash-text-secondary)]">No pending estimate</p>
+                <Link to="/estimativa" className="mt-3 inline-block text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)] hover:underline">Create estimate →</Link>
               </div>
-            </>
-          ) : (
-            <div className="rounded-[18px] border-2 border-dashed border-[var(--dash-border)] bg-white p-6 text-center">
-              <p className="text-sm font-semibold text-[var(--dash-text-secondary)]">No pending estimate</p>
-              <Link to="/estimativa" className="mt-3 inline-block text-sm font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)] hover:underline">Create estimate →</Link>
-            </div>
-          )}
-        </aside>
+            )}
+          </aside>
+        )}
       </main>
 
-      <section className="mx-3 mb-6 rounded-[18px] border border-[var(--dash-border)] bg-white px-4 py-5 sm:mx-5 sm:px-6 sm:py-6 print:hidden" style={cardShadow}>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-          {footerCats.map((c) => (
-            <div key={c.title} className="flex items-start gap-3">
-              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[8px]" style={{ background: "var(--dash-water-bg)" }}>
-                <c.icon className="h-[18px] w-[18px]" style={{ color: "var(--dash-water-icon)" }} />
-              </span>
-              <div>
-                <div className="font-bold text-[var(--dash-text)]">{c.title}</div>
-                <div className="text-sm text-[var(--dash-text-secondary)]">{c.text}</div>
+      {layout === "admin" && (
+        <section className="mx-3 mb-6 rounded-[18px] border border-[var(--dash-border)] bg-white px-4 py-5 sm:mx-5 sm:px-6 sm:py-6 print:hidden" style={cardShadow}>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            {footerCats.map((c) => (
+              <div key={c.title} className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-[8px]" style={{ background: "var(--dash-water-bg)" }}>
+                  <c.icon className="h-[18px] w-[18px]" style={{ color: "var(--dash-water-icon)" }} />
+                </span>
+                <div>
+                  <div className="font-bold text-[var(--dash-text)]">{c.title}</div>
+                  <div className="text-sm text-[var(--dash-text-secondary)]">{c.text}</div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       <NewInvoiceModal open={open} onClose={() => setOpen(false)} onCreated={() => qc.invalidateQueries({ queryKey: ["invoices"] })} />
+    </>
+  );
+}
+
+function InvoicePage() {
+  return (
+    <div className="dash min-h-screen bg-[var(--dash-bg)] pb-20 lg:pb-0 lg:pl-60">
+      <AppSidebar />
+      <AppHeader />
+      <InvoicesContent />
     </div>
   );
 }
@@ -452,9 +470,16 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
       if (items.length === 0) throw new Error("Add at least one item");
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not authenticated");
+      // A technician managing invoices on their employer's behalf has their
+      // own auth uid, but the invoice needs to be owned by the employer
+      // (technicians.user_id) for the RLS policies and every other admin
+      // query to find it — getMyTechnician() resolves to null for a normal
+      // admin login, so this falls back to their own id in that case.
+      const technician = await getMyTechnician();
+      const ownerUserId = technician?.user_id ?? u.user.id;
       const number = nextNumber("INV", invoices.map((i) => i.number));
       const { data: inv, error } = await supabase.from("invoices").insert({
-        user_id: u.user.id, client_id: clientId, estimate_id: estimateId || null,
+        user_id: ownerUserId, client_id: clientId, estimate_id: estimateId || null,
         number, due_date: dueDate || null, status, subtotal, tax: 0, total,
       }).select().single();
       if (error) throw error;
