@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 import { type ReactNode } from "react";
 
 export function Modal({
-  open, onClose, title, subtitle, headerAction, children, maxWidth = "max-w-2xl", closeOnOverlayClick = true, fullScreenOnMobile = false,
+  open, onClose, title, subtitle, headerAction, children, maxWidth = "max-w-2xl", closeOnOverlayClick = true, fullScreenOnMobile = false, closeButtonSide = "right",
 }: {
   open: boolean; onClose: () => void; title: string; subtitle?: string; headerAction?: ReactNode; children: ReactNode; maxWidth?: string;
   closeOnOverlayClick?: boolean;
@@ -10,6 +10,9 @@ export function Modal({
   // the way up) instead of floating as a small centered box — reverts to
   // the normal centered dialog at the sm breakpoint and up.
   fullScreenOnMobile?: boolean;
+  // "left" puts the X before the title, like a back button on a full page
+  // (used by the client form); "right" (default) is the usual dialog close.
+  closeButtonSide?: "left" | "right";
 }) {
   if (!open) return null;
   return (
@@ -30,13 +33,20 @@ export function Modal({
           </div>
         )}
         <div className="flex shrink-0 items-center justify-between border-b border-[var(--dash-border)] px-6 py-4">
-          <div className="min-w-0">
-            <h2 className="text-lg font-bold text-[var(--dash-text)]">{title}</h2>
-            {subtitle && <p className="text-xs font-medium text-[var(--dash-text-muted)]">{subtitle}</p>}
+          <div className="flex min-w-0 items-center gap-3">
+            {closeButtonSide === "left" && (
+              <button onClick={onClose} className="shrink-0 text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"><X className="h-6 w-6" /></button>
+            )}
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold text-[var(--dash-text)]">{title}</h2>
+              {subtitle && <p className="text-xs font-medium text-[var(--dash-text-muted)]">{subtitle}</p>}
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-3">
             {headerAction}
-            <button onClick={onClose} className="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"><X className="h-5 w-5" /></button>
+            {closeButtonSide === "right" && (
+              <button onClick={onClose} className="text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"><X className="h-5 w-5" /></button>
+            )}
           </div>
         </div>
         <div className={`min-w-0 flex-1 overflow-y-auto overflow-x-hidden p-6 ${fullScreenOnMobile ? "" : "max-h-[75vh]"}`}>{children}</div>
