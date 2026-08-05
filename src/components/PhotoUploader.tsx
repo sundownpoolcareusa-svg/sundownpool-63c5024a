@@ -54,8 +54,8 @@ export function PhotoUploader({
 
   return (
     <div>
-      <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">{label}</label>
-      <div className="mt-2 flex flex-wrap gap-2">
+      {label && <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">{label}</label>}
+      <div className={`flex flex-wrap gap-2 ${label ? "mt-2" : ""}`}>
         {value.map((path, idx) => (
           <PhotoThumb key={path} path={path} bucket={bucket} onRemove={() => removeAt(idx)} />
         ))}
