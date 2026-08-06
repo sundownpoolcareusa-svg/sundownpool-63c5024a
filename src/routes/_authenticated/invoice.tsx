@@ -7,7 +7,7 @@ import { Modal } from "@/components/Modal";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, Link2, Check, X,
-  Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save,
+  Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save, ArrowLeft,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
 import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, sendInvoiceReceipt, errorMessage, getMyTechnician, type Invoice } from "@/lib/db";
@@ -78,10 +78,20 @@ export function InvoicesContent({ layout = "admin" }: { layout?: "admin" | "tech
   const selected = invoices.find((i) => i.id === selectedId) ?? filtered[0] ?? null;
   const pendingEstimate = estimates.find((e) => e.status === "PENDENTE" || e.status === "ENVIADA");
 
+  // On the technician's single-column page, the list and the detail used
+  // to sit stacked in one long scroll with no visual break between them —
+  // tapping an invoice just kept scrolling instead of feeling like it
+  // opened. So there, show one or the other, never both, with a Back link;
+  // the admin's 3-column desktop layout keeps showing list + detail side
+  // by side, unaffected.
+  const showList = layout === "admin" || !selectedId;
+  const showDetail = layout === "admin" || !!selectedId;
+
   return (
     <>
       <main className={`grid grid-cols-1 gap-5 ${layout === "admin" ? "p-3 sm:p-5 lg:grid-cols-12" : ""} print:block print:p-0`}>
         {/* LEFT */}
+        {showList && (
         <aside className={`space-y-4 print:hidden ${layout === "admin" ? "lg:col-span-3" : ""}`}>
           <div className="flex items-center justify-between">
             {layout === "admin" && <h1 className="text-[20px] font-extrabold text-[var(--dash-text)]">Invoices</h1>}
@@ -146,9 +156,20 @@ export function InvoicesContent({ layout = "admin" }: { layout?: "admin" | "tech
             </div>
           )}
         </aside>
+        )}
 
         {/* CENTER */}
+        {showDetail && (
         <section className={`space-y-4 print:col-span-12 ${layout === "admin" ? "lg:col-span-6" : ""}`}>
+          {layout === "technician" && (
+            <button
+              type="button"
+              onClick={() => setSelectedId(null)}
+              className="flex items-center gap-1.5 text-sm font-semibold text-[var(--dash-link)]"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to invoices
+            </button>
+          )}
           {selected ? (
             <InvoiceDetail invoice={selected} onChanged={() => qc.invalidateQueries({ queryKey: ["invoices"] })} />
           ) : (
@@ -159,6 +180,7 @@ export function InvoicesContent({ layout = "admin" }: { layout?: "admin" | "tech
             </div>
           )}
         </section>
+        )}
 
         {/* RIGHT */}
         {layout === "admin" && (
