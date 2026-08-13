@@ -14,7 +14,7 @@ import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, for
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
-import { downloadElementAsPdf } from "@/lib/pdf";
+import { downloadElementAsPdf, generateElementPdfBase64 } from "@/lib/pdf";
 import { useShareLink } from "@/components/ShareLink";
 import { ServicePicker } from "@/components/ServicePicker";
 import { ServiceCatalogModal } from "@/components/ServiceCatalogModal";
@@ -270,7 +270,10 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
   });
 
   const sendReceipt = useMutation({
-    mutationFn: () => sendInvoiceReceipt(invoice.id),
+    mutationFn: async () => {
+      const pdfBase64 = pdfRef.current ? await generateElementPdfBase64(pdfRef.current) : undefined;
+      return sendInvoiceReceipt(invoice.id, pdfBase64);
+    },
     onSuccess: () => { toast.success("Receipt emailed to client!"); setPaymentStep(null); },
     onError: (e: Error) => { toast.error(errorMessage(e, "Could not send receipt")); setPaymentStep(null); },
   });

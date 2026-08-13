@@ -8,10 +8,10 @@ import { jsPDF } from "jspdf";
 // just a crop.
 const PDF_CAPTURE_WIDTH = 820;
 
-// Renders the element to a clean PDF (no browser print headers/footers),
-// always at a fixed desktop-like width so it looks the same whether the
-// owner taps "PDF" on a phone or a computer.
-export async function downloadElementAsPdf(el: HTMLElement, filename: string) {
+// Shared by downloadElementAsPdf and generateElementPdfBase64 — renders the
+// element to a jsPDF document, always at a fixed desktop-like width so it
+// looks the same whether the owner is on a phone or a computer.
+async function renderElementToPdf(el: HTMLElement): Promise<jsPDF> {
   const canvas = await html2canvas(el, {
     scale: 2,
     useCORS: true,
@@ -53,5 +53,20 @@ export async function downloadElementAsPdf(el: HTMLElement, filename: string) {
     pageIndex++;
   }
 
+  return pdf;
+}
+
+// Renders the element to a clean PDF (no browser print headers/footers)
+// and triggers a browser download.
+export async function downloadElementAsPdf(el: HTMLElement, filename: string) {
+  const pdf = await renderElementToPdf(el);
   pdf.save(`${filename}.pdf`);
+}
+
+// Same rendering, but returns the raw base64 PDF bytes instead of
+// downloading — used to attach the invoice as a PDF on the "email a paid
+// receipt" flow, since that request is built and sent from the browser.
+export async function generateElementPdfBase64(el: HTMLElement): Promise<string> {
+  const pdf = await renderElementToPdf(el);
+  return pdf.output("datauristring").split(",")[1] ?? "";
 }

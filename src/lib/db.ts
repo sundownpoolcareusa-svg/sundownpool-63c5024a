@@ -892,10 +892,13 @@ function triggerClientEmailSweep() {
 // One-off "payment received" email for a single invoice, sent on demand
 // right after the admin marks it paid — goes through an Edge Function since
 // it needs the RESEND_API_KEY secret, which can never be used from the
-// browser.
-export async function sendInvoiceReceipt(invoiceId: string) {
+// browser. pdfBase64 (from generateElementPdfBase64, rendered client-side
+// from the same invoice card the admin sees) is attached to the email when
+// provided — generating a PDF server-side would mean re-building the whole
+// invoice layout in Deno with no DOM, so the browser renders it instead.
+export async function sendInvoiceReceipt(invoiceId: string, pdfBase64?: string) {
   const { data, error } = await supabase.functions.invoke("send-invoice-receipt", {
-    body: { invoice_id: invoiceId },
+    body: { invoice_id: invoiceId, pdf_base64: pdfBase64 },
   });
   if (error) throw error;
   if (!data?.ok) throw new Error(data?.error ?? "Failed to send receipt");

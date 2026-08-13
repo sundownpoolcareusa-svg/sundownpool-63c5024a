@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
   const { data: callerData, error: callerErr } = await callerClient.auth.getUser();
   if (callerErr || !callerData.user) return fail("Not authenticated");
 
-  let body: { invoice_id?: string };
+  let body: { invoice_id?: string; pdf_base64?: string };
   try {
     body = await req.json();
   } catch {
@@ -116,6 +116,9 @@ Deno.serve(async (req) => {
                <p>Thanks! We've received your payment of $${amount} for invoice ${invoice.number}${invoice.payment_method ? ` via ${invoice.payment_method}` : ""}.</p>
                <p><a href="${publicUrl}">View your paid invoice</a></p>
                <p>Thanks for choosing Sundown Pool Care!</p>`,
+        ...(body.pdf_base64
+          ? { attachments: [{ filename: `Invoice-${invoice.number}.pdf`, content: body.pdf_base64 }] }
+          : {}),
       }),
     });
     if (!res.ok) throw new Error(`Resend error ${res.status}: ${await res.text()}`);
