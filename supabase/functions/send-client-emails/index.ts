@@ -24,6 +24,20 @@ const BUSINESS_TIMEZONE = "America/New_York";
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+// The cron trigger calls this with no Origin header (not a browser), but
+// triggerClientEmailSweep() in src/lib/db.ts also fires it directly from
+// the browser to send "on the way" emails immediately — that's a
+// cross-origin POST with custom headers, so the browser sends a CORS
+// preflight OPTIONS first. Without these headers on every response
+// (including the preflight's) the browser silently drops it — caught by
+// that call's .catch(() => {}), so this was failing quietly every time,
+// always falling back to the next cron cycle a few minutes later.
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 async function sendEmail(to: string[], subject: string, html: string) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -71,7 +85,9 @@ function isOnOrAfterCutoff(dateIso: string | null, sinceIso: string | null | und
   return new Date(dateIso) >= new Date(sinceIso);
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
+
   let onWaySent = 0;
   let chemicalsSent = 0;
   let photoSent = 0;
@@ -91,7 +107,7 @@ Deno.serve(async () => {
     .is("on_way_email_sent_at", null)
     .eq("clients.notify_on_way", true);
 
-  if (startedErr) return new Response(JSON.stringify({ error: startedErr.message }), { status: 500 });
+  if (startedErr) return new Response(JSON.stringify({ error: startedErr.message }), { status: 500, headers: corsHeaders });
 
   for (const stop of (startedStops ?? []) as {
     id: string; started_at: string | null;
@@ -127,7 +143,7 @@ Deno.serve(async () => {
     .is("chemicals_email_sent_at", null)
     .eq("clients.notify_chemicals", true);
 
-  if (chemErr) return new Response(JSON.stringify({ error: chemErr.message }), { status: 500 });
+  if (chemErr) return new Response(JSON.stringify({ error: chemErr.message }), { status: 500, headers: corsHeaders });
 
   for (const stop of (chemStops ?? []) as {
     id: string; completed_at: string | null;
@@ -194,7 +210,7 @@ Deno.serve(async () => {
     .is("photo_email_sent_at", null)
     .eq("clients.notify_photo", true);
 
-  if (photoErr) return new Response(JSON.stringify({ error: photoErr.message }), { status: 500 });
+  if (photoErr) return new Response(JSON.stringify({ error: photoErr.message }), { status: 500, headers: corsHeaders });
 
   for (const stop of (photoStops ?? []) as {
     id: string; completed_at: string | null; photo_taken_at: string | null; visit_photos: string[] | null;
@@ -241,6 +257,6 @@ Deno.serve(async () => {
   }
 
   return new Response(JSON.stringify({ onWaySent, chemicalsSent, photoSent, errors }), {
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

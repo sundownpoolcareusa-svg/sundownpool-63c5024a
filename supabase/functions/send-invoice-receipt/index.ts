@@ -21,6 +21,11 @@ const SITE_URL = "https://sundownpoolcare.com";
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+// Called from the browser (supabase.functions.invoke), which means the
+// browser sends a CORS preflight OPTIONS request first — without these
+// headers on every response (including the preflight's) the browser
+// blocks the whole thing and supabase-js just reports "Failed to send a
+// request to the Edge Function", with no hint that it was a CORS issue.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
