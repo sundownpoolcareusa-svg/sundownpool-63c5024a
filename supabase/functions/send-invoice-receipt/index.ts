@@ -40,6 +40,7 @@ function fail(error: string) {
   return new Response(JSON.stringify({ ok: false, error }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
+
 // clients.email is a single text field that can hold more than one address
 // (comma/semicolon separated) — same parsing send-client-emails uses.
 function parseEmails(raw: string): string[] {
@@ -51,9 +52,10 @@ function firstOf<T>(v: T | T[]): T {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
   const authHeader = req.headers.get("Authorization");
+
   if (!authHeader) return fail("Missing Authorization");
 
   const callerClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {

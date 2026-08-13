@@ -86,7 +86,7 @@ function isOnOrAfterCutoff(dateIso: string | null, sinceIso: string | null | und
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
 
   let onWaySent = 0;
   let chemicalsSent = 0;
