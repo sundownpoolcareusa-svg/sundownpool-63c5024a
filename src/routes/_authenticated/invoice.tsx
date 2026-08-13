@@ -271,7 +271,21 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
 
   const sendReceipt = useMutation({
     mutationFn: async () => {
-      const pdfBase64 = pdfRef.current ? await generateElementPdfBase64(pdfRef.current) : undefined;
+      // Rendering the PDF (html2canvas cloning the page at a fixed desktop
+      // width) can be slow or occasionally hang on an underpowered phone —
+      // better to send the receipt without the attachment than leave the
+      // admin stuck on "Sending..." forever.
+      let pdfBase64: string | undefined;
+      try {
+        pdfBase64 = pdfRef.current
+          ? await Promise.race([
+              generateElementPdfBase64(pdfRef.current),
+              new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 8000)),
+            ])
+          : undefined;
+      } catch {
+        pdfBase64 = undefined;
+      }
       return sendInvoiceReceipt(invoice.id, pdfBase64);
     },
     onSuccess: () => { toast.success("Receipt emailed to client!"); setPaymentStep(null); },
