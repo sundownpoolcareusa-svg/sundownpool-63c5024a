@@ -21,12 +21,23 @@ const SITE_URL = "https://sundownpoolcare.com";
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+// Called from the browser (supabase.functions.invoke), which means the
+// browser sends a CORS preflight OPTIONS request first — without these
+// headers on every response (including the preflight's) the browser
+// blocks the whole thing and supabase-js just reports "Failed to send a
+// request to the Edge Function", with no hint that it was a CORS issue.
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 function ok(body: Record<string, unknown> = {}) {
-  return new Response(JSON.stringify({ ok: true, ...body }), { headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify({ ok: true, ...body }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
 function fail(error: string) {
-  return new Response(JSON.stringify({ ok: false, error }), { headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify({ ok: false, error }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
 // clients.email is a single text field that can hold more than one address
@@ -40,6 +51,8 @@ function firstOf<T>(v: T | T[]): T {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return fail("Missing Authorization");
 
