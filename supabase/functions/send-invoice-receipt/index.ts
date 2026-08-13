@@ -21,13 +21,20 @@ const SITE_URL = "https://sundownpoolcare.com";
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 function ok(body: Record<string, unknown> = {}) {
-  return new Response(JSON.stringify({ ok: true, ...body }), { headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify({ ok: true, ...body }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
 function fail(error: string) {
-  return new Response(JSON.stringify({ ok: false, error }), { headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify({ ok: false, error }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
+
 
 // clients.email is a single text field that can hold more than one address
 // (comma/semicolon separated) — same parsing send-client-emails uses.
