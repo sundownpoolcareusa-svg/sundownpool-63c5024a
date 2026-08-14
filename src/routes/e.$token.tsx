@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { getPublicEstimate } from "@/lib/public-estimate.functions";
 import { DocCardHeader } from "@/components/InvoiceCard";
 import { fmt, fmtDate, formatPhone } from "@/lib/db";
@@ -38,6 +38,12 @@ function PublicEstimatePage() {
   });
 
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  // So the browser tab (and a shared-link preview) reads something useful
+  // instead of a generic app title — same reason a print-out has a name.
+  useEffect(() => {
+    if (data) document.title = `Estimate ${data.estimate.number} - ${data.client?.name ?? "Client"} | Sundown Pool Care`;
+  }, [data]);
 
   if (isLoading) return <div className="dash grid min-h-screen place-items-center text-[var(--dash-text-muted)]">Loading...</div>;
   if (error || !data) return (
