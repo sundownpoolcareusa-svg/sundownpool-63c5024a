@@ -328,7 +328,10 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             {isPaid ? <><X className="h-4 w-4" /> Mark Unpaid</> : <><Check className="h-4 w-4" /> Mark Paid</>}
           </button>
           <button
-            onClick={() => share(publicUrl, `Invoice ${invoice.number}`)}
+            onClick={() => {
+              window.open(publicUrl, "_blank", "noopener,noreferrer");
+              share(publicUrl, `Invoice ${invoice.number}`);
+            }}
             className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)]"
           >
             <Link2 className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> <span className="hidden sm:inline">Client </span>Link
