@@ -26,6 +26,7 @@ export type Client = {
   has_salt_system?: boolean;
   notify_on_way?: boolean;
   notify_chemicals?: boolean;
+  notify_chemical_products?: boolean;
   notify_photo?: boolean;
   created_at: string;
 };

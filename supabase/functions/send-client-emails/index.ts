@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
   // until it does, picked up on a later cron run.
   const { data: chemStops, error: chemErr } = await supabase
     .from("route_stops")
-    .select("id, completed_at, client:clients!inner(id, name, email, notify_chemicals, notify_chemicals_since, has_salt_system)")
+    .select("id, completed_at, client:clients!inner(id, name, email, notify_chemicals, notify_chemicals_since, notify_chemical_products, has_salt_system)")
     .eq("status", "Concluído")
     .is("chemicals_email_sent_at", null)
     .eq("clients.notify_chemicals", true);
@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
 
   for (const stop of (chemStops ?? []) as {
     id: string; completed_at: string | null;
-    client: (ClientRow & { notify_chemicals: boolean; notify_chemicals_since: string | null; has_salt_system: boolean }) | (ClientRow & { notify_chemicals: boolean; notify_chemicals_since: string | null; has_salt_system: boolean })[];
+    client: (ClientRow & { notify_chemicals: boolean; notify_chemicals_since: string | null; notify_chemical_products: boolean; has_salt_system: boolean }) | (ClientRow & { notify_chemicals: boolean; notify_chemicals_since: string | null; notify_chemical_products: boolean; has_salt_system: boolean })[];
   }[]) {
     const client = firstOf(stop.client);
     const recipients = client?.email ? parseEmails(client.email) : [];
@@ -194,20 +194,26 @@ Deno.serve(async (req) => {
       })
       .join("");
 
-    // Only products the technician actually logged a quantity for — the
-    // saved list always includes every known product at 0 unless used.
-    const products = (Array.isArray(chem.products) ? chem.products : []) as { name?: string; unit?: string; qty?: number }[];
-    const productsRows = products
-      .filter((p) => typeof p.qty === "number" && p.qty > 0 && p.name)
-      .map((p) => `<tr><td style="padding:4px 12px 4px 0;color:#5B6472;">${escapeHtml(p.name!)}</td><td style="padding:4px 0;font-weight:bold;">${formatProductQty(p.qty!)} ${escapeHtml(p.unit ?? "")}</td></tr>`)
-      .join("");
-    const productsSection = productsRows
-      ? `<p><strong>Products added today:</strong></p><table cellspacing="0" cellpadding="0">${productsRows}</table>`
-      : "";
+    // Products/notes are only included for clients specifically opted into
+    // that extra detail — not every client wants to see what was dosed.
+    let productsSection = "";
+    let notesSection = "";
+    if (client.notify_chemical_products) {
+      // Only products the technician actually logged a quantity for — the
+      // saved list always includes every known product at 0 unless used.
+      const products = (Array.isArray(chem.products) ? chem.products : []) as { name?: string; unit?: string; qty?: number }[];
+      const productsRows = products
+        .filter((p) => typeof p.qty === "number" && p.qty > 0 && p.name)
+        .map((p) => `<tr><td style="padding:4px 12px 4px 0;color:#5B6472;">${escapeHtml(p.name!)}</td><td style="padding:4px 0;font-weight:bold;">${formatProductQty(p.qty!)} ${escapeHtml(p.unit ?? "")}</td></tr>`)
+        .join("");
+      productsSection = productsRows
+        ? `<p><strong>Products added today:</strong></p><table cellspacing="0" cellpadding="0">${productsRows}</table>`
+        : "";
 
-    const notesSection = chem.notes && chem.notes.trim()
-      ? `<p><strong>Technician notes:</strong><br>${escapeHtml(chem.notes.trim())}</p>`
-      : "";
+      notesSection = chem.notes && chem.notes.trim()
+        ? `<p><strong>Technician notes:</strong><br>${escapeHtml(chem.notes.trim())}</p>`
+        : "";
+    }
 
     const visitDate = stop.completed_at ? new Date(stop.completed_at) : new Date();
     const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: BUSINESS_TIMEZONE });

@@ -10,6 +10,7 @@ import {
   LayoutGrid, List as ListIcon, MoreVertical, Phone, MessageSquare, FileText, MapPin,
   CheckCircle2, Route as RouteIcon, DollarSign, AlertTriangle, Star, Mail, Waves, User,
   FlaskConical, Camera, Building2, Hash, Home, Key, Send, Lock, Save, UserPlus,
+  ClipboardList,
 } from "lucide-react";
 import { listClients, listTechnicians, listInvoices, listRoutesForDate, removeStaleClientStops, scheduleOneTimeVisit, deleteStop, rescheduleStop, fmtDate, fmt, type Client, type Invoice, type ClientContact, type Technician } from "@/lib/db";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -947,6 +948,7 @@ function ClientFormModal({
     has_salt_system: false,
     notify_on_way: false,
     notify_chemicals: false,
+    notify_chemical_products: false,
     notify_photo: false,
     notes: "",
   };
@@ -995,6 +997,7 @@ function ClientFormModal({
         has_salt_system: editing.has_salt_system ?? false,
         notify_on_way: editing.notify_on_way ?? false,
         notify_chemicals: editing.notify_chemicals ?? false,
+        notify_chemical_products: editing.notify_chemical_products ?? false,
         notify_photo: editing.notify_photo ?? false,
         notes: editing.notes || "",
       });
@@ -1375,6 +1378,17 @@ function ClientFormModal({
               </div>
               <Toggle checked={form.notify_chemicals} onChange={(v) => setForm({ ...form, notify_chemicals: v })} />
             </div>
+            {form.notify_chemicals && (
+              <div className="flex items-center justify-between gap-3 py-2.5 pl-11 pr-3">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
+                    <ClipboardList className="h-4 w-4" />
+                  </span>
+                  <span className="text-sm text-[var(--dash-text-secondary)]">Also include products used &amp; technician notes</span>
+                </div>
+                <Toggle checked={form.notify_chemical_products} onChange={(v) => setForm({ ...form, notify_chemical_products: v })} />
+              </div>
+            )}
             <div className="flex items-center justify-between gap-3 px-3 py-2.5">
               <div className="flex items-center gap-3">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full" style={{ background: "var(--dash-water-bg)", color: "var(--dash-water-icon)" }}>
