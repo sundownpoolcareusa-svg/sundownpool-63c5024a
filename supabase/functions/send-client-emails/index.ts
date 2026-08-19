@@ -60,6 +60,25 @@ function parseEmails(raw: string): string[] {
   return raw.split(/[,;]/).map((e) => e.trim()).filter(Boolean);
 }
 
+const QTY_FRACTIONS: Record<string, string> = { "0.25": "¼", "0.50": "½", "0.75": "¾" };
+
+// Same fraction display technicians see in the app (1/4, 1/2, 3/4 gallon;
+// 1/2, 1 1/2 scoop) instead of raw decimals — duplicated from
+// src/lib/db.ts's formatProductQty since this Deno function can't import
+// from the Vite app.
+function formatProductQty(qty: number): string {
+  if (qty === 0) return "0";
+  const whole = Math.floor(qty);
+  const fracKey = (Math.round((qty - whole) * 100) / 100).toFixed(2);
+  const fracStr = QTY_FRACTIONS[fracKey];
+  if (!fracStr) return qty.toFixed(1).replace(/\.0$/, "");
+  return whole === 0 ? fracStr : `${whole} ${fracStr}`;
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 const CHEMICAL_LABELS: Record<string, string> = {
   free_chlorine: "Free Chlorine (ppm)",
   ph: "pH",
@@ -156,7 +175,7 @@ Deno.serve(async (req) => {
 
     const { data: chem } = await supabase
       .from("stop_chemicals")
-      .select("free_chlorine, ph, total_alkalinity, calcium_hardness, stabilizer, salt")
+      .select("free_chlorine, ph, total_alkalinity, calcium_hardness, stabilizer, salt, products, notes")
       .eq("route_stop_id", stop.id)
       .eq("body_type", "pool")
       .maybeSingle();
@@ -175,6 +194,21 @@ Deno.serve(async (req) => {
       })
       .join("");
 
+    // Only products the technician actually logged a quantity for — the
+    // saved list always includes every known product at 0 unless used.
+    const products = (Array.isArray(chem.products) ? chem.products : []) as { name?: string; unit?: string; qty?: number }[];
+    const productsRows = products
+      .filter((p) => typeof p.qty === "number" && p.qty > 0 && p.name)
+      .map((p) => `<tr><td style="padding:4px 12px 4px 0;color:#5B6472;">${escapeHtml(p.name!)}</td><td style="padding:4px 0;font-weight:bold;">${formatProductQty(p.qty!)} ${escapeHtml(p.unit ?? "")}</td></tr>`)
+      .join("");
+    const productsSection = productsRows
+      ? `<p><strong>Products added today:</strong></p><table cellspacing="0" cellpadding="0">${productsRows}</table>`
+      : "";
+
+    const notesSection = chem.notes && chem.notes.trim()
+      ? `<p><strong>Technician notes:</strong><br>${escapeHtml(chem.notes.trim())}</p>`
+      : "";
+
     const visitDate = stop.completed_at ? new Date(stop.completed_at) : new Date();
     const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: BUSINESS_TIMEZONE });
     const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: BUSINESS_TIMEZONE });
@@ -186,6 +220,8 @@ Deno.serve(async (req) => {
         `<p>Hi ${client.name},</p>
          <p>Your pool was serviced on ${dateLabel} at ${timeLabel}. Here are the chemical readings from today's visit:</p>
          <table cellspacing="0" cellpadding="0">${readingsRows}</table>
+         ${productsSection}
+         ${notesSection}
          <p>Thanks for choosing Sundown Pool Care!</p>`,
       );
       await supabase.from("route_stops").update({ chemicals_email_sent_at: new Date().toISOString() }).eq("id", stop.id);
