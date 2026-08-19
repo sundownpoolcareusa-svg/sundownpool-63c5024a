@@ -944,6 +944,7 @@ export type Database = {
           client_address: string
           client_city: string
           client_name: string
+          client_notify_photo: boolean
           client_state: string
           client_type: string
           client_zip: string

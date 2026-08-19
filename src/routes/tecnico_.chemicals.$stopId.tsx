@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Droplet, FlaskConical, Diamond, ShieldCheck, Minus, Plus, Filter,
   CheckCircle2, AlertTriangle, Check, ChevronRight, StickyNote, History, X, Waves, Droplets, CalendarDays,
-  ChevronDown, Square, Gem,
+  ChevronDown, Square, Gem, Camera,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Modal } from "@/components/Modal";
@@ -147,6 +147,7 @@ function TechnicianChemicalsPage() {
   const [baselineByBody, setBaselineByBody] = useState<Record<BodyType, BodyChemState>>({ pool: EMPTY_BODY_STATE, spa: EMPTY_BODY_STATE });
   const [loadedBody, setLoadedBody] = useState<Record<BodyType, boolean>>({ pool: false, spa: false });
   const [confirmIncomplete, setConfirmIncomplete] = useState<{ which: string } | null>(null);
+  const [photoPromptOpen, setPhotoPromptOpen] = useState(false);
 
   const readings = dataByBody[bodyType].readings;
   const products = dataByBody[bodyType].products;
@@ -252,6 +253,18 @@ function TechnicianChemicalsPage() {
         setConfirmIncomplete({ which });
         return;
       }
+    }
+    proceedToComplete();
+  }
+
+  // For clients who opted into the photo email, ask for a visit photo right
+  // before completing — same prompt tecnico.tsx's stop list already shows,
+  // this page just had no way to trigger it since it completes stops on its
+  // own. Optional, not required: "Esqueci a foto" still completes the stop.
+  function proceedToComplete() {
+    if (stop?.client_notify_photo && visitPhotos.length === 0) {
+      setPhotoPromptOpen(true);
+      return;
     }
     saveMut.mutate();
   }
@@ -579,12 +592,48 @@ function TechnicianChemicalsPage() {
             <button
               onClick={() => {
                 setConfirmIncomplete(null);
-                saveMut.mutate();
+                proceedToComplete();
               }}
               className="flex-1 rounded-[12px] py-3 text-sm font-bold text-white"
               style={{ background: "var(--dash-green)" }}
             >
               Continuar
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={photoPromptOpen}
+        onClose={() => setPhotoPromptOpen(false)}
+        title="Foto da visita"
+        maxWidth="max-w-sm"
+      >
+        <div className="space-y-3 p-4">
+          <p className="text-sm text-[var(--dash-text-secondary)]">
+            <span className="font-bold text-[var(--dash-text)]">{stop?.client_name}</span> quer receber uma foto da visita por e-mail. Quer tirar agora?
+          </p>
+          <PhotoUploader
+            label="Foto da visita"
+            value={visitPhotos}
+            onChange={(next) => { setVisitPhotos(next); visitPhotosMut.mutate(next); }}
+            folder={`stop-${stopId}/visit`}
+            stamp
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setPhotoPromptOpen(false); saveMut.mutate(); }}
+              className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-2.5 text-sm font-bold text-[var(--dash-text-secondary)]"
+            >
+              Esqueci a foto
+            </button>
+            <button
+              onClick={() => { setPhotoPromptOpen(false); saveMut.mutate(); }}
+              disabled={visitPhotos.length === 0}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: "var(--dash-green)" }}
+            >
+              <Camera className="h-4 w-4" /> Enviar e concluir
             </button>
           </div>
         </div>
