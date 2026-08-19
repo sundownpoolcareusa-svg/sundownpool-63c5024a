@@ -37,6 +37,7 @@ export type Database = {
           monthly_value: number
           name: string
           notes: string | null
+          notify_chemical_products: boolean
           notify_chemicals: boolean
           notify_chemicals_since: string | null
           notify_on_way: boolean
@@ -80,6 +81,7 @@ export type Database = {
           monthly_value?: number
           name: string
           notes?: string | null
+          notify_chemical_products?: boolean
           notify_chemicals?: boolean
           notify_chemicals_since?: string | null
           notify_on_way?: boolean
@@ -123,6 +125,7 @@ export type Database = {
           monthly_value?: number
           name?: string
           notes?: string | null
+          notify_chemical_products?: boolean
           notify_chemicals?: boolean
           notify_chemicals_since?: string | null
           notify_on_way?: boolean
