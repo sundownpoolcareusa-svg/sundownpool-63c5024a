@@ -9,9 +9,10 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Modal } from "@/components/Modal";
+import { PhotoUploader } from "@/components/PhotoUploader";
 import {
   getRouteStop, getStopChemicals, saveStopChemicals, updateStopStatus, getClientChemicalsHistory, fmtDate,
-  logFilterCleaning, formatProductQty, mergeSavedProducts,
+  logFilterCleaning, formatProductQty, mergeSavedProducts, saveStopVisitPhotos,
   CHEMICAL_READING_META, DEFAULT_READINGS, DEFAULT_PRODUCTS, isReadingInRange,
   type ChemicalReadingKey, type ChemicalReadings, type Product, type BodyType,
 } from "@/lib/db";
@@ -101,6 +102,23 @@ function PoolChemicalsPage() {
   const { data: stop } = useQuery({ queryKey: ["route-stop", stopId], queryFn: () => getRouteStop(stopId) });
   const [bodyType, setBodyType] = useState<BodyType>("pool");
   const hasSpaOnly = !!stop?.client?.has_spa;
+
+  // A photo of this visit specifically, separate from the client's general
+  // pool photo gallery — attached to the completion email for clients who
+  // opted into the photo alert.
+  const [visitPhotos, setVisitPhotos] = useState<string[]>([]);
+  const [visitPhotosLoaded, setVisitPhotosLoaded] = useState(false);
+  useEffect(() => {
+    if (stop && !visitPhotosLoaded) {
+      setVisitPhotos(stop.visit_photos ?? []);
+      setVisitPhotosLoaded(true);
+    }
+  }, [stop, visitPhotosLoaded]);
+  const visitPhotosMut = useMutation({
+    mutationFn: (photos: string[]) => saveStopVisitPhotos(stopId, photos),
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const [photoPromptOpen, setPhotoPromptOpen] = useState(false);
 
   // Pool and Spa readings/products/notes are kept in memory for BOTH bodies
   // at once (not just whichever tab is active) — switching tabs used to
@@ -233,6 +251,18 @@ function PoolChemicalsPage() {
         setConfirmIncomplete({ which });
         return;
       }
+    }
+    proceedToComplete();
+  }
+
+  // For clients who opted into the photo email, ask for a visit photo right
+  // before completing — mirrors the same prompt already on /rotas and the
+  // technician's own chemicals page. Optional: "Forgot the photo" still
+  // completes the stop.
+  function proceedToComplete() {
+    if (stop?.client?.notify_photo && visitPhotos.length === 0) {
+      setPhotoPromptOpen(true);
+      return;
     }
     saveMut.mutate();
   }
@@ -513,20 +543,22 @@ function PoolChemicalsPage() {
             </div>
             <h2 className="text-[15px] font-extrabold text-[var(--dash-text)]">Notes</h2>
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add service notes..."
-              className="flex-1 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm"
-            />
-            <button
-              onClick={() => toast.info("Photo attachments — coming soon")}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
-            >
-              <Camera className="h-4 w-4" />
-            </button>
-          </div>
+          <input
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Add service notes..."
+            className="w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2.5 text-sm"
+          />
+        </section>
+
+        <section className="rounded-2xl border border-[var(--dash-border)] bg-white p-4">
+          <PhotoUploader
+            label="Visit Photo"
+            value={visitPhotos}
+            onChange={(next) => { setVisitPhotos(next); visitPhotosMut.mutate(next); }}
+            folder={`stop-${stopId}/visit`}
+            stamp
+          />
         </section>
       </main>
 
@@ -569,12 +601,48 @@ function PoolChemicalsPage() {
             <button
               onClick={() => {
                 setConfirmIncomplete(null);
-                saveMut.mutate();
+                proceedToComplete();
               }}
               className="flex-1 rounded-[12px] py-3 text-sm font-bold text-white"
               style={{ background: "var(--dash-green)" }}
             >
               Continue
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={photoPromptOpen}
+        onClose={() => setPhotoPromptOpen(false)}
+        title="Visit photo"
+        maxWidth="max-w-sm"
+      >
+        <div className="space-y-3 p-4">
+          <p className="text-sm text-[var(--dash-text-secondary)]">
+            <span className="font-bold text-[var(--dash-text)]">{stop?.client?.name}</span> wants to receive a photo from the visit by email. Take one now?
+          </p>
+          <PhotoUploader
+            label="Visit Photo"
+            value={visitPhotos}
+            onChange={(next) => { setVisitPhotos(next); visitPhotosMut.mutate(next); }}
+            folder={`stop-${stopId}/visit`}
+            stamp
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setPhotoPromptOpen(false); saveMut.mutate(); }}
+              className="flex-1 rounded-[12px] border border-[var(--dash-border)] py-2.5 text-sm font-bold text-[var(--dash-text-secondary)]"
+            >
+              Forgot the photo
+            </button>
+            <button
+              onClick={() => { setPhotoPromptOpen(false); saveMut.mutate(); }}
+              disabled={visitPhotos.length === 0}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-[12px] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: "var(--dash-green)" }}
+            >
+              <Camera className="h-4 w-4" /> Send & complete
             </button>
           </div>
         </div>
