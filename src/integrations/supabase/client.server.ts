@@ -39,14 +39,6 @@ function createSupabaseAdminClient() {
       ...(!SUPABASE_SERVICE_ROLE_KEY ? ['SUPABASE_SERVICE_ROLE_KEY'] : []),
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    // TEMP DIAGNOSTIC: this is failing even after the Vercel dashboard shows
-    // both vars saved for Production and a clean rebuild — logging which
-    // env var keys the runtime actually sees (never values) so we can tell
-    // "genuinely absent" apart from "present under a different name/casing"
-    // apart from "process.env barely populated at all" (would point at a
-    // Nitro/vercel-preset runtime issue rather than a dashboard config one).
-    console.error(`[Supabase][diagnostic] total env keys: ${Object.keys(process.env).length}`);
-    console.error(`[Supabase][diagnostic] keys containing SUPABASE: ${JSON.stringify(Object.keys(process.env).filter((k) => k.toUpperCase().includes('SUPABASE')))}`);
     console.error(`[Supabase] ${message}`);
     throw new Error(message);
   }
