@@ -39,7 +39,6 @@ export type Database = {
           notes: string | null
           notify_chemicals: boolean
           notify_chemicals_since: string | null
-          notify_chemical_products: boolean
           notify_on_way: boolean
           notify_on_way_since: string | null
           notify_photo: boolean
@@ -83,7 +82,6 @@ export type Database = {
           notes?: string | null
           notify_chemicals?: boolean
           notify_chemicals_since?: string | null
-          notify_chemical_products?: boolean
           notify_on_way?: boolean
           notify_on_way_since?: string | null
           notify_photo?: boolean
@@ -127,7 +125,6 @@ export type Database = {
           notes?: string | null
           notify_chemicals?: boolean
           notify_chemicals_since?: string | null
-          notify_chemical_products?: boolean
           notify_on_way?: boolean
           notify_on_way_since?: string | null
           notify_photo?: boolean
