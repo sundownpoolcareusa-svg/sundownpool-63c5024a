@@ -10,10 +10,4 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     server: { entry: "server" },
   },
-  nitro: {
-    routeRules: {
-      "/sitemap.xml": { headers: { "content-type": "application/xml; charset=utf-8" } },
-      "/robots.txt": { headers: { "content-type": "text/plain; charset=utf-8" } },
-    },
-  },
 });
