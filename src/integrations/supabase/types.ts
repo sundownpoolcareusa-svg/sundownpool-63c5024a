@@ -830,6 +830,7 @@ export type Database = {
         Returns: undefined
       }
       get_estimate_public: { Args: { _token: string }; Returns: Json }
+      get_invoice_public: { Args: { _token: string }; Returns: Json }
       get_my_client_chemicals_history: {
         Args: { p_client_id: string }
         Returns: {
