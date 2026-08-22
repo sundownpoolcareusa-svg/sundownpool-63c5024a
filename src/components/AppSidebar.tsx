@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, UserPlus, Map, ClipboardList, FileText, HardHat, FlaskConical, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, UserPlus, Map, ClipboardList, FileText, HardHat, FlaskConical, LogOut, Building2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppLogo } from "./AppLogo";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ const tabs = [
   { to: "/quimicos", label: "Chemicals", icon: FlaskConical },
   { to: "/estimativa", label: "Estimates", icon: ClipboardList },
   { to: "/invoice", label: "Invoices", icon: FileText },
+  { to: "/business", label: "Business", icon: Building2 },
 ] as const;
 
 export function AppSidebar() {

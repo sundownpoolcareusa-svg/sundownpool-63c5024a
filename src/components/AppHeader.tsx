@@ -1,7 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Bell, Search, FileText, Users, UserPlus, ClipboardList, Map, ChevronDown, LogOut, X, LayoutDashboard,
-  Home, Route as RouteIcon, Plus, Menu, HardHat, FlaskConical,
+  Home, Route as RouteIcon, Plus, Menu, HardHat, FlaskConical, Building2,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { AppLogo } from "./AppLogo";
@@ -28,6 +28,7 @@ const allTabs = [
   { to: "/quimicos", label: "Chemicals", icon: FlaskConical },
   { to: "/estimativa", label: "Estimates", icon: ClipboardList },
   { to: "/invoice", label: "Invoices", icon: FileText },
+  { to: "/business", label: "Business", icon: Building2 },
 ] as const;
 
 export function AppHeader() {

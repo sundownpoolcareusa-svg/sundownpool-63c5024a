@@ -17,6 +17,7 @@ import { Route as MaintenancePlansRouteImport } from './routes/maintenance-plans
 import { Route as ServiceAreasRouteImport } from './routes/service-areas'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as TecnicoRouteImport } from './routes/tecnico'
+import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticated/business'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEstimativaRouteImport } from './routes/_authenticated/estimativa'
@@ -69,6 +70,11 @@ const TecnicoRoute = TecnicoRouteImport.update({
   id: '/tecnico',
   path: '/tecnico',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBusinessRoute = AuthenticatedBusinessRouteImport.update({
+  id: '/business',
+  path: '/business',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/service-areas': typeof ServiceAreasRoute
   '/services': typeof ServicesRoute
   '/tecnico': typeof TecnicoRoute
+  '/business': typeof AuthenticatedBusinessRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/service-areas': typeof ServiceAreasRoute
   '/services': typeof ServicesRoute
   '/tecnico': typeof TecnicoRoute
+  '/business': typeof AuthenticatedBusinessRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/estimativa': typeof AuthenticatedEstimativaRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/service-areas': typeof ServiceAreasRoute
   '/services': typeof ServicesRoute
   '/tecnico': typeof TecnicoRoute
+  '/_authenticated/business': typeof AuthenticatedBusinessRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/estimativa': typeof AuthenticatedEstimativaRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/service-areas'
     | '/services'
     | '/tecnico'
+    | '/business'
     | '/clientes'
     | '/dashboard'
     | '/estimativa'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/service-areas'
     | '/services'
     | '/tecnico'
+    | '/business'
     | '/clientes'
     | '/dashboard'
     | '/estimativa'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/service-areas'
     | '/services'
     | '/tecnico'
+    | '/_authenticated/business'
     | '/_authenticated/clientes'
     | '/_authenticated/dashboard'
     | '/_authenticated/estimativa'
@@ -347,6 +359,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tecnico'
       preLoaderRoute: typeof TecnicoRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/business': {
+      id: '/_authenticated/business'
+      path: '/business'
+      fullPath: '/business'
+      preLoaderRoute: typeof AuthenticatedBusinessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/clientes': {
       id: '/_authenticated/clientes'
@@ -443,6 +462,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBusinessRoute: typeof AuthenticatedBusinessRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEstimativaRoute: typeof AuthenticatedEstimativaRoute
@@ -455,6 +475,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBusinessRoute: AuthenticatedBusinessRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEstimativaRoute: AuthenticatedEstimativaRoute,
