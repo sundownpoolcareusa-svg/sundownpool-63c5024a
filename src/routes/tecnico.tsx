@@ -406,7 +406,7 @@ function TecnicoRouteMap({ stops, showTraffic, onToggleTraffic }: { stops: Techn
     <div className={wrapperClass}>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        center={SARASOTA_CENTER}
+        center={points[0]?.pos ?? SARASOTA_CENTER}
         zoom={11}
         onLoad={(m) => { mapRef.current = m; }}
         options={{
