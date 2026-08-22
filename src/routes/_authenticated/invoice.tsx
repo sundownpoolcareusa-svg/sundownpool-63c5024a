@@ -4,13 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
-import { DocCardHeader } from "@/components/InvoiceCard";
+import { DocCardHeader, BusinessInfoBlock } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, Link2, Check, X,
   Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save, ArrowLeft,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, sendInvoiceReceipt, errorMessage, getMyTechnician, type Invoice } from "@/lib/db";
+import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, sendInvoiceReceipt, errorMessage, getMyTechnician, getEmployerBusinessProfile, type Invoice } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
@@ -259,6 +259,12 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
   const pdfRef = useRef<HTMLDivElement>(null);
   const items = (invoice.invoice_items ?? []).slice().sort((a, b) => a.position - b.position);
   const isPaid = invoice.status === "PAID";
+  // The issuing owner's business info, regardless of whether the current
+  // viewer is that owner or a technician managing invoices on their behalf.
+  const { data: business } = useQuery({
+    queryKey: ["business-profile", invoice.user_id],
+    queryFn: () => getEmployerBusinessProfile(invoice.user_id),
+  });
 
   const markPaid = useMutation({
     mutationFn: async (method: string) => {
@@ -394,12 +400,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
       <div ref={pdfRef} className="pdf-print rounded-[20px] border border-[var(--dash-border)] bg-white px-[26px] pb-[26px] pt-1 print:border-0 print:shadow-none" style={cardShadow}>
         <DocCardHeader title="INVOICE" number={invoice.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
-          <div className="space-y-1 text-[var(--dash-text-secondary)]">
-            <div className="font-bold text-[var(--dash-text)]">Effect Up LLC</div>
-            <div>4008 Destination Dr Apt 2208</div>
-            <div>Osprey, FL 34229</div>
-            <div>(561) 376-2428</div>
-          </div>
+          <BusinessInfoBlock business={business} />
           <div className="space-y-1 text-[var(--dash-text-secondary)] sm:text-right">
             <div><span className="font-semibold text-[var(--dash-text)]">Date:</span> {fmtDate(invoice.invoice_date)}</div>
             <div><span className="font-semibold text-[var(--dash-text)]">Due Date:</span> {fmtDate(invoice.due_date)}</div>

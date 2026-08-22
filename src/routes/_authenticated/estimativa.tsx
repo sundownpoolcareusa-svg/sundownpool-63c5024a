@@ -4,13 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
-import { DocCardHeader } from "@/components/InvoiceCard";
+import { DocCardHeader, BusinessInfoBlock } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, User, MapPin,
   Wrench, ListChecks, CalendarDays, Clock, ShieldCheck, Phone, CheckCircle2, Trash2, Pencil, Save,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listEstimates, listClients, nextNumber, fmt, fmtDate, formatPhone, createService, type Estimate, type BillingType } from "@/lib/db";
+import { listEstimates, listClients, nextNumber, fmt, fmtDate, formatPhone, createService, getEmployerBusinessProfile, type Estimate, type BillingType } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
@@ -244,6 +244,10 @@ function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; on
   const pdfRef = useRef<HTMLDivElement>(null);
   const { share, modal: shareModal } = useShareLink();
   const publicUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/e/${estimate.public_token}`;
+  const { data: business } = useQuery({
+    queryKey: ["business-profile", estimate.user_id],
+    queryFn: () => getEmployerBusinessProfile(estimate.user_id),
+  });
   return (
     <>
       {shareModal}
@@ -281,12 +285,7 @@ function EstimateDetail({ estimate, onEdit, onDelete }: { estimate: Estimate; on
       <div ref={pdfRef} className="pdf-print rounded-[20px] border border-[var(--dash-border)] bg-white px-[26px] pb-[26px] pt-1" style={cardShadow}>
         <DocCardHeader title="ESTIMATE" number={estimate.number} />
         <div className="mt-1 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
-          <div className="space-y-1 text-[var(--dash-text-secondary)]">
-            <div className="font-bold text-[var(--dash-text)]">Effect Up LLC</div>
-            <div>4008 Destination Dr Apt 2208</div>
-            <div>Osprey, FL 34229</div>
-            <div>(561) 376-2428</div>
-          </div>
+          <BusinessInfoBlock business={business} />
           <div className="space-y-1 text-[var(--dash-text-secondary)] sm:text-right">
             <div><span className="font-semibold text-[var(--dash-text)]">Date:</span> {fmtDate(estimate.estimate_date)}</div>
             <div><span className="font-semibold text-[var(--dash-text)]">Valid until:</span> {fmtDate(estimate.valid_until)}</div>

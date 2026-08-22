@@ -1,6 +1,49 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 
+export type BusinessProfile = {
+  company_name: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  phone: string | null;
+};
+
+export async function getMyBusinessProfile(): Promise<BusinessProfile | null> {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return null;
+  const { data, error } = await supabase
+    .from("business_profiles")
+    .select("company_name, address, city, state, zip, phone")
+    .eq("user_id", u.user.id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// The employer's business profile, for a technician viewing an invoice on
+// their behalf — falls back to null (the caller's own hardcoded defaults)
+// if the technician has no invoice access or no profile exists yet.
+export async function getEmployerBusinessProfile(employerUserId: string): Promise<BusinessProfile | null> {
+  const { data, error } = await supabase
+    .from("business_profiles")
+    .select("company_name, address, city, state, zip, phone")
+    .eq("user_id", employerUserId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function saveMyBusinessProfile(values: BusinessProfile) {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) throw new Error("Not signed in");
+  const { error } = await supabase
+    .from("business_profiles")
+    .upsert({ user_id: u.user.id, ...values, updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
 export type Client = {
   id: string;
   name: string;
@@ -55,6 +98,7 @@ export type BillingType = "total" | "monthly";
 
 export type Estimate = {
   id: string;
+  user_id: string;
   client_id: string;
   number: string;
   title: string | null;
@@ -84,6 +128,7 @@ export type InvoiceItem = {
 
 export type Invoice = {
   id: string;
+  user_id: string;
   client_id: string;
   estimate_id: string | null;
   number: string;

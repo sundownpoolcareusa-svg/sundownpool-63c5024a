@@ -92,7 +92,20 @@ function firstOf<T>(v: T | T[]): T {
   return Array.isArray(v) ? v[0] : v;
 }
 
-type ClientRow = { id: string; name: string; email: string | null };
+type ClientRow = { id: string; name: string; email: string | null; user_id: string };
+
+// Signature line only — the sending address itself stays Sundown's verified
+// domain until a second business sets up its own with Resend. Cached per
+// run since many stops in one sweep usually belong to the same account.
+const businessNameCache = new Map<string, string>();
+async function getCompanyName(userId: string): Promise<string> {
+  const cached = businessNameCache.get(userId);
+  if (cached) return cached;
+  const { data } = await supabase.from("business_profiles").select("company_name").eq("user_id", userId).maybeSingle();
+  const name = data?.company_name || "Sundown Pool Care";
+  businessNameCache.set(userId, name);
+  return name;
+}
 
 // A flag being opted into shouldn't retroactively email about a visit that
 // already happened before it was turned on — sinceIso is null for clients
@@ -121,7 +134,7 @@ Deno.serve(async (req) => {
   // Concluído without one.
   const { data: startedStops, error: startedErr } = await supabase
     .from("route_stops")
-    .select("id, started_at, client:clients!inner(id, name, email, notify_on_way, notify_on_way_since)")
+    .select("id, started_at, client:clients!inner(id, name, email, user_id, notify_on_way, notify_on_way_since)")
     .not("started_at", "is", null)
     .is("on_way_email_sent_at", null)
     .eq("clients.notify_on_way", true);
@@ -137,12 +150,13 @@ Deno.serve(async (req) => {
     if (recipients.length === 0) continue;
     if (!isOnOrAfterCutoff(stop.started_at, client.notify_on_way_since)) continue;
     try {
+      const companyName = await getCompanyName(client.user_id);
       await sendEmail(
         recipients,
-        "Your Sundown Pool Care technician is on the way!",
+        `Your ${companyName} technician is on the way!`,
         `<p>Hi ${client.name},</p>
-         <p>Just a quick heads up — your Sundown Pool Care technician is on the way to service your pool today.</p>
-         <p>Thanks for choosing Sundown Pool Care!</p>`,
+         <p>Just a quick heads up — your ${companyName} technician is on the way to service your pool today.</p>
+         <p>Thanks for choosing ${companyName}!</p>`,
       );
       await supabase.from("route_stops").update({ on_way_email_sent_at: new Date().toISOString() }).eq("id", stop.id);
       onWaySent++;
@@ -157,7 +171,7 @@ Deno.serve(async (req) => {
   // until it does, picked up on a later cron run.
   const { data: chemStops, error: chemErr } = await supabase
     .from("route_stops")
-    .select("id, completed_at, client:clients!inner(id, name, email, notify_chemicals, notify_chemicals_since, notify_chemical_products, has_salt_system)")
+    .select("id, completed_at, client:clients!inner(id, name, email, user_id, notify_chemicals, notify_chemicals_since, notify_chemical_products, has_salt_system)")
     .eq("status", "Concluído")
     .is("chemicals_email_sent_at", null)
     .eq("clients.notify_chemicals", true);
@@ -220,6 +234,7 @@ Deno.serve(async (req) => {
     const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: BUSINESS_TIMEZONE });
 
     try {
+      const companyName = await getCompanyName(client.user_id);
       await sendEmail(
         recipients,
         "Your pool chemical readings",
@@ -228,7 +243,7 @@ Deno.serve(async (req) => {
          <table cellspacing="0" cellpadding="0">${readingsRows}</table>
          ${productsSection}
          ${notesSection}
-         <p>Thanks for choosing Sundown Pool Care!</p>`,
+         <p>Thanks for choosing ${companyName}!</p>`,
       );
       await supabase.from("route_stops").update({ chemicals_email_sent_at: new Date().toISOString() }).eq("id", stop.id);
       chemicalsSent++;
@@ -247,7 +262,7 @@ Deno.serve(async (req) => {
   // without a photo (picked up on a later run once one is added).
   const { data: photoStops, error: photoErr } = await supabase
     .from("route_stops")
-    .select("id, completed_at, photo_taken_at, visit_photos, client:clients!inner(id, name, email, notify_photo, notify_photo_since)")
+    .select("id, completed_at, photo_taken_at, visit_photos, client:clients!inner(id, name, email, user_id, notify_photo, notify_photo_since)")
     .eq("status", "Concluído")
     .is("photo_email_sent_at", null)
     .eq("clients.notify_photo", true);
@@ -283,13 +298,14 @@ Deno.serve(async (req) => {
     const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: BUSINESS_TIMEZONE });
 
     try {
+      const companyName = await getCompanyName(client.user_id);
       await sendEmail(
         recipients,
         "A photo from your pool visit",
         `<p>Hi ${client.name},</p>
          <p>Here's a photo from your pool visit on ${dateLabel} at ${timeLabel}.</p>
          <p><img src="${signed.signedUrl}" alt="Visit photo" style="max-width:100%;border-radius:8px;" /></p>
-         <p>Thanks for choosing Sundown Pool Care!</p>`,
+         <p>Thanks for choosing ${companyName}!</p>`,
       );
       await supabase.from("route_stops").update({ photo_email_sent_at: new Date().toISOString() }).eq("id", stop.id);
       photoSent++;

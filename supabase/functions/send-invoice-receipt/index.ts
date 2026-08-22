@@ -98,6 +98,15 @@ Deno.serve(async (req) => {
   const recipients = client?.email ? parseEmails(client.email) : [];
   if (recipients.length === 0) return fail("This client has no email on file");
 
+  // Signature line only — the sending address itself stays Sundown's
+  // verified domain until a second business sets up its own with Resend.
+  const { data: business } = await admin
+    .from("business_profiles")
+    .select("company_name")
+    .eq("user_id", invoice.user_id)
+    .maybeSingle();
+  const companyName = business?.company_name || "Sundown Pool Care";
+
   const publicUrl = `${SITE_URL}/i/${invoice.public_token}`;
   const amount = Number(invoice.total ?? 0).toFixed(2);
 
@@ -115,7 +124,7 @@ Deno.serve(async (req) => {
         html: `<p>Hi ${client?.name ?? "there"},</p>
                <p>Thanks! We've received your payment of $${amount} for invoice ${invoice.number}${invoice.payment_method ? ` via ${invoice.payment_method}` : ""}.</p>
                <p><a href="${publicUrl}">View your paid invoice</a></p>
-               <p>Thanks for choosing Sundown Pool Care!</p>`,
+               <p>Thanks for choosing ${companyName}!</p>`,
         ...(body.pdf_base64
           ? { attachments: [{ filename: `Invoice-${invoice.number}.pdf`, content: body.pdf_base64 }] }
           : {}),

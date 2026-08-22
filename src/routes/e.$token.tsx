@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef } from "react";
 import { getPublicEstimate } from "@/lib/public-estimate.functions";
-import { DocCardHeader } from "@/components/InvoiceCard";
+import { DocCardHeader, BusinessInfoBlock } from "@/components/InvoiceCard";
 import { fmt, fmtDate, formatPhone } from "@/lib/db";
 import { downloadElementAsPdf } from "@/lib/pdf";
 import { Wrench, Download } from "lucide-react";
@@ -18,6 +18,7 @@ type PublicEstimate = {
     status: string; subtotal: number; discount: number; total: number; billing_type: string; notes: string | null;
   };
   client: { name: string; email: string | null; phone: string | null; address: string | null; city: string | null; state: string | null; zip: string | null };
+  business: { company_name: string | null; address: string | null; city: string | null; state: string | null; zip: string | null; phone: string | null } | null;
   items: Array<{ name: string; description: string; qty: number; unit_price: number; total: number; position: number }>;
 };
 
@@ -82,12 +83,7 @@ function PublicEstimatePage() {
         <div ref={pdfRef} className="pdf-print rounded-[20px] border border-[var(--dash-border)] bg-white px-[26px] pb-[26px] pt-1 print:border-0 print:shadow-none" style={{ boxShadow: "0 1px 2px rgba(20,36,60,.03)" }}>
           <DocCardHeader title="ESTIMATE" number={estimate.number} />
           <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
-            <div className="space-y-1 text-[var(--dash-text-secondary)]">
-              <div className="font-bold text-[var(--dash-text)]">Effect Up LLC</div>
-              <div>4008 Destination Dr Apt 2208</div>
-              <div>Osprey, FL 34229</div>
-              <div>(561) 376-2428</div>
-            </div>
+            <BusinessInfoBlock business={data.business} />
             <div className="space-y-1 text-right text-[var(--dash-text-secondary)]">
               <div><span className="font-semibold text-[var(--dash-text)]">Date:</span> {fmtDate(estimate.estimate_date)}</div>
               <div><span className="font-semibold text-[var(--dash-text)]">Valid Until:</span> {fmtDate(estimate.valid_until)}</div>
