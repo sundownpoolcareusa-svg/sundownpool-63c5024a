@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.business_profiles IS 'Business info shown on invoices, estimates and client emails';
