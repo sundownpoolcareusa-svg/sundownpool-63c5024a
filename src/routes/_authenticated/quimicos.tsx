@@ -9,6 +9,7 @@ import {
   listProductCosts,
   upsertProductCost,
   listAllChemicalsHistory,
+  listTechniciansAdmin,
   formatProductQty,
   fmt,
   fmtDate,
@@ -30,6 +31,32 @@ function visitCost(entry: ChemicalVisitEntry, costByName: Map<string, number>) {
   );
 }
 
+type Period = "14d" | "30d" | "thisMonth" | "lastMonth";
+const PERIOD_LABELS: Record<Period, string> = {
+  "14d": "Last 14 days",
+  "30d": "Last 30 days",
+  thisMonth: "This month",
+  lastMonth: "Last month",
+};
+
+// route_date is a plain YYYY-MM-DD string — comparing as local-midnight Dates
+// avoids the timezone rollover that toISOString() based comparisons would hit.
+function periodRange(period: Period): { start: Date; end: Date } {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  switch (period) {
+    case "14d":
+      return { start: new Date(todayStart.getTime() - 13 * 86400000), end: endOfToday };
+    case "30d":
+      return { start: new Date(todayStart.getTime() - 29 * 86400000), end: endOfToday };
+    case "thisMonth":
+      return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: endOfToday };
+    case "lastMonth":
+      return { start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999) };
+  }
+}
+
 function QuimicosPage() {
   const qc = useQueryClient();
   const { data: costs = [], isLoading: loadingCosts } = useQuery({
@@ -40,6 +67,32 @@ function QuimicosPage() {
     queryKey: ["all-chemicals-history"],
     queryFn: listAllChemicalsHistory,
   });
+  const { data: technicians = [] } = useQuery({ queryKey: ["technicians-admin"], queryFn: listTechniciansAdmin });
+
+  const [technicianId, setTechnicianId] = useState("all");
+  const [period, setPeriod] = useState<Period>("30d");
+  const { start: periodStart, end: periodEnd } = periodRange(period);
+  const filteredHistory = history.filter((h) => {
+    if (technicianId !== "all" && h.technician_id !== technicianId) return false;
+    const d = new Date(h.route_date);
+    return d >= periodStart && d <= periodEnd;
+  });
+
+  // Summed quantity per product across every filtered visit — same fraction
+  // display as elsewhere (formatProductQty), grouped by name+unit since a
+  // product's unit doesn't vary between visits.
+  const totalsByProduct = new Map<string, { unit: string; qty: number }>();
+  for (const h of filteredHistory) {
+    for (const p of h.chemicals.products) {
+      if (p.qty <= 0) continue;
+      const key = `${p.name}|${p.unit}`;
+      const existing = totalsByProduct.get(key);
+      totalsByProduct.set(key, { unit: p.unit, qty: (existing?.qty ?? 0) + p.qty });
+    }
+  }
+  const productTotals = Array.from(totalsByProduct.entries())
+    .map(([key, v]) => ({ name: key.split("|")[0], unit: v.unit, qty: v.qty }))
+    .sort((a, b) => b.qty - a.qty);
 
   const costByName = new Map(costs.map((c) => [c.product_name, Number(c.cost_per_unit)]));
   const productNames = Array.from(
@@ -157,13 +210,53 @@ function QuimicosPage() {
           className="rounded-[18px] border border-[var(--dash-border)] bg-white p-4 sm:p-6 lg:col-span-8"
           style={cardShadow}
         >
-          <h1 className="text-xl font-extrabold text-[var(--dash-text)] sm:text-2xl">
-            Chemicals Applied per Visit
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-xl font-extrabold text-[var(--dash-text)] sm:text-2xl">
+              Chemicals Applied per Visit
+            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={technicianId}
+                onChange={(e) => setTechnicianId(e.target.value)}
+                className="rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2 text-sm"
+              >
+                <option value="all">All Technicians</option>
+                {technicians.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as Period)}
+                className="rounded-[10px] border border-[var(--dash-border-input)] bg-white px-3 py-2 text-sm"
+              >
+                {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+                  <option key={p} value={p}>{PERIOD_LABELS[p]}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {!loadingHistory && productTotals.length > 0 && (
+            <div className="mt-4 rounded-[14px] border border-[var(--dash-border)] bg-[var(--dash-bg)] p-4">
+              <div className="text-sm font-bold text-[var(--dash-text)]">
+                Total products used — {PERIOD_LABELS[period]}
+                {technicianId !== "all" && ` · ${technicians.find((t) => t.id === technicianId)?.name ?? ""}`}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+                {productTotals.map((p) => (
+                  <div key={`${p.name}|${p.unit}`} className="flex items-center justify-between gap-2 text-sm">
+                    <span className="text-[var(--dash-text-secondary)]">{p.name}</span>
+                    <span className="font-bold tabular-nums text-[var(--dash-text)]">{formatProductQty(p.qty)} {p.unit}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {loadingHistory ? (
             <div className="py-12 text-center text-[var(--dash-text-muted)]">Loading...</div>
-          ) : history.length === 0 ? (
+          ) : filteredHistory.length === 0 ? (
             <div className="mt-8 rounded-[18px] border-2 border-dashed border-[var(--dash-border)] py-16 text-center">
               <FlaskConical className="mx-auto h-10 w-10 text-[var(--dash-text-muted)]" />
               <p className="mt-3 font-semibold text-[var(--dash-text-secondary)]">
@@ -179,6 +272,9 @@ function QuimicosPage() {
                       Client
                     </th>
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Date</th>
+                    {technicianId === "all" && (
+                      <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">Technician</th>
+                    )}
                     <th className="py-3 text-[11px] font-bold uppercase tracking-[.07em]">
                       Products Used
                     </th>
@@ -188,7 +284,7 @@ function QuimicosPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {history.map((h) => {
+                  {filteredHistory.map((h) => {
                     const used = h.chemicals.products.filter((p) => p.qty > 0);
                     return (
                       <tr
@@ -206,6 +302,9 @@ function QuimicosPage() {
                         <td className="py-4 text-[var(--dash-text-secondary)]">
                           {fmtDate(h.route_date)}
                         </td>
+                        {technicianId === "all" && (
+                          <td className="py-4 text-[var(--dash-text-secondary)]">{h.technician_name ?? "—"}</td>
+                        )}
                         <td className="py-4 text-[var(--dash-text-secondary)]">
                           {used.length === 0
                             ? "—"
