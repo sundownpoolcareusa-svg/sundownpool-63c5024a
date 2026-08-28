@@ -1335,15 +1335,18 @@ export type ChemicalVisitEntry = {
   route_date: string;
   client_id: string;
   client_name: string;
+  technician_id: string | null;
+  technician_name: string | null;
   chemicals: StopChemicals;
 };
 
 // Every chemicals entry logged across ALL clients (not scoped to one), newest
-// first — used by the Químicos page to compute the product cost of each visit.
+// first — used by the Químicos page to compute the product cost of each visit
+// and to report a technician's chemical usage over a period.
 export async function listAllChemicalsHistory(): Promise<ChemicalVisitEntry[]> {
   const { data: stops, error: stopsErr } = await supabase
     .from("route_stops")
-    .select("id, client_id, client:clients(name), route:routes(route_date)");
+    .select("id, client_id, client:clients(name), route:routes(route_date, technician_id, technician:technicians(name))");
   if (stopsErr) throw stopsErr;
 
   const { data: chem, error: chemErr } = await supabase.from("stop_chemicals").select("*");
@@ -1354,11 +1357,14 @@ export async function listAllChemicalsHistory(): Promise<ChemicalVisitEntry[]> {
   return (chem ?? [])
     .map((c) => {
       const stop = stopById.get(c.route_stop_id);
+      const route = stop?.route as { route_date: string; technician_id: string | null; technician: { name: string } | null } | null;
       return {
         route_stop_id: c.route_stop_id,
-        route_date: (stop?.route as { route_date: string } | null)?.route_date ?? "",
+        route_date: route?.route_date ?? "",
         client_id: stop?.client_id ?? "",
         client_name: (stop?.client as { name: string } | null)?.name ?? "—",
+        technician_id: route?.technician_id ?? null,
+        technician_name: route?.technician?.name ?? null,
         chemicals: { ...c, products: (c.products as unknown as Product[]) ?? [] } as StopChemicals,
       };
     })
