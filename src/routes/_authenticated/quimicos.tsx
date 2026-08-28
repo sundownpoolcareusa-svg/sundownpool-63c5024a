@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
-import { FlaskConical, Save } from "lucide-react";
+import { FlaskConical, Save, Download } from "lucide-react";
 import {
   DEFAULT_PRODUCTS,
   listProductCosts,
@@ -16,6 +16,7 @@ import {
   type ProductCost,
   type ChemicalVisitEntry,
 } from "@/lib/db";
+import { downloadElementAsPdf } from "@/lib/pdf";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/quimicos")({
@@ -93,6 +94,9 @@ function QuimicosPage() {
   const productTotals = Array.from(totalsByProduct.entries())
     .map(([key, v]) => ({ name: key.split("|")[0], unit: v.unit, qty: v.qty }))
     .sort((a, b) => b.qty - a.qty);
+
+  const reportRef = useRef<HTMLDivElement>(null);
+  const reportTechnicianLabel = technicianId === "all" ? "All Technicians" : (technicians.find((t) => t.id === technicianId)?.name ?? "");
 
   const costByName = new Map(costs.map((c) => [c.product_name, Number(c.cost_per_unit)]));
   const productNames = Array.from(
@@ -234,9 +238,17 @@ function QuimicosPage() {
                   <option key={p} value={p}>{PERIOD_LABELS[p]}</option>
                 ))}
               </select>
+              <button
+                onClick={() => { if (reportRef.current) downloadElementAsPdf(reportRef.current, `Chemicals Report - ${reportTechnicianLabel} - ${PERIOD_LABELS[period]}`); }}
+                disabled={loadingHistory || filteredHistory.length === 0}
+                className="flex items-center gap-1.5 rounded-[10px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)] disabled:opacity-50"
+              >
+                <Download className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> PDF
+              </button>
             </div>
           </div>
 
+          <div ref={reportRef} className="pdf-print">
           {!loadingHistory && productTotals.length > 0 && (
             <div className="mt-4 rounded-[14px] border border-[var(--dash-border)] bg-[var(--dash-bg)] p-4">
               <div className="text-sm font-bold text-[var(--dash-text)]">
@@ -322,6 +334,7 @@ function QuimicosPage() {
               </table>
             </div>
           )}
+          </div>
         </section>
       </main>
     </div>
