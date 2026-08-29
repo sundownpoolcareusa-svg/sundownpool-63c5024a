@@ -10,6 +10,7 @@ import {
   upsertProductCost,
   listAllChemicalsHistory,
   listTechniciansAdmin,
+  getMyBusinessProfile,
   formatProductQty,
   fmt,
   fmtDate,
@@ -17,6 +18,7 @@ import {
   type ChemicalVisitEntry,
 } from "@/lib/db";
 import { downloadElementAsPdf } from "@/lib/pdf";
+import { DocCardHeader, BusinessInfoBlock } from "@/components/InvoiceCard";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/quimicos")({
@@ -69,6 +71,7 @@ function QuimicosPage() {
     queryFn: listAllChemicalsHistory,
   });
   const { data: technicians = [] } = useQuery({ queryKey: ["technicians-admin"], queryFn: listTechniciansAdmin });
+  const { data: business } = useQuery({ queryKey: ["business-profile", "mine"], queryFn: getMyBusinessProfile });
 
   const [technicianId, setTechnicianId] = useState("all");
   const [period, setPeriod] = useState<Period>("30d");
@@ -95,8 +98,11 @@ function QuimicosPage() {
     .map(([key, v]) => ({ name: key.split("|")[0], unit: v.unit, qty: v.qty }))
     .sort((a, b) => b.qty - a.qty);
 
-  const reportRef = useRef<HTMLDivElement>(null);
   const reportTechnicianLabel = technicianId === "all" ? "All Technicians" : (technicians.find((t) => t.id === technicianId)?.name ?? "");
+  // A separate, print-styled version of just the totals (not the on-screen
+  // plain grid or the per-visit table) — rendered off-screen so it never
+  // shows up in the page itself, only when captured for the PDF.
+  const pdfReportRef = useRef<HTMLDivElement>(null);
 
   const costByName = new Map(costs.map((c) => [c.product_name, Number(c.cost_per_unit)]));
   const productNames = Array.from(
@@ -239,8 +245,8 @@ function QuimicosPage() {
                 ))}
               </select>
               <button
-                onClick={() => { if (reportRef.current) downloadElementAsPdf(reportRef.current, `Chemicals Report - ${reportTechnicianLabel} - ${PERIOD_LABELS[period]}`); }}
-                disabled={loadingHistory || filteredHistory.length === 0}
+                onClick={() => { if (pdfReportRef.current) downloadElementAsPdf(pdfReportRef.current, `Chemicals Report - ${reportTechnicianLabel} - ${PERIOD_LABELS[period]}`); }}
+                disabled={loadingHistory || productTotals.length === 0}
                 className="flex items-center gap-1.5 rounded-[10px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)] disabled:opacity-50"
               >
                 <Download className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> PDF
@@ -248,7 +254,6 @@ function QuimicosPage() {
             </div>
           </div>
 
-          <div ref={reportRef} className="pdf-print">
           {!loadingHistory && productTotals.length > 0 && (
             <div className="mt-4 rounded-[14px] border border-[var(--dash-border)] bg-[var(--dash-bg)] p-4">
               <div className="text-sm font-bold text-[var(--dash-text)]">
@@ -334,8 +339,45 @@ function QuimicosPage() {
               </table>
             </div>
           )}
-          </div>
         </section>
+
+        {/* Off-screen, print-styled version of just the totals — matches the
+            invoice/estimate PDF look (logo, business info) instead of the
+            plain on-screen grid, and deliberately excludes the per-visit
+            table. Positioned off-screen rather than display:none since
+            html2canvas can't capture a display:none element. */}
+        <div className="fixed left-[-9999px] top-0" aria-hidden="true">
+          <div ref={pdfReportRef} className="w-[820px] bg-white px-[26px] pb-[26px] pt-1">
+            <DocCardHeader title="CHEMICALS REPORT" number={PERIOD_LABELS[period]} />
+            <div className="mt-1 grid grid-cols-2 gap-6 text-sm">
+              <BusinessInfoBlock business={business} />
+              <div className="space-y-1 text-right text-[var(--dash-text-secondary)]">
+                <div><span className="font-semibold text-[var(--dash-text)]">Technician:</span> {reportTechnicianLabel}</div>
+                <div><span className="font-semibold text-[var(--dash-text)]">Period:</span> {PERIOD_LABELS[period]}</div>
+                <div><span className="font-semibold text-[var(--dash-text)]">Generated:</span> {fmtDate(new Date().toISOString())}</div>
+              </div>
+            </div>
+            <hr className="my-4 border-[var(--dash-border)]" />
+            <div className="overflow-hidden rounded-[11px] border border-[var(--dash-border-table)]">
+              <table className="w-full text-sm">
+                <thead style={{ background: "var(--dash-navy)" }} className="text-white">
+                  <tr>
+                    <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[.07em]">Product</th>
+                    <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[.07em]">Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productTotals.map((p) => (
+                    <tr key={`${p.name}|${p.unit}`} className="border-t border-[var(--dash-border-table)]">
+                      <td className="px-4 py-2.5 font-semibold text-[var(--dash-text)]">{p.name}</td>
+                      <td className="px-4 py-2.5 text-right font-bold tabular-nums text-[var(--dash-text)]">{formatProductQty(p.qty)} {p.unit}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );
