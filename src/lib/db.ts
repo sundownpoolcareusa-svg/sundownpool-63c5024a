@@ -137,6 +137,7 @@ export type Invoice = {
   status: string;
   payment_method?: string | null;
   subtotal: number;
+  discount: number;
   tax: number;
   total: number;
   notes: string | null;
