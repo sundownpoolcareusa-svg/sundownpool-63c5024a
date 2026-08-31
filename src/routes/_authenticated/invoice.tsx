@@ -460,6 +460,9 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
         <div className="mt-4 flex justify-end">
           <div className="w-full max-w-xs space-y-2 text-sm sm:w-72">
             <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(invoice.subtotal)}</span></div>
+            {invoice.discount > 0 && (
+              <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums" style={{ color: "var(--dash-green)" }}>-{fmt(invoice.discount)}</span></div>
+            )}
             <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base"><span className="font-semibold">Total</span><span className="font-extrabold tabular-nums" style={{ color: isPaid ? "var(--dash-green)" : "var(--dash-text)" }}>{fmt(invoice.total)}</span></div>
           </div>
         </div>
@@ -482,9 +485,12 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
   const [dueDate, setDueDate] = useState("");
   const [status, setStatus] = useState("UNPAID");
   const [items, setItems] = useState<LineRow[]>([{ service: "Pool Cleaning", description: "Standard cleaning", qty: 1, rate: 100 }]);
+  const [discountEnabled, setDiscountEnabled] = useState(false);
+  const [discount, setDiscount] = useState(0);
 
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.qty * i.rate, 0), [items]);
-  const total = subtotal;
+  const appliedDiscount = discountEnabled ? discount : 0;
+  const total = Math.max(0, subtotal - appliedDiscount);
 
   function applyEstimate(id: string) {
     setEstimateId(id);
@@ -523,7 +529,7 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
       const number = nextNumber("INV", invoices.map((i) => i.number));
       const { data: inv, error } = await supabase.from("invoices").insert({
         user_id: ownerUserId, client_id: clientId, estimate_id: estimateId || null,
-        number, due_date: dueDate || null, status, subtotal, tax: 0, total,
+        number, due_date: dueDate || null, status, subtotal, discount: appliedDiscount, tax: 0, total,
       }).select().single();
       if (error) throw error;
       const rows = items.map((it, idx) => ({
@@ -537,6 +543,7 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
       toast.success("Invoice created!");
       setClientId(""); setEstimateId(""); setDueDate(""); setStatus("UNPAID");
       setItems([{ service: "Pool Cleaning", description: "Standard cleaning", qty: 1, rate: 100 }]);
+      setDiscountEnabled(false); setDiscount(0);
       onCreated(); onClose();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -614,6 +621,19 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
           <div className="flex justify-end">
             <div className="w-72 space-y-1.5 text-sm">
               <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
+              <label className="flex items-center justify-between gap-2 text-[var(--dash-text-secondary)]">
+                <span className="flex items-center gap-2">
+                  <input type="checkbox" checked={discountEnabled} onChange={(e) => setDiscountEnabled(e.target.checked)} className="h-4 w-4 rounded border-[var(--dash-border-input)]" />
+                  Discount
+                </span>
+                {discountEnabled && (
+                  <input
+                    type="number" min="0" step="0.01" value={discount}
+                    onChange={(e) => setDiscount(Number(e.target.value))}
+                    className="w-24 rounded-[8px] border border-[var(--dash-border-input)] px-2 py-1 text-right text-sm"
+                  />
+                )}
+              </label>
               <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base font-bold"><span>Total</span><span className="tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(total)}</span></div>
             </div>
           </div>
@@ -645,16 +665,19 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
       rate: it.rate,
     }))
   );
+  const [discountEnabled, setDiscountEnabled] = useState((invoice.discount ?? 0) > 0);
+  const [discount, setDiscount] = useState(invoice.discount ?? 0);
 
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.qty * i.rate, 0), [items]);
-  const total = subtotal;
+  const appliedDiscount = discountEnabled ? discount : 0;
+  const total = Math.max(0, subtotal - appliedDiscount);
 
   const mut = useMutation({
     mutationFn: async () => {
       if (items.length === 0) throw new Error("Add at least one item");
       const { error: invErr } = await supabase
         .from("invoices")
-        .update({ due_date: dueDate || null, status, subtotal, tax: 0, total })
+        .update({ due_date: dueDate || null, status, subtotal, discount: appliedDiscount, tax: 0, total })
         .eq("id", invoice.id);
       if (invErr) throw invErr;
       const { error: delErr } = await supabase.from("invoice_items").delete().eq("invoice_id", invoice.id);
@@ -731,6 +754,19 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
         <div className="flex justify-end">
           <div className="w-72 space-y-1.5 text-sm">
             <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
+            <label className="flex items-center justify-between gap-2 text-[var(--dash-text-secondary)]">
+              <span className="flex items-center gap-2">
+                <input type="checkbox" checked={discountEnabled} onChange={(e) => setDiscountEnabled(e.target.checked)} className="h-4 w-4 rounded border-[var(--dash-border-input)]" />
+                Discount
+              </span>
+              {discountEnabled && (
+                <input
+                  type="number" min="0" step="0.01" value={discount}
+                  onChange={(e) => setDiscount(Number(e.target.value))}
+                  className="w-24 rounded-[8px] border border-[var(--dash-border-input)] px-2 py-1 text-right text-sm"
+                />
+              )}
+            </label>
             <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base font-bold"><span>Total</span><span className="tabular-nums" style={{ color: "var(--dash-navy)" }}>{fmt(total)}</span></div>
           </div>
         </div>

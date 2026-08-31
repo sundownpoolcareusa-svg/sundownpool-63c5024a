@@ -15,7 +15,7 @@ export const Route = createFileRoute("/i/$token")({
 type PublicInvoice = {
   invoice: {
     id: string; number: string; invoice_date: string; due_date: string | null;
-    status: string; subtotal: number; total: number; notes: string | null;
+    status: string; subtotal: number; discount: number; total: number; notes: string | null;
   };
   client: { name: string; email: string | null; phone: string | null; address: string | null; city: string | null; state: string | null; zip: string | null };
   business: { company_name: string | null; address: string | null; city: string | null; state: string | null; zip: string | null; phone: string | null } | null;
@@ -126,6 +126,9 @@ function PublicInvoicePage() {
           <div className="mt-4 flex justify-end">
             <div className="w-72 space-y-2 text-sm">
               <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Subtotal</span><span className="tabular-nums">{fmt(Number(invoice.subtotal))}</span></div>
+              {Number(invoice.discount) > 0 && (
+                <div className="flex justify-between text-[var(--dash-text-secondary)]"><span>Discount</span><span className="tabular-nums" style={{ color: "var(--dash-green)" }}>-{fmt(Number(invoice.discount))}</span></div>
+              )}
               <div className="flex justify-between border-t border-[var(--dash-border)] pt-2 text-base"><span className="font-semibold">Total</span><span className="font-extrabold tabular-nums" style={{ color: isPaid ? "var(--dash-green)" : "var(--dash-text)" }}>{fmt(Number(invoice.total))}</span></div>
             </div>
           </div>
