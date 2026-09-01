@@ -8,6 +8,7 @@ export type BusinessProfile = {
   state: string | null;
   zip: string | null;
   phone: string | null;
+  default_estimate_notes?: string | null;
 };
 
 export async function getMyBusinessProfile(): Promise<BusinessProfile | null> {
@@ -15,7 +16,7 @@ export async function getMyBusinessProfile(): Promise<BusinessProfile | null> {
   if (!u.user) return null;
   const { data, error } = await supabase
     .from("business_profiles")
-    .select("company_name, address, city, state, zip, phone")
+    .select("company_name, address, city, state, zip, phone, default_estimate_notes")
     .eq("user_id", u.user.id)
     .maybeSingle();
   if (error) throw error;
@@ -41,6 +42,18 @@ export async function saveMyBusinessProfile(values: BusinessProfile) {
   const { error } = await supabase
     .from("business_profiles")
     .upsert({ user_id: u.user.id, ...values, updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
+// Only touches default_estimate_notes — an upsert's UPDATE only sets the
+// columns actually passed in, so this can't clobber the rest of the
+// account's business profile (company name, address, etc.).
+export async function saveMyDefaultEstimateNotes(notes: string) {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) throw new Error("Not signed in");
+  const { error } = await supabase
+    .from("business_profiles")
+    .upsert({ user_id: u.user.id, default_estimate_notes: notes, updated_at: new Date().toISOString() });
   if (error) throw error;
 }
 
