@@ -35,7 +35,7 @@ const footerCats = [
 
 const cardShadow = { boxShadow: "0 1px 2px rgba(20,36,60,.03)" };
 
-const PAYMENT_METHODS = ["Stripe", "Zelle", "Cash", "Cheque"];
+const PAYMENT_METHODS = ["Card", "Zelle", "Cash", "Cheque"];
 
 function statusBadge(s: string, paymentMethod?: string | null) {
   const isPaid = s === "PAID";
