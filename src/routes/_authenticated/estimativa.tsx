@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -10,7 +10,7 @@ import {
   Wrench, ListChecks, CalendarDays, Clock, ShieldCheck, Phone, CheckCircle2, Trash2, Pencil, Save,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listEstimates, listClients, nextNumber, fmt, fmtDate, formatPhone, createService, getEmployerBusinessProfile, type Estimate, type BillingType } from "@/lib/db";
+import { listEstimates, listClients, nextNumber, fmt, fmtDate, formatPhone, createService, getEmployerBusinessProfile, getMyBusinessProfile, saveMyDefaultEstimateNotes, type Estimate, type BillingType } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
@@ -371,6 +371,7 @@ function EstimateFormModal({
 }) {
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: listClients, enabled: open });
   const { data: estimates = [] } = useQuery({ queryKey: ["estimates"], queryFn: listEstimates, enabled: open });
+  const { data: businessProfile } = useQuery({ queryKey: ["business-profile", "mine"], queryFn: getMyBusinessProfile, enabled: open });
   const qc = useQueryClient();
   const [catalogOpen, setCatalogOpen] = useState(false);
 
@@ -401,13 +402,31 @@ function EstimateFormModal({
     }
   }, [editingId]);
 
+  // Pre-fills a brand new estimate's notes from whatever the owner last
+  // saved as their default (below) — only once per time the modal opens for
+  // a NEW estimate, so it doesn't stomp on typing or an editing estimate's
+  // own saved notes.
+  const [defaultNotesApplied, setDefaultNotesApplied] = useState(false);
+  useEffect(() => {
+    if (!open) { setDefaultNotesApplied(false); return; }
+    if (editing || defaultNotesApplied || !businessProfile) return;
+    if (businessProfile.default_estimate_notes) setNotes(businessProfile.default_estimate_notes);
+    setDefaultNotesApplied(true);
+  }, [open, editing, defaultNotesApplied, businessProfile]);
+
+  const saveDefaultNotesMut = useMutation({
+    mutationFn: () => saveMyDefaultEstimateNotes(notes),
+    onSuccess: () => { toast.success("Saved as default notes for new estimates"); qc.invalidateQueries({ queryKey: ["business-profile"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.qty * i.unit_price, 0), [items]);
   const total = Math.max(0, subtotal - discount);
 
   const resetForm = () => {
     setClientId(""); setTitle("Pool Cleaning & Maintenance"); setValidUntil("");
     setBillingType("total");
-    setDiscount(0); setNotes("Prices may change after on-site inspection.");
+    setDiscount(0); setNotes(businessProfile?.default_estimate_notes || "Prices may change after on-site inspection.");
     setItems([{ name: "Pool Cleaning", description: "Vacuuming and brushing", qty: 1, unit_price: 100 }]);
   };
 
@@ -542,7 +561,18 @@ function EstimateFormModal({
           </div>
 
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Notes</label>
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-[11px] font-bold uppercase tracking-[.07em] text-[var(--dash-text-secondary-2)]">Notes</label>
+              <button
+                type="button"
+                title="Save as default notes for new estimates"
+                onClick={() => saveDefaultNotesMut.mutate()}
+                disabled={saveDefaultNotesMut.isPending}
+                className="flex items-center gap-1 text-xs font-semibold text-[var(--dash-link)] hover:text-[var(--dash-link-hover)] disabled:opacity-50"
+              >
+                <Save className="h-3.5 w-3.5" /> {saveDefaultNotesMut.isPending ? "Saving..." : "Save as default"}
+              </button>
+            </div>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1 w-full rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" />
           </div>
 
