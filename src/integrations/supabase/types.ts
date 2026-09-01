@@ -20,7 +20,6 @@ export type Database = {
           city: string | null
           company_name: string | null
           created_at: string
-          default_estimate_notes: string | null
           id: string
           phone: string | null
           state: string | null
@@ -33,7 +32,6 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           created_at?: string
-          default_estimate_notes?: string | null
           id?: string
           phone?: string | null
           state?: string | null
@@ -46,7 +44,6 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           created_at?: string
-          default_estimate_notes?: string | null
           id?: string
           phone?: string | null
           state?: string | null
