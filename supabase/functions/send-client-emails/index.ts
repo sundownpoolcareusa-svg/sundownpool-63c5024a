@@ -278,16 +278,23 @@ Deno.serve(async (req) => {
     if (recipients.length === 0) continue;
     if (!isOnOrAfterCutoff(stop.photo_taken_at ?? stop.completed_at, client.notify_photo_since)) continue;
 
-    const photoPath = stop.visit_photos?.[0];
-    if (!photoPath) continue;
+    const photoPaths = (stop.visit_photos ?? []).filter(Boolean);
+    if (photoPaths.length === 0) continue;
 
-    const { data: signed, error: signError } = await supabase.storage
-      .from("client-photos")
-      .createSignedUrl(photoPath, 60 * 60 * 24 * 7);
-    if (!signed?.signedUrl) {
-      errors.push(`photo ${stop.id}: could not sign ${photoPath}: ${signError?.message ?? "unknown error"}`);
-      continue;
+    // Every photo the technician attached, not just the first — sign each
+    // one independently so a single bad path doesn't drop the rest.
+    const signedUrls: string[] = [];
+    for (const photoPath of photoPaths) {
+      const { data: signed, error: signError } = await supabase.storage
+        .from("client-photos")
+        .createSignedUrl(photoPath, 60 * 60 * 24 * 7);
+      if (!signed?.signedUrl) {
+        errors.push(`photo ${stop.id}: could not sign ${photoPath}: ${signError?.message ?? "unknown error"}`);
+        continue;
+      }
+      signedUrls.push(signed.signedUrl);
     }
+    if (signedUrls.length === 0) continue;
 
     // photo_taken_at (set the moment the photo is saved) reflects when the
     // photo was actually taken — completed_at only reflects when the stop
@@ -296,15 +303,18 @@ Deno.serve(async (req) => {
     const visitDate = stop.photo_taken_at ? new Date(stop.photo_taken_at) : stop.completed_at ? new Date(stop.completed_at) : new Date();
     const dateLabel = visitDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: BUSINESS_TIMEZONE });
     const timeLabel = visitDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: BUSINESS_TIMEZONE });
+    const photosHtml = signedUrls
+      .map((url) => `<img src="${url}" alt="Visit photo" style="max-width:100%;border-radius:8px;margin-bottom:12px;display:block;" />`)
+      .join("");
 
     try {
       const companyName = await getCompanyName(client.user_id);
       await sendEmail(
         recipients,
-        "A photo from your pool visit",
+        signedUrls.length > 1 ? "Photos from your pool visit" : "A photo from your pool visit",
         `<p>Hi ${client.name},</p>
-         <p>Here's a photo from your pool visit on ${dateLabel} at ${timeLabel}.</p>
-         <p><img src="${signed.signedUrl}" alt="Visit photo" style="max-width:100%;border-radius:8px;" /></p>
+         <p>${signedUrls.length > 1 ? "Here are photos" : "Here's a photo"} from your pool visit on ${dateLabel} at ${timeLabel}.</p>
+         <p>${photosHtml}</p>
          <p>Thanks for choosing ${companyName}!</p>`,
       );
       await supabase.from("route_stops").update({ photo_email_sent_at: new Date().toISOString() }).eq("id", stop.id);

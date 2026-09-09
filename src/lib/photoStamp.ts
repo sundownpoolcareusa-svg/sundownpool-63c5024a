@@ -1,17 +1,28 @@
+// Phone cameras routinely produce 3-8MB originals — fine for one photo, but
+// a technician attaching 3-4 of them was slow/unreliable enough on mobile
+// data that the upload batch (handleFiles only calls onChange once, after
+// ALL files finish) sometimes never completed, silently leaving
+// visit_photos empty and the client never getting an email at all. Capping
+// the longest side keeps every photo clearly viewable on any screen while
+// cutting file size dramatically.
+const MAX_DIMENSION = 1600;
+
 // Burns the current date/time into the bottom-right corner of a photo
 // before it's uploaded, so a visit photo visibly proves when it was taken
 // — the client sees the stamp right on the image itself, not just in text
 // elsewhere in the email that could point to a different moment (e.g. the
-// stop's completion time, if the photo was added later).
+// stop's completion time, if the photo was added later). Also downsizes
+// and re-compresses the photo so multi-photo uploads stay fast and light.
 export async function stampPhotoWithTimestamp(file: File): Promise<File> {
   try {
     const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement("canvas");
-    canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
     const ctx = canvas.getContext("2d");
     if (!ctx) return file;
-    ctx.drawImage(bitmap, 0, 0);
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
     const label = new Date().toLocaleString("en-US", {
       weekday: "short", year: "numeric", month: "short", day: "numeric",
@@ -35,7 +46,7 @@ export async function stampPhotoWithTimestamp(file: File): Promise<File> {
     ctx.fillStyle = "#ffffff";
     ctx.fillText(label, x + paddingX, y + boxHeight / 2);
 
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.8));
     if (!blob) return file;
     const name = file.name.replace(/\.\w+$/, "") + ".jpg";
     return new File([blob], name, { type: "image/jpeg" });
