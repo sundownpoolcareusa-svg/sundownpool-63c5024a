@@ -39,9 +39,18 @@ export function BusinessInfoBlock({ business }: { business: BusinessInfo }) {
 
 // An item's description is entered one line per item (a materials/parts
 // list, say) — renders each non-empty line as its own bulleted row instead
-// of one run-on paragraph.
+// of one run-on paragraph. Older descriptions saved before the field
+// allowed real line breaks were typed as one line with " - " between
+// items instead — split on that too when there's no actual newline, so
+// those still render as separate bullets. Splitting only on a hyphen with
+// spaces on both sides leaves a hyphenated word (e.g. "2-Port") or an
+// en/em dash used mid-sentence alone.
 export function DescriptionLines({ text }: { text: string | null | undefined }) {
-  const lines = (text ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
+  const raw = text ?? "";
+  const hasNewlines = raw.includes("\n");
+  const lines = (hasNewlines ? raw.split("\n") : raw.split(/\s-\s/))
+    .map((l) => l.replace(/^-\s*/, "").trim())
+    .filter(Boolean);
   if (lines.length === 0) return null;
   if (lines.length === 1) return <>{lines[0]}</>;
   return (
