@@ -37,6 +37,22 @@ export function BusinessInfoBlock({ business }: { business: BusinessInfo }) {
   );
 }
 
+// An item's description is entered one line per item (a materials/parts
+// list, say) — renders each non-empty line as its own bulleted row instead
+// of one run-on paragraph.
+export function DescriptionLines({ text }: { text: string | null | undefined }) {
+  const lines = (text ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return null;
+  if (lines.length === 1) return <>{lines[0]}</>;
+  return (
+    <ul className="list-none space-y-0.5">
+      {lines.map((line, i) => (
+        <li key={i}>– {line}</li>
+      ))}
+    </ul>
+  );
+}
+
 
 
 

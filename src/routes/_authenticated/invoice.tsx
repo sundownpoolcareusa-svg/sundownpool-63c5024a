@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Modal } from "@/components/Modal";
-import { DocCardHeader, BusinessInfoBlock } from "@/components/InvoiceCard";
+import { DocCardHeader, BusinessInfoBlock, DescriptionLines } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, Link2, Check, X,
   Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save, ArrowLeft,
@@ -447,7 +447,7 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
                     <td className="px-4 py-3 font-bold text-[var(--dash-text)]">
                       <div className="flex items-center gap-2"><Wrench className="h-4 w-4" style={{ color: "var(--dash-water-icon)" }} /> {it.service || "—"}</div>
                     </td>
-                    <td className="px-4 py-3 text-[var(--dash-text-secondary)]">{it.description}</td>
+                    <td className="px-4 py-3 text-[var(--dash-text-secondary)]"><DescriptionLines text={it.description} /></td>
                     <td className="px-4 py-3 text-[var(--dash-text-secondary)]">{it.qty}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(it.rate)}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(it.amount)}</td>
@@ -608,7 +608,7 @@ function NewInvoiceModal({ open, onClose, onCreated }: { open: boolean; onClose:
               {items.map((it, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2">
                   <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
-                  <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                  <textarea rows={1} className="col-span-3 resize-y rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description (one item per line)" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
                   <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
                   <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
                   <button type="button" title="Save as reusable service" onClick={() => it.service.trim() && saveAsServiceMut.mutate(it)} className="col-span-1 grid place-items-center rounded-[10px] border border-[var(--dash-border-input)] text-[var(--dash-text-muted)] hover:text-[var(--dash-navy)]"><Save className="h-4 w-4" /></button>
@@ -741,7 +741,7 @@ function EditInvoiceModal({ invoice, open, onClose, onSaved }: { invoice: Invoic
             {items.map((it, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2">
                 <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Service" value={it.service} onChange={(e) => { const n = [...items]; n[idx].service = e.target.value; setItems(n); }} />
-                <input className="col-span-3 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
+                <textarea rows={1} className="col-span-3 resize-y rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" placeholder="Description (one item per line)" value={it.description} onChange={(e) => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} />
                 <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Qty" value={it.qty} onChange={(e) => { const n = [...items]; n[idx].qty = Number(e.target.value); setItems(n); }} />
                 <input className="col-span-2 rounded-[10px] border border-[var(--dash-border-input)] px-3 py-2 text-sm" type="number" step="0.01" placeholder="Rate" value={it.rate} onChange={(e) => { const n = [...items]; n[idx].rate = Number(e.target.value); setItems(n); }} />
                 <button type="button" title="Save as reusable service" onClick={() => it.service.trim() && saveAsServiceMut.mutate(it)} className="col-span-1 grid place-items-center rounded-[10px] border border-[var(--dash-border-input)] text-[var(--dash-text-muted)] hover:text-[var(--dash-navy)]"><Save className="h-4 w-4" /></button>

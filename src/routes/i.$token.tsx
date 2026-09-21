@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef } from "react";
 import { getPublicInvoice } from "@/lib/public-invoice.functions";
-import { DocCardHeader, BusinessInfoBlock } from "@/components/InvoiceCard";
+import { DocCardHeader, BusinessInfoBlock, DescriptionLines } from "@/components/InvoiceCard";
 import { fmt, fmtDate, formatPhone } from "@/lib/db";
 import { downloadElementAsPdf } from "@/lib/pdf";
 import { Wrench, Download } from "lucide-react";
@@ -114,7 +114,7 @@ function PublicInvoicePage() {
                 {sortedItems.map((it, i) => (
                   <tr key={i} className="border-t border-[var(--dash-border-table)] align-top">
                     <td className="px-4 py-2.5 font-bold text-[var(--dash-text)]"><div className="flex items-center gap-2"><Wrench className="h-4 w-4" style={{ color: "var(--dash-water-icon)" }} /> {it.service || "—"}</div></td>
-                    <td className="px-4 py-2.5 text-[var(--dash-text-secondary)]">{it.description}</td>
+                    <td className="px-4 py-2.5 text-[var(--dash-text-secondary)]"><DescriptionLines text={it.description} /></td>
                     <td className="px-4 py-2.5 text-[var(--dash-text-secondary)]">{it.qty}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(Number(it.rate))}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-[var(--dash-text-secondary)]">{fmt(Number(it.amount))}</td>
