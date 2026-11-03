@@ -964,6 +964,17 @@ export async function sendInvoiceReceipt(invoiceId: string, pdfBase64?: string) 
   if (!data?.ok) throw new Error(data?.error ?? "Failed to send receipt");
 }
 
+// Sends the invoice itself to the client ("please find the invoice
+// attached") with payment instructions — distinct from sendInvoiceReceipt,
+// which confirms a payment already received.
+export async function sendInvoiceEmail(invoiceId: string, pdfBase64?: string) {
+  const { data, error } = await supabase.functions.invoke("send-invoice-email", {
+    body: { invoice_id: invoiceId, pdf_base64: pdfBase64 },
+  });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error ?? "Failed to send invoice email");
+}
+
 export async function updateMyStopStatus(stopId: string, status: StopStatus) {
   const { error } = await supabase.rpc("update_my_stop_status", {
     p_stop_id: stopId,

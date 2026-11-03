@@ -7,10 +7,10 @@ import { Modal } from "@/components/Modal";
 import { DocCardHeader, BusinessInfoBlock, DescriptionLines } from "@/components/InvoiceCard";
 import {
   Plus, Search, Filter, FileText, Download, MoreHorizontal, Link2, Check, X,
-  Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save, ArrowLeft,
+  Droplet, Wrench, ShoppingBasket, FlaskConical, Calendar, Trash2, Pencil, Save, ArrowLeft, Mail,
 } from "lucide-react";
 import poolImg from "@/assets/pool.jpg";
-import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, sendInvoiceReceipt, errorMessage, getMyTechnician, getEmployerBusinessProfile, type Invoice } from "@/lib/db";
+import { listInvoices, listClients, listEstimates, nextNumber, fmt, fmtDate, formatPhone, createService, sendInvoiceReceipt, sendInvoiceEmail, errorMessage, getMyTechnician, getEmployerBusinessProfile, type Invoice } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRef } from "react";
@@ -298,6 +298,27 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
     onError: (e: Error) => { toast.error(errorMessage(e, "Could not send receipt")); setPaymentStep(null); },
   });
 
+  const sendEmailMut = useMutation({
+    mutationFn: async () => {
+      // Same timeout fallback as sendReceipt — better to send without the
+      // PDF attachment than leave the admin stuck on "Sending..." forever.
+      let pdfBase64: string | undefined;
+      try {
+        pdfBase64 = pdfRef.current
+          ? await Promise.race([
+              generateElementPdfBase64(pdfRef.current),
+              new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 8000)),
+            ])
+          : undefined;
+      } catch {
+        pdfBase64 = undefined;
+      }
+      return sendInvoiceEmail(invoice.id, pdfBase64);
+    },
+    onSuccess: () => toast.success("Invoice emailed to client!"),
+    onError: (e: Error) => toast.error(errorMessage(e, "Could not send invoice email")),
+  });
+
   const markUnpaid = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("invoices").update({ status: "UNPAID", payment_method: null }).eq("id", invoice.id);
@@ -351,6 +372,13 @@ function InvoiceDetail({ invoice, onChanged }: { invoice: Invoice; onChanged: ()
             className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)]"
           >
             <Download className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> PDF
+          </button>
+          <button
+            onClick={() => sendEmailMut.mutate()}
+            disabled={sendEmailMut.isPending}
+            className="flex items-center gap-2 rounded-[11px] border border-[var(--dash-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--dash-text-secondary)] disabled:opacity-50"
+          >
+            <Mail className="h-4 w-4" style={{ color: "var(--dash-navy)" }} /> {sendEmailMut.isPending ? "Sending..." : "Send Email"}
           </button>
           <button className="grid h-9 w-9 place-items-center rounded-[11px] border border-[var(--dash-border)] bg-white text-[var(--dash-text-secondary)]"><MoreHorizontal className="h-4 w-4" /></button>
         </div>
