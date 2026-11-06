@@ -41,7 +41,7 @@ export async function saveMyBusinessProfile(values: BusinessProfile) {
   if (!u.user) throw new Error("Not signed in");
   const { error } = await supabase
     .from("business_profiles")
-    .upsert({ user_id: u.user.id, ...values, updated_at: new Date().toISOString() });
+    .upsert({ user_id: u.user.id, ...values, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
   if (error) throw error;
 }
 
@@ -53,7 +53,7 @@ export async function saveMyDefaultEstimateNotes(notes: string) {
   if (!u.user) throw new Error("Not signed in");
   const { error } = await supabase
     .from("business_profiles")
-    .upsert({ user_id: u.user.id, default_estimate_notes: notes, updated_at: new Date().toISOString() });
+    .upsert({ user_id: u.user.id, default_estimate_notes: notes, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
   if (error) throw error;
 }
 
