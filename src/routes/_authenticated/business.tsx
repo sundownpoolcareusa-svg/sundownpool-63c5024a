@@ -8,6 +8,16 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { getMyBusinessProfile, saveMyBusinessProfile, type BusinessProfile } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/business")({
+  head: () => ({
+    meta: [
+      { title: "Business Information | Sundown Pool Care" },
+      { name: "description", content: "Manage your company's details for invoices, estimates, and client emails." },
+      { property: "og:title", content: "Business Information | Sundown Pool Care" },
+      { property: "og:description", content: "Manage your company's details for invoices, estimates, and client emails." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: BusinessPage,
 });
 
