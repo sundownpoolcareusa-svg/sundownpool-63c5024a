@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/business")({
 
 const cardShadow = { boxShadow: "0 1px 2px rgba(20,36,60,.03)" };
 
-const EMPTY: BusinessProfile = { company_name: "", address: "", city: "", state: "", zip: "", phone: "" };
+const EMPTY: BusinessProfile = { company_name: "", address: "", city: "", state: "", zip: "", phone: "", email_display_name: "" };
 
 function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
@@ -44,6 +44,7 @@ function BusinessPage() {
         state: profile?.state ?? "",
         zip: profile?.zip ?? "",
         phone: profile?.phone ?? "",
+        email_display_name: profile?.email_display_name ?? "",
       });
       setLoaded(true);
     }
@@ -89,6 +90,17 @@ function BusinessPage() {
                 <Field label="Zip" value={form.zip ?? ""} onChange={(v) => setForm({ ...form, zip: v })} placeholder="34229" />
               </div>
               <Field label="Phone" value={form.phone ?? ""} onChange={(v) => setForm({ ...form, phone: v })} placeholder="(561) 376-2428" />
+              <div>
+                <Field
+                  label="Email Display Name (optional)"
+                  value={form.email_display_name ?? ""}
+                  onChange={(v) => setForm({ ...form, email_display_name: v })}
+                  placeholder="Sundown Pool Care"
+                />
+                <p className="mt-1 text-xs text-[var(--dash-text-muted)]">
+                  Used in automated client emails (on-the-way, chemicals, photo, receipt) instead of Company Name — handy when your invoices need the legal entity name but emails should read more casually. Leave blank to use Company Name everywhere.
+                </p>
+              </div>
               <button
                 type="submit"
                 disabled={saveMut.isPending}

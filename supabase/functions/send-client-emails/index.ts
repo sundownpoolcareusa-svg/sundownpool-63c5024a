@@ -97,12 +97,15 @@ type ClientRow = { id: string; name: string; email: string | null; user_id: stri
 // Signature line only — the sending address itself stays Sundown's verified
 // domain until a second business sets up its own with Resend. Cached per
 // run since many stops in one sweep usually belong to the same account.
+// Prefers email_display_name over company_name — some accounts need the
+// legal entity name on invoices (e.g. "Sundown ITC LLC") but a friendlier
+// brand name in these client-facing emails (e.g. "Sundown Pool Care").
 const businessNameCache = new Map<string, string>();
 async function getCompanyName(userId: string): Promise<string> {
   const cached = businessNameCache.get(userId);
   if (cached) return cached;
-  const { data } = await supabase.from("business_profiles").select("company_name").eq("user_id", userId).maybeSingle();
-  const name = data?.company_name || "Sundown Pool Care";
+  const { data } = await supabase.from("business_profiles").select("company_name, email_display_name").eq("user_id", userId).maybeSingle();
+  const name = data?.email_display_name || data?.company_name || "Sundown Pool Care";
   businessNameCache.set(userId, name);
   return name;
 }
