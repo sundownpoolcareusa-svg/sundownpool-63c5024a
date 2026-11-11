@@ -21,6 +21,7 @@ export type Database = {
           company_name: string | null
           created_at: string
           default_estimate_notes: string | null
+          email_display_name: string | null
           id: string
           phone: string | null
           state: string | null
@@ -34,6 +35,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           default_estimate_notes?: string | null
+          email_display_name?: string | null
           id?: string
           phone?: string | null
           state?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string
           default_estimate_notes?: string | null
+          email_display_name?: string | null
           id?: string
           phone?: string | null
           state?: string | null

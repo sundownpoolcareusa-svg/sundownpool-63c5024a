@@ -100,12 +100,15 @@ Deno.serve(async (req) => {
 
   // Signature line only — the sending address itself stays Sundown's
   // verified domain until a second business sets up its own with Resend.
+  // Prefers email_display_name over company_name — some accounts need the
+  // legal entity name on invoices (e.g. "Sundown ITC LLC") but a friendlier
+  // brand name in client-facing emails (e.g. "Sundown Pool Care").
   const { data: business } = await admin
     .from("business_profiles")
-    .select("company_name")
+    .select("company_name, email_display_name")
     .eq("user_id", invoice.user_id)
     .maybeSingle();
-  const companyName = business?.company_name || "Sundown Pool Care";
+  const companyName = business?.email_display_name || business?.company_name || "Sundown Pool Care";
 
   const publicUrl = `${SITE_URL}/i/${invoice.public_token}`;
   const amount = Number(invoice.total ?? 0).toFixed(2);

@@ -9,6 +9,12 @@ export type BusinessProfile = {
   zip: string | null;
   phone: string | null;
   default_estimate_notes?: string | null;
+  // Optional separate name for automated client emails (on-the-way/
+  // chemicals/photo/receipt) — falls back to company_name when unset.
+  // Lets the invoice/estimate header show the legal entity name (e.g.
+  // "Sundown ITC LLC", what a client needs to pay by check/Zelle) while
+  // emails use a friendlier brand name (e.g. "Sundown Pool Care").
+  email_display_name?: string | null;
 };
 
 export async function getMyBusinessProfile(): Promise<BusinessProfile | null> {
@@ -16,7 +22,7 @@ export async function getMyBusinessProfile(): Promise<BusinessProfile | null> {
   if (!u.user) return null;
   const { data, error } = await supabase
     .from("business_profiles")
-    .select("company_name, address, city, state, zip, phone, default_estimate_notes")
+    .select("company_name, address, city, state, zip, phone, default_estimate_notes, email_display_name")
     .eq("user_id", u.user.id)
     .maybeSingle();
   if (error) throw error;
